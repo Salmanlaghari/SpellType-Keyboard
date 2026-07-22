@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/keyboard_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/keyboard_background"
+    android:paddingBottom="4dp">
+
+    <!-- Active Frame Selector Toolbar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:orientation="horizontal"
+        android:background="@color/toolbar_background"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SpellType"
+            android:textColor="@color/key_text_color"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:layout_marginRight="8dp"/>
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="none"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/chip_none"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Normal"
+                    android:textColor="@color/key_text_color"
+                    android:textSize="12sp"
+                    android:background="@drawable/chip_active_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_marginHorizontal="4dp"/>
+
+                <TextView
+                    android:id="@+id/chip_box"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Box ┌─┐"
+                    android:textColor="@color/key_text_color"
+                    android:textSize="12sp"
+                    android:background="@drawable/chip_inactive_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_marginHorizontal="4dp"/>
+
+                <TextView
+                    android:id="@+id/chip_star"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Star ★"
+                    android:textColor="@color/key_text_color"
+                    android:textSize="12sp"
+                    android:background="@drawable/chip_inactive_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_marginHorizontal="4dp"/>
+
+                <TextView
+                    android:id="@+id/chip_bracket"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Bracket 【】"
+                    android:textColor="@color/key_text_color"
+                    android:textSize="12sp"
+                    android:background="@drawable/chip_inactive_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_marginHorizontal="4dp"/>
+
+                <TextView
+                    android:id="@+id/chip_diamond"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Diamond ◆"
+                    android:textColor="@color/key_text_color"
+                    android:textSize="12sp"
+                    android:background="@drawable/chip_inactive_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_marginHorizontal="4dp"/>
+
+            </LinearLayout>
+        </HorizontalScrollView>
+    </LinearLayout>
+
+    <!-- Row 1 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="54dp"
+        android:orientation="horizontal"
+        android:paddingHorizontal="2dp"
+        android:layout_marginTop="4dp">
+
+        <TextView android:id="@+id/btn_q" style="@style/KeyboardKey" android:text="q"/>
+        <TextView android:id="@+id/btn_w" style="@style/KeyboardKey" android:text="w"/>
+        <TextView android:id="@+id/btn_e" style="@style/KeyboardKey" android:text="e"/>
+        <TextView android:id="@+id/btn_r" style="@style/KeyboardKey" android:text="r"/>
+        <TextView android:id="@+id/btn_t" style="@style/KeyboardKey" android:text="t"/>
+        <TextView android:id="@+id/btn_y" style="@style/KeyboardKey" android:text="y"/>
+        <TextView android:id="@+id/btn_u" style="@style/KeyboardKey" android:text="u"/>
+        <TextView android:id="@+id/btn_i" style="@style/KeyboardKey" android:text="i"/>
+        <TextView android:id="@+id/btn_o" style="@style/KeyboardKey" android:text="o"/>
+        <TextView android:id="@+id/btn_p" style="@style/KeyboardKey" android:text="p"/>
+    </LinearLayout>
+
+    <!-- Row 2 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="54dp"
+        android:orientation="horizontal"
+        android:paddingHorizontal="12dp">
+
+        <TextView android:id="@+id/btn_a" style="@style/KeyboardKey" android:text="a"/>
+        <TextView android:id="@+id/btn_s" style="@style/KeyboardKey" android:text="s"/>
+        <TextView android:id="@+id/btn_d" style="@style/KeyboardKey" android:text="d"/>
+        <TextView android:id="@+id/btn_f" style="@style/KeyboardKey" android:text="f"/>
+        <TextView android:id="@+id/btn_g" style="@style/KeyboardKey" android:text="g"/>
+        <TextView android:id="@+id/btn_h" style="@style/KeyboardKey" android:text="h"/>
+        <TextView android:id="@+id/btn_j" style="@style/KeyboardKey" android:text="j"/>
+        <TextView android:id="@+id/btn_k" style="@style/KeyboardKey" android:text="k"/>
+        <TextView android:id="@+id/btn_l" style="@style/KeyboardKey" android:text="l"/>
+    </LinearLayout>
+
+    <!-- Row 3 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="54dp"
+        android:orientation="horizontal"
+        android:paddingHorizontal="2dp">
+
+        <TextView android:id="@+id/btn_shift" style="@style/KeyboardKey.Special" android:layout_weight="1.5" android:text="⇧"/>
+        <TextView android:id="@+id/btn_z" style="@style/KeyboardKey" android:text="z"/>
+        <TextView android:id="@+id/btn_x" style="@style/KeyboardKey" android:text="x"/>
+        <TextView android:id="@+id/btn_c" style="@style/KeyboardKey" android:text="c"/>
+        <TextView android:id="@+id/btn_v" style="@style/KeyboardKey" android:text="v"/>
+        <TextView android:id="@+id/btn_b" style="@style/KeyboardKey" android:text="b"/>
+        <TextView android:id="@+id/btn_n" style="@style/KeyboardKey" android:text="n"/>
+        <TextView android:id="@+id/btn_m" style="@style/KeyboardKey" android:text="m"/>
+        <TextView android:id="@+id/btn_backspace" style="@style/KeyboardKey.Special" android:layout_weight="1.5" android:text="⌫"/>
+    </LinearLayout>
+
+    <!-- Row 4 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="54dp"
+        android:orientation="horizontal"
+        android:paddingHorizontal="2dp">
+
+        <TextView android:id="@+id/btn_mode" style="@style/KeyboardKey.Special" android:layout_weight="1.5" android:text="\?123"/>
+        <TextView android:id="@+id/btn_space" style="@style/KeyboardKey" android:layout_weight="5" android:text=""/>
+        <TextView android:id="@+id/btn_enter" style="@style/KeyboardKey.Accent" android:layout_weight="2" android:text="Enter"/>
+    </LinearLayout>
+
+</LinearLayout>
