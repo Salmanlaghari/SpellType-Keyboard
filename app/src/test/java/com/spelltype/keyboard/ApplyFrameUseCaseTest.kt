@@ -73,4 +73,19 @@ class ApplyFrameUseCaseTest {
         val savedList = fakeRepository.getSavedArtList().first()
         assertEquals(1, savedList.size)
     }
+
+    @Test
+    fun testWordGlitter_interspersesSparkles() = runTest {
+        val text = "Hello World"
+        val result = applyFrameUseCase(
+            text = text,
+            style = FrameStyle.NONE,
+            glitterEnabled = true
+        )
+        // Hello (glitter) World
+        // For Hello World, it should intersperse one of ["✨", "🌟", "⭐", "💫"]
+        assertTrue(result.contains("✨") || result.contains("🌟") || result.contains("⭐") || result.contains("💫"))
+        assertTrue(result.startsWith("Hello"))
+        assertTrue(result.endsWith("World"))
+    }
 }

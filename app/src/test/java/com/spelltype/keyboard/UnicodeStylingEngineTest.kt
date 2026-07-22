@@ -52,4 +52,11 @@ class UnicodeStylingEngineTest {
         val result = UnicodeStylingEngine.applyStyle(input, UnicodeStyle.BUBBLE)
         assertEquals("𝔹", result)
     }
+
+    @Test
+    fun testSquaredSolidStyle() {
+        val input = "A"
+        val result = UnicodeStylingEngine.applyStyle(input, UnicodeStyle.SQUARED_SOLID)
+        assertEquals("🅰", result)
+    }
 }

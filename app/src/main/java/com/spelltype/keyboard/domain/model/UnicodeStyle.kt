@@ -8,5 +8,6 @@ enum class UnicodeStyle {
     CURSIVE,
     CIRCLED,
     SQUARED,
+    SQUARED_SOLID,
     BUBBLE
 }

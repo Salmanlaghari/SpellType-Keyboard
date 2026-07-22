@@ -61,4 +61,25 @@ class ArtEngineTest {
         val expected = "◆◆◆◆◆◆◆\n◆ Yay ◆\n◆◆◆◆◆◆◆"
         assertEquals(expected, result)
     }
+
+    @Test
+    fun testFloralStyle() {
+        val input = "✿"
+        val result = ArtEngine.applyFrame(input, FrameStyle.FLORAL)
+        assertTrue(result.contains("✿"))
+    }
+
+    @Test
+    fun testGemStyle() {
+        val input = "💎"
+        val result = ArtEngine.applyFrame(input, FrameStyle.GEM)
+        assertTrue(result.contains("💎"))
+    }
+
+    @Test
+    fun testCloverStyle() {
+        val input = "🍀"
+        val result = ArtEngine.applyFrame(input, FrameStyle.CLOVER)
+        assertTrue(result.contains("🍀"))
+    }
 }

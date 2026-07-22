@@ -29,6 +29,7 @@ object ArtEngine {
                 val lines = text.split("\n")
                 lines.joinToString("\n") { "【 $it 】" }
             }
+
             // Emoji Uniform Borders
             FrameStyle.LEAF -> formatUniformBorder(text, "🍁")
             FrameStyle.SPARKS -> formatUniformBorder(text, "✨")
@@ -46,6 +47,9 @@ object ArtEngine {
             FrameStyle.PARTY -> formatUniformBorder(text, "🎉")
             FrameStyle.BALLOON -> formatUniformBorder(text, "🎈")
             FrameStyle.GHOST -> formatUniformBorder(text, "👻")
+            FrameStyle.FLORAL -> formatUniformBorder(text, "✿")
+            FrameStyle.GEM -> formatUniformBorder(text, "💎")
+            FrameStyle.CLOVER -> formatUniformBorder(text, "🍀")
         }
     }
 

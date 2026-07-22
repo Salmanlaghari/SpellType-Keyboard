@@ -33,5 +33,8 @@ enum class FrameStyle {
     FIRE,
     PARTY,
     BALLOON,
-    GHOST
+    GHOST,
+    FLORAL,
+    GEM,
+    CLOVER
 }

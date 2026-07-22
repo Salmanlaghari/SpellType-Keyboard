@@ -90,6 +90,13 @@ object UnicodeStylingEngine {
                     else -> char.toString()
                 }
             }
+            UnicodeStyle.SQUARED_SOLID -> {
+                when (char) {
+                    in 'A'..'Z' -> codePointToString(0x1F170 + (char - 'A'))
+                    in 'a'..'z' -> codePointToString(0x1F170 + (char - 'a'))
+                    else -> char.toString()
+                }
+            }
             UnicodeStyle.BUBBLE -> {
                 when (char) {
                     in 'A'..'Z' -> {

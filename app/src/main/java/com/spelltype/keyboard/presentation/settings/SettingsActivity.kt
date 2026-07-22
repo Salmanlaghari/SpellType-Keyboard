@@ -96,6 +96,7 @@ class SettingsActivity : AppCompatActivity() {
         binding.settUnicodeCursive.setOnClickListener { viewModel.selectUnicodeStyle(UnicodeStyle.CURSIVE) }
         binding.settUnicodeCircled.setOnClickListener { viewModel.selectUnicodeStyle(UnicodeStyle.CIRCLED) }
         binding.settUnicodeSquared.setOnClickListener { viewModel.selectUnicodeStyle(UnicodeStyle.SQUARED) }
+        binding.settUnicodeSquaredSolid.setOnClickListener { viewModel.selectUnicodeStyle(UnicodeStyle.SQUARED_SOLID) }
         binding.settUnicodeBubble.setOnClickListener { viewModel.selectUnicodeStyle(UnicodeStyle.BUBBLE) }
 
         // Glitter Switch listener
@@ -213,6 +214,7 @@ class SettingsActivity : AppCompatActivity() {
         binding.settUnicodeCursive.setBackgroundResource(if (active == UnicodeStyle.CURSIVE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
         binding.settUnicodeCircled.setBackgroundResource(if (active == UnicodeStyle.CIRCLED) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
         binding.settUnicodeSquared.setBackgroundResource(if (active == UnicodeStyle.SQUARED) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settUnicodeSquaredSolid.setBackgroundResource(if (active == UnicodeStyle.SQUARED_SOLID) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
         binding.settUnicodeBubble.setBackgroundResource(if (active == UnicodeStyle.BUBBLE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
     }
 
@@ -230,11 +232,23 @@ class SettingsActivity : AppCompatActivity() {
         val signature = viewModel.customSignature.value
 
         var processed = UnicodeStylingEngine.applyStyle(text, unicode)
+
+        if (glitter) {
+            val glitterSymbols = listOf("✨", "🌟", "⭐", "💫")
+            val words = processed.split(" ")
+            val sb = StringBuilder()
+            for (i in words.indices) {
+                sb.append(words[i])
+                if (i < words.size - 1) {
+                    val symbol = glitterSymbols[i % glitterSymbols.size]
+                    sb.append(" $symbol ")
+                }
+            }
+            processed = if (words.size == 1) "✨ $processed ✨" else sb.toString()
+        }
+
         processed = ShapeEngine.applyShape(processed, shape)
         processed = ArtEngine.applyFrame(processed, frame)
-        if (glitter) {
-            processed = processed.split("\n").joinToString("\n") { "✨ $it ✨" }
-        }
         if (signature.isNotEmpty()) {
             processed = "$processed\n$signature"
         }
