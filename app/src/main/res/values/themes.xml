@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base application theme. -->
+    <style name="Theme.SpellType" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <item name="colorPrimary">@color/accent_color</item>
+        <item name="android:windowBackground">@color/keyboard_background</item>
+    </style>
+
+    <!-- Custom Premium Keyboard Key style -->
+    <style name="KeyboardKey">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_margin">3dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">@color/key_text_color</item>
+        <item name="android:background">@drawable/key_background</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+
+    <style name="KeyboardKey.Special">
+        <item name="android:background">@drawable/key_special_background</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="KeyboardKey.Accent">
+        <item name="android:background">@drawable/key_accent_background</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+</resources>
