@@ -55,6 +55,31 @@ class SettingsViewModel(
     val premiumUnlocked: StateFlow<Boolean> = repository.getPremiumUnlocked()
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
+    // Phase 6 Flow Exposes
+    val colorfulPreviewEnabled: StateFlow<Boolean> = repository.getColorfulPreviewEnabled()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    val giantWordsEnabled: StateFlow<Boolean> = repository.getGiantWordsEnabled()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    val keyboardHeight: StateFlow<String> = repository.getKeyboardHeight()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, "MEDIUM")
+
+    val vibrationStrength: StateFlow<Int> = repository.getVibrationStrength()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 50)
+
+    val keySoundVolume: StateFlow<Int> = repository.getKeySoundVolume()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 50)
+
+    val numberRowEnabled: StateFlow<Boolean> = repository.getNumberRowEnabled()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    val autoSuggestionsEnabled: StateFlow<Boolean> = repository.getAutoSuggestionsEnabled()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    val swipeTypingEnabled: StateFlow<Boolean> = repository.getSwipeTypingEnabled()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
     fun selectFrameStyle(style: FrameStyle) {
         viewModelScope.launch {
             saveSelectedFrameStyleUseCase(style)
@@ -97,13 +122,14 @@ class SettingsViewModel(
         }
     }
 
-    fun setVibrationEnabled(enabled: Boolean) {
+    // Alignment setters matching SettingsActivity.kt exactly
+    fun saveVibrationEnabled(enabled: Boolean) {
         viewModelScope.launch {
             repository.saveVibrationEnabled(enabled)
         }
     }
 
-    fun setSoundEnabled(enabled: Boolean) {
+    fun saveSoundEnabled(enabled: Boolean) {
         viewModelScope.launch {
             repository.saveSoundEnabled(enabled)
         }
@@ -118,6 +144,55 @@ class SettingsViewModel(
     fun setPremiumUnlocked(unlocked: Boolean) {
         viewModelScope.launch {
             repository.savePremiumUnlocked(unlocked)
+        }
+    }
+
+    // Phase 6 Mappings
+    fun saveColorfulPreviewEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            repository.saveColorfulPreviewEnabled(enabled)
+        }
+    }
+
+    fun saveGiantWordsEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            repository.saveGiantWordsEnabled(enabled)
+        }
+    }
+
+    fun saveKeyboardHeight(height: String) {
+        viewModelScope.launch {
+            repository.saveKeyboardHeight(height)
+        }
+    }
+
+    fun saveVibrationStrength(strength: Int) {
+        viewModelScope.launch {
+            repository.saveVibrationStrength(strength)
+        }
+    }
+
+    fun saveKeySoundVolume(volume: Int) {
+        viewModelScope.launch {
+            repository.saveKeySoundVolume(volume)
+        }
+    }
+
+    fun saveNumberRowEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            repository.saveNumberRowEnabled(enabled)
+        }
+    }
+
+    fun saveAutoSuggestionsEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            repository.saveAutoSuggestionsEnabled(enabled)
+        }
+    }
+
+    fun saveSwipeTypingEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            repository.saveSwipeTypingEnabled(enabled)
         }
     }
 

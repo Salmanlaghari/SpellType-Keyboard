@@ -3,6 +3,30 @@ package com.spelltype.keyboard.domain
 import com.spelltype.keyboard.domain.model.UnicodeStyle
 
 object UnicodeStylingEngine {
+
+    private val superscriptMap = mapOf(
+        '0' to "⁰", '1' to "¹", '2' to "²", '3' to "³", '4' to "⁴",
+        '5' to "⁵", '6' to "⁶", '7' to "⁷", '8' to "⁸", '9' to "⁹",
+        'a' to "ᵃ", 'b' to "ᵇ", 'c' to "ᶜ", 'd' to "ᵈ", 'e' to "ᵉ",
+        'f' to "ᶠ", 'g' to "ᵍ", 'h' to "ʰ", 'i' to "ⁱ", 'j' to "ʲ",
+        'k' to "ᵏ", 'l' to "ˡ", 'm' to "ᵐ", 'n' to "ⁿ", 'o' to "ᵒ",
+        'p' to "ᵖ", 'r' to "ʳ", 's' to "ˢ", 't' to "ᵗ", 'u' to "ᵘ",
+        'v' to "ᵛ", 'w' to "ʷ", 'x' to "ˣ", 'y' to "ʸ", 'z' to "ᶻ",
+        'A' to "ᴬ", 'B' to "ᴮ", 'D' to "ᴰ", 'E' to "ᴱ", 'G' to "ᴳ",
+        'H' to "ᴴ", 'I' to "ᴵ", 'J' to "ᴶ", 'K' to "ᴲ", 'L' to "ᴸ",
+        'M' to "ᴹ", 'N' to "ᴺ", 'O' to "ᴼ", 'P' to "ᴾ", 'R' to "ᴿ",
+        'T' to "ᵀ", 'U' to "ᵁ", 'V' to "ⱽ", 'W' to "ᵂ"
+    )
+
+    private val subscriptMap = mapOf(
+        '0' to "₀", '1' to "₁", '2' to "₂", '3' to "₃", '4' to "₄",
+        '5' to "₅", '6' to "₆", '7' to "₇", '8' to "₈", '9' to "₉",
+        'a' to "ₐ", 'e' to "ₑ", 'h' to "ₕ", 'i' to "ᵢ", 'j' to "ⱼ",
+        'k' to "ₖ", 'l' to "ₗ", 'm' to "ₘ", 'n' to "ₙ", 'o' to "ₒ",
+        'p' to "ₚ", 'r' to "ᵣ", 's' to "ₛ", 't' to "ₜ", 'u' to "ᵤ",
+        'v' to "ᵥ", 'x' to "ₓ"
+    )
+
     fun applyStyle(text: String, style: UnicodeStyle): String {
         if (style == UnicodeStyle.NONE) return text
 
@@ -113,6 +137,32 @@ object UnicodeStylingEngine {
                     }
                     in 'a'..'z' -> codePointToString(0x1D552 + (char - 'a'))
                     in '0'..'9' -> codePointToString(0x1D7D8 + (char - '0'))
+                    else -> char.toString()
+                }
+            }
+            UnicodeStyle.FULL_WIDTH -> {
+                when (char) {
+                    in '!'..'~' -> codePointToString(0xFF01 + (char - '!'))
+                    ' ' -> "　"
+                    else -> char.toString()
+                }
+            }
+            UnicodeStyle.STRIKETHROUGH -> {
+                if (char.isWhitespace()) char.toString() else "$char\u0336"
+            }
+            UnicodeStyle.UNDERLINE -> {
+                if (char.isWhitespace()) char.toString() else "$char\u0332"
+            }
+            UnicodeStyle.SUPERSCRIPT -> {
+                superscriptMap[char] ?: char.toString()
+            }
+            UnicodeStyle.SUBSCRIPT -> {
+                subscriptMap[char] ?: char.toString()
+            }
+            UnicodeStyle.BOLD_ITALIC -> {
+                when (char) {
+                    in 'A'..'Z' -> codePointToString(0x1D468 + (char - 'A'))
+                    in 'a'..'z' -> codePointToString(0x1D482 + (char - 'a'))
                     else -> char.toString()
                 }
             }

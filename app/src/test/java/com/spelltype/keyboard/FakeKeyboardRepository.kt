@@ -23,6 +23,16 @@ class FakeKeyboardRepository : KeyboardRepository {
     private val themeSelectionFlow = MutableStateFlow("DARK")
     private val premiumUnlockedFlow = MutableStateFlow(false)
 
+    // Phase 6 Flow Mappings
+    private val colorfulPreviewEnabledFlow = MutableStateFlow(true)
+    private val giantWordsEnabledFlow = MutableStateFlow(false)
+    private val keyboardHeightFlow = MutableStateFlow("MEDIUM")
+    private val vibrationStrengthFlow = MutableStateFlow(50)
+    private val keySoundVolumeFlow = MutableStateFlow(50)
+    private val numberRowEnabledFlow = MutableStateFlow(true)
+    private val autoSuggestionsEnabledFlow = MutableStateFlow(true)
+    private val swipeTypingEnabledFlow = MutableStateFlow(false)
+
     override fun getSavedArtList(): Flow<List<SavedArt>> {
         return savedArtFlow
     }
@@ -116,6 +126,71 @@ class FakeKeyboardRepository : KeyboardRepository {
 
     override suspend fun savePremiumUnlocked(unlocked: Boolean) {
         premiumUnlockedFlow.value = unlocked
+    }
+
+    // Phase 6 Flow Implementations
+    override fun getColorfulPreviewEnabled(): Flow<Boolean> {
+        return colorfulPreviewEnabledFlow
+    }
+
+    override suspend fun saveColorfulPreviewEnabled(enabled: Boolean) {
+        colorfulPreviewEnabledFlow.value = enabled
+    }
+
+    override fun getGiantWordsEnabled(): Flow<Boolean> {
+        return giantWordsEnabledFlow
+    }
+
+    override suspend fun saveGiantWordsEnabled(enabled: Boolean) {
+        giantWordsEnabledFlow.value = enabled
+    }
+
+    override fun getKeyboardHeight(): Flow<String> {
+        return keyboardHeightFlow
+    }
+
+    override suspend fun saveKeyboardHeight(height: String) {
+        keyboardHeightFlow.value = height
+    }
+
+    override fun getVibrationStrength(): Flow<Int> {
+        return vibrationStrengthFlow
+    }
+
+    override suspend fun saveVibrationStrength(strength: Int) {
+        vibrationStrengthFlow.value = strength
+    }
+
+    override fun getKeySoundVolume(): Flow<Int> {
+        return keySoundVolumeFlow
+    }
+
+    override suspend fun saveKeySoundVolume(volume: Int) {
+        keySoundVolumeFlow.value = volume
+    }
+
+    override fun getNumberRowEnabled(): Flow<Boolean> {
+        return numberRowEnabledFlow
+    }
+
+    override suspend fun saveNumberRowEnabled(enabled: Boolean) {
+        numberRowEnabledFlow.value = enabled
+    }
+
+    override fun getAutoSuggestionsEnabled(): Flow<Boolean> {
+        return autoSuggestionsEnabledFlow
+    }
+
+    override suspend fun saveAutoSuggestionsEnabled(enabled: Boolean) {
+        autoSuggestionsEnabledFlow.value = enabled
+    }
+
+    override fun getSwipeTypingEnabled(): Flow<Boolean> {
+        return swipeTypingEnabledFlow
+    }
+
+    override suspend fun saveSwipeTypingEnabled(enabled: Boolean) {
+        swipeTypingEnabledFlow.value = enabled
     }
 
     override suspend fun clearAllArt() {

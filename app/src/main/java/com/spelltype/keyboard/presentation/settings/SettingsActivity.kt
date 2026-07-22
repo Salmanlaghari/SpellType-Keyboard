@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.provider.Settings
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.Lifecycle
@@ -21,6 +22,7 @@ import com.spelltype.keyboard.data.repository.KeyboardRepositoryImpl
 import com.spelltype.keyboard.domain.ArtEngine
 import com.spelltype.keyboard.domain.ShapeEngine
 import com.spelltype.keyboard.domain.UnicodeStylingEngine
+import com.spelltype.keyboard.domain.PreviewStyler
 import com.spelltype.keyboard.domain.model.FrameStyle
 import com.spelltype.keyboard.domain.model.ShapeLayout
 import com.spelltype.keyboard.domain.model.UnicodeStyle
@@ -112,18 +114,67 @@ class SettingsActivity : AppCompatActivity() {
 
         // Sound switch listener
         binding.switchSound.setOnCheckedChangeListener { _, isChecked ->
-            viewModel.setSoundEnabled(isChecked)
+            viewModel.saveSoundEnabled(isChecked)
         }
 
         // Vibration switch listener
         binding.switchVibration.setOnCheckedChangeListener { _, isChecked ->
-            viewModel.setVibrationEnabled(isChecked)
+            viewModel.saveVibrationEnabled(isChecked)
         }
 
-        // Theme selection chips
+        // Phase 6 Switches
+        binding.switchNumberRow.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.saveNumberRowEnabled(isChecked)
+        }
+
+        binding.switchSuggestions.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.saveAutoSuggestionsEnabled(isChecked)
+        }
+
+        binding.switchSwipeTyping.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.saveSwipeTypingEnabled(isChecked)
+        }
+
+        binding.switchColorful.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.saveColorfulPreviewEnabled(isChecked)
+        }
+
+        binding.switchGiantWords.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.saveGiantWordsEnabled(isChecked)
+        }
+
+        // Vibration Strength SeekBar
+        binding.sliderVibrationStrength.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                binding.tvVibrationStrength.text = "Vibration Strength: $progress%"
+                if (fromUser) viewModel.saveVibrationStrength(progress)
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        // Sound Volume SeekBar
+        binding.sliderSoundVolume.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                binding.tvSoundVolume.text = "Sound Volume: $progress%"
+                if (fromUser) viewModel.saveKeySoundVolume(progress)
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        // Height chips
+        binding.heightSmall.setOnClickListener { viewModel.saveKeyboardHeight("SMALL") }
+        binding.heightMedium.setOnClickListener { viewModel.saveKeyboardHeight("MEDIUM") }
+        binding.heightLarge.setOnClickListener { viewModel.saveKeyboardHeight("LARGE") }
+
+        // Theme selection chips (extended)
         binding.themeDark.setOnClickListener { viewModel.setThemeSelection("DARK") }
         binding.themeAmoled.setOnClickListener { viewModel.setThemeSelection("AMOLED") }
         binding.themeLight.setOnClickListener { viewModel.setThemeSelection("LIGHT") }
+        binding.themeBlue.setOnClickListener { viewModel.setThemeSelection("BLUE") }
+        binding.themePurple.setOnClickListener { viewModel.setThemeSelection("PURPLE") }
+        binding.themeGreen.setOnClickListener { viewModel.setThemeSelection("GREEN") }
 
         // Custom signature input listener
         binding.etCustomSignature.addTextChangedListener { text ->
@@ -184,6 +235,7 @@ class SettingsActivity : AppCompatActivity() {
                         if (binding.switchSound.isChecked != enabled) {
                             binding.switchSound.isChecked = enabled
                         }
+                        binding.containerSoundVolume.visibility = if (enabled) View.VISIBLE else View.GONE
                     }
                 }
 
@@ -193,6 +245,74 @@ class SettingsActivity : AppCompatActivity() {
                         if (binding.switchVibration.isChecked != enabled) {
                             binding.switchVibration.isChecked = enabled
                         }
+                        binding.containerVibrationStrength.visibility = if (enabled) View.VISIBLE else View.GONE
+                    }
+                }
+
+                // Phase 6 Flow Observers
+                launch {
+                    viewModel.colorfulPreviewEnabled.collect { enabled ->
+                        if (binding.switchColorful.isChecked != enabled) {
+                            binding.switchColorful.isChecked = enabled
+                        }
+                        updateLivePreview()
+                    }
+                }
+
+                launch {
+                    viewModel.giantWordsEnabled.collect { enabled ->
+                        if (binding.switchGiantWords.isChecked != enabled) {
+                            binding.switchGiantWords.isChecked = enabled
+                        }
+                        updateLivePreview()
+                    }
+                }
+
+                launch {
+                    viewModel.numberRowEnabled.collect { enabled ->
+                        if (binding.switchNumberRow.isChecked != enabled) {
+                            binding.switchNumberRow.isChecked = enabled
+                        }
+                    }
+                }
+
+                launch {
+                    viewModel.autoSuggestionsEnabled.collect { enabled ->
+                        if (binding.switchSuggestions.isChecked != enabled) {
+                            binding.switchSuggestions.isChecked = enabled
+                        }
+                    }
+                }
+
+                launch {
+                    viewModel.swipeTypingEnabled.collect { enabled ->
+                        if (binding.switchSwipeTyping.isChecked != enabled) {
+                            binding.switchSwipeTyping.isChecked = enabled
+                        }
+                    }
+                }
+
+                launch {
+                    viewModel.vibrationStrength.collect { strength ->
+                        if (binding.sliderVibrationStrength.progress != strength) {
+                            binding.sliderVibrationStrength.progress = strength
+                        }
+                        binding.tvVibrationStrength.text = "Vibration Strength: $strength%"
+                    }
+                }
+
+                launch {
+                    viewModel.keySoundVolume.collect { volume ->
+                        if (binding.sliderSoundVolume.progress != volume) {
+                            binding.sliderSoundVolume.progress = volume
+                        }
+                        binding.tvSoundVolume.text = "Sound Volume: $volume%"
+                    }
+                }
+
+                launch {
+                    viewModel.keyboardHeight.collect { height ->
+                        updateHeightHighlighting(height)
                     }
                 }
 
@@ -264,10 +384,19 @@ class SettingsActivity : AppCompatActivity() {
         binding.settUnicodeBubble.setBackgroundResource(if (active == UnicodeStyle.BUBBLE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
     }
 
+    private fun updateHeightHighlighting(active: String) {
+        binding.heightSmall.setBackgroundResource(if (active == "SMALL") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.heightMedium.setBackgroundResource(if (active == "MEDIUM") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.heightLarge.setBackgroundResource(if (active == "LARGE") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+    }
+
     private fun updateThemeHighlighting(theme: String) {
         binding.themeDark.setBackgroundResource(if (theme == "DARK") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
         binding.themeAmoled.setBackgroundResource(if (theme == "AMOLED") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
         binding.themeLight.setBackgroundResource(if (theme == "LIGHT") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.themeBlue.setBackgroundResource(if (theme == "BLUE") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.themePurple.setBackgroundResource(if (theme == "PURPLE") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.themeGreen.setBackgroundResource(if (theme == "GREEN") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
     }
 
     private fun updateLivePreview() {
@@ -305,6 +434,11 @@ class SettingsActivity : AppCompatActivity() {
             processed = "$processed\n$signature"
         }
 
-        binding.tvRealtimePreview.text = processed
+        // Apply Rainbow Coloring and Giant Sizing preview style dynamically
+        binding.tvRealtimePreview.text = PreviewStyler.stylePreview(
+            processed,
+            viewModel.colorfulPreviewEnabled.value,
+            viewModel.giantWordsEnabled.value
+        )
     }
 }

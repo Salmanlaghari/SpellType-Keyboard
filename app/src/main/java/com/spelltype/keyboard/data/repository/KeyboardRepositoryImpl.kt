@@ -106,6 +106,71 @@ class KeyboardRepositoryImpl(
         preferences.savePremiumUnlocked(unlocked)
     }
 
+    // Phase 6 Mappings
+    override fun getColorfulPreviewEnabled(): Flow<Boolean> {
+        return preferences.colorfulPreviewEnabledFlow
+    }
+
+    override suspend fun saveColorfulPreviewEnabled(enabled: Boolean) {
+        preferences.saveColorfulPreviewEnabled(enabled)
+    }
+
+    override fun getGiantWordsEnabled(): Flow<Boolean> {
+        return preferences.giantWordsEnabledFlow
+    }
+
+    override suspend fun saveGiantWordsEnabled(enabled: Boolean) {
+        preferences.saveGiantWordsEnabled(enabled)
+    }
+
+    override fun getKeyboardHeight(): Flow<String> {
+        return preferences.keyboardHeightFlow
+    }
+
+    override suspend fun saveKeyboardHeight(height: String) {
+        preferences.saveKeyboardHeight(height)
+    }
+
+    override fun getVibrationStrength(): Flow<Int> {
+        return preferences.vibrationStrengthFlow
+    }
+
+    override suspend fun saveVibrationStrength(strength: Int) {
+        preferences.saveVibrationStrength(strength)
+    }
+
+    override fun getKeySoundVolume(): Flow<Int> {
+        return preferences.keySoundVolumeFlow
+    }
+
+    override suspend fun saveKeySoundVolume(volume: Int) {
+        preferences.saveKeySoundVolume(volume)
+    }
+
+    override fun getNumberRowEnabled(): Flow<Boolean> {
+        return preferences.numberRowEnabledFlow
+    }
+
+    override suspend fun saveNumberRowEnabled(enabled: Boolean) {
+        preferences.saveNumberRowEnabled(enabled)
+    }
+
+    override fun getAutoSuggestionsEnabled(): Flow<Boolean> {
+        return preferences.autoSuggestionsEnabledFlow
+    }
+
+    override suspend fun saveAutoSuggestionsEnabled(enabled: Boolean) {
+        preferences.saveAutoSuggestionsEnabled(enabled)
+    }
+
+    override fun getSwipeTypingEnabled(): Flow<Boolean> {
+        return preferences.swipeTypingEnabledFlow
+    }
+
+    override suspend fun saveSwipeTypingEnabled(enabled: Boolean) {
+        preferences.saveSwipeTypingEnabled(enabled)
+    }
+
     override suspend fun clearAllArt() {
         savedArtDao.deleteAll()
     }

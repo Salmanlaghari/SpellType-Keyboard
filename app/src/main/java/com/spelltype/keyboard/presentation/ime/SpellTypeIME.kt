@@ -14,6 +14,8 @@ import com.spelltype.keyboard.domain.ArtEngine
 import com.spelltype.keyboard.domain.ShapeEngine
 import com.spelltype.keyboard.domain.StyleCategorizer
 import com.spelltype.keyboard.domain.UnicodeStylingEngine
+import com.spelltype.keyboard.domain.PreviewStyler
+import com.spelltype.keyboard.domain.MoodDetector
 import com.spelltype.keyboard.domain.model.FrameStyle
 import com.spelltype.keyboard.domain.model.ShapeLayout
 import com.spelltype.keyboard.domain.model.UnicodeStyle
@@ -37,8 +39,19 @@ class SpellTypeIME : InputMethodService() {
     private var glitterEnabled = false
     private var customSignature = ""
     private var favoriteStyles = emptySet<String>()
+
+    // Phase 5 & 6 Settings
     private var vibrationEnabled = true
     private var soundEnabled = true
+    private var vibrationStrength = 50
+    private var soundVolume = 50
+    private var keyboardHeight = "MEDIUM"
+    private var numberRowEnabled = true
+    private var autoSuggestionsEnabled = true
+    private var swipeTypingEnabled = false
+    private var colorfulPreviewEnabled = true
+    private var giantWordsEnabled = false
+    private var themeSelection = "DARK"
 
     private var isShifted = false
     private var isSymbolMode = false
@@ -52,6 +65,11 @@ class SpellTypeIME : InputMethodService() {
         R.id.btn_h, R.id.btn_j, R.id.btn_k, R.id.btn_l,
         R.id.btn_z, R.id.btn_x, R.id.btn_c, R.id.btn_v,
         R.id.btn_b, R.id.btn_n, R.id.btn_m
+    )
+
+    private val numKeyIds = listOf(
+        R.id.num_1, R.id.num_2, R.id.num_3, R.id.num_4, R.id.num_5,
+        R.id.num_6, R.id.num_7, R.id.num_8, R.id.num_9, R.id.num_0
     )
 
     private val lettersLower = listOf(
@@ -75,6 +93,10 @@ class SpellTypeIME : InputMethodService() {
     private var keyViews = mutableMapOf<Int, TextView>()
     private var keyboardRootView: View? = null
 
+    // Suggestions Style Targets
+    private var suggestedStyleLeft: FrameStyle? = null
+    private var suggestedStyleRight: FrameStyle? = null
+
     override fun onCreate() {
         super.onCreate()
         val database = SpellTypeDatabase.getDatabase(this)
@@ -90,6 +112,7 @@ class SpellTypeIME : InputMethodService() {
         super.onStartInputView(info, restarting)
         composingText.clear()
         updateLivePreviewBar()
+        updateSuggestionsBar()
     }
 
     override fun onCreateInputView(): View {
@@ -103,6 +126,15 @@ class SpellTypeIME : InputMethodService() {
             keyView.setOnClickListener {
                 onKeyClickFeedback(keyView)
                 handleKeyClick(keyView.text.toString())
+            }
+        }
+
+        // Map permanent number row keys
+        for (id in numKeyIds) {
+            val numView: TextView = keyboardView.findViewById(id)
+            numView.setOnClickListener {
+                onKeyClickFeedback(numView)
+                handleKeyClick(numView.text.toString())
             }
         }
 
@@ -137,7 +169,21 @@ class SpellTypeIME : InputMethodService() {
             handleEnter()
         }
 
-        // Load dynamic settings flow
+        // Setup suggestions click listeners
+        keyboardView.findViewById<View>(R.id.suggestion_left).setOnClickListener {
+            suggestedStyleLeft?.let { style ->
+                onKeyClickFeedback(it)
+                selectFrameStyle(style)
+            }
+        }
+        keyboardView.findViewById<View>(R.id.suggestion_right).setOnClickListener {
+            suggestedStyleRight?.let { style ->
+                onKeyClickFeedback(it)
+                selectFrameStyle(style)
+            }
+        }
+
+        // Load dynamic settings flows
         serviceScope.launch {
             getSelectedFrameStyleUseCase().collect { style ->
                 activeStyle = style
@@ -188,6 +234,52 @@ class SpellTypeIME : InputMethodService() {
                 soundEnabled = enabled
             }
         }
+        serviceScope.launch {
+            repository.getVibrationStrength().collect { strength ->
+                vibrationStrength = strength
+            }
+        }
+        serviceScope.launch {
+            repository.getKeySoundVolume().collect { volume ->
+                soundVolume = volume
+            }
+        }
+        serviceScope.launch {
+            repository.getKeyboardHeight().collect { height ->
+                keyboardHeight = height
+                applyKeyboardHeight(height)
+            }
+        }
+        serviceScope.launch {
+            repository.getNumberRowEnabled().collect { enabled ->
+                numberRowEnabled = enabled
+                keyboardRootView?.findViewById<View>(R.id.number_row)?.visibility = if (enabled) View.VISIBLE else View.GONE
+            }
+        }
+        serviceScope.launch {
+            repository.getAutoSuggestionsEnabled().collect { enabled ->
+                autoSuggestionsEnabled = enabled
+                keyboardRootView?.findViewById<View>(R.id.auto_suggestions_bar)?.visibility = if (enabled) View.VISIBLE else View.GONE
+            }
+        }
+        serviceScope.launch {
+            repository.getColorfulPreviewEnabled().collect { enabled ->
+                colorfulPreviewEnabled = enabled
+                updateLivePreviewBar()
+            }
+        }
+        serviceScope.launch {
+            repository.getGiantWordsEnabled().collect { enabled ->
+                giantWordsEnabled = enabled
+                updateLivePreviewBar()
+            }
+        }
+        serviceScope.launch {
+            repository.getThemeSelection().collect { theme ->
+                themeSelection = theme
+                applyKeyboardTheme(theme)
+            }
+        }
 
         // Programmatically populate Quick Art Bar container with 36+ chips
         val container: LinearLayout? = keyboardView.findViewById(R.id.quick_art_container)
@@ -218,9 +310,8 @@ class SpellTypeIME : InputMethodService() {
         for (style in styles) {
             val textView = TextView(this)
 
-            // Add custom visual decorators for favorites or premiums
             val isFav = favoriteStyles.contains(style.name)
-            val isPrem = com.spelltype.keyboard.domain.StyleCategorizer.isPremium(style)
+            val isPrem = StyleCategorizer.isPremium(style)
             val prefix = when {
                 isFav -> "♥ "
                 isPrem -> "👑 "
@@ -261,21 +352,34 @@ class SpellTypeIME : InputMethodService() {
 
     private fun onKeyClickFeedback(view: View) {
         if (vibrationEnabled) {
-            view.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
+            val vibrator = getSystemService(android.content.Context.VIBRATOR_SERVICE) as? android.os.Vibrator
+            vibrator?.let {
+                val duration = (vibrationStrength * 0.4).toLong().coerceAtLeast(1)
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    val amplitude = (vibrationStrength * 2.55).toInt().coerceIn(1, 255)
+                    it.vibrate(android.os.VibrationEffect.createOneShot(duration, amplitude))
+                } else {
+                    @Suppress("DEPRECATION")
+                    it.vibrate(duration)
+                }
+            }
         }
         if (soundEnabled) {
             val am = getSystemService(android.content.Context.AUDIO_SERVICE) as? android.media.AudioManager
-            am?.playSoundEffect(android.media.AudioManager.FX_KEYPRESS_STANDARD)
+            val vol = soundVolume / 100f
+            am?.playSoundEffect(android.media.AudioManager.FX_KEYPRESS_STANDARD, vol)
         }
+
+        // 120fps smooth scale popup animation
         view.animate()
             .scaleX(1.15f)
             .scaleY(1.15f)
-            .setDuration(70)
+            .setDuration(60)
             .withEndAction {
                 view.animate()
                     .scaleX(1.0f)
                     .scaleY(1.0f)
-                    .setDuration(70)
+                    .setDuration(60)
                     .start()
             }.start()
     }
@@ -317,6 +421,7 @@ class SpellTypeIME : InputMethodService() {
             composingText.append(text)
             ic.setComposingText(composingText.toString(), 1)
             updateLivePreviewBar()
+            updateSuggestionsBar()
         }
 
         if (isShifted && !isSymbolMode) {
@@ -369,6 +474,7 @@ class SpellTypeIME : InputMethodService() {
                 ic.setComposingText(composingText.toString(), 1)
             }
             updateLivePreviewBar()
+            updateSuggestionsBar()
         } else {
             ic.deleteSurroundingText(1, 0)
         }
@@ -402,6 +508,7 @@ class SpellTypeIME : InputMethodService() {
         val textToFormat = composingText.toString()
         composingText.clear()
         updateLivePreviewBar()
+        updateSuggestionsBar()
         val ic: InputConnection = currentInputConnection ?: return
 
         serviceScope.launch {
@@ -448,7 +555,124 @@ class SpellTypeIME : InputMethodService() {
                 processed = "$processed\n$customSignature"
             }
 
-            previewTextView.text = processed
+            // Apply Rainbow Coloring and Giant Sizing preview style dynamically
+            previewTextView.text = PreviewStyler.stylePreview(
+                processed,
+                colorfulPreviewEnabled,
+                giantWordsEnabled
+            )
+        }
+    }
+
+    private fun updateSuggestionsBar() {
+        val root = keyboardRootView ?: return
+        val suggestionsBar = root.findViewById<View>(R.id.auto_suggestions_bar) ?: return
+        if (!autoSuggestionsEnabled || composingText.isEmpty()) {
+            suggestionsBar.visibility = if (autoSuggestionsEnabled) View.VISIBLE else View.GONE
+            root.findViewById<TextView>(R.id.suggestion_left)?.text = "spell"
+            root.findViewById<TextView>(R.id.suggestion_center)?.text = "SpellType"
+            root.findViewById<TextView>(R.id.suggestion_right)?.text = "keyboard"
+            suggestedStyleLeft = null
+            suggestedStyleRight = null
+            return
+        }
+
+        // Rule-based AI Mood detection in real-time as user types!
+        val rawInput = composingText.toString()
+        val moodSuggestion = MoodDetector.detectMood(rawInput)
+
+        val leftText: TextView = root.findViewById(R.id.suggestion_left) ?: return
+        val centerText: TextView = root.findViewById(R.id.suggestion_center) ?: return
+        val rightText: TextView = root.findViewById(R.id.suggestion_right) ?: return
+
+        centerText.text = "Mood: ${moodSuggestion.mood.displayName} ${moodSuggestion.mood.emoji}"
+
+        val list = moodSuggestion.suggestedStyles
+        if (list.isNotEmpty()) {
+            suggestedStyleLeft = list[0]
+            leftText.text = "Try " + list[0].name.lowercase().replace("_", " ")
+        } else {
+            suggestedStyleLeft = null
+            leftText.text = "Normal"
+        }
+
+        if (list.size > 1) {
+            suggestedStyleRight = list[1]
+            rightText.text = "Try " + list[1].name.lowercase().replace("_", " ")
+        } else {
+            suggestedStyleRight = null
+            rightText.text = "Star"
+        }
+    }
+
+    private fun applyKeyboardHeight(heightSelection: String) {
+        val container = keyboardRootView as? LinearLayout ?: return
+        val density = resources.displayMetrics.density
+
+        // Loop and adjust vertical row parameters
+        for (i in 0 until container.childCount) {
+            val row = container.getChildAt(i) as? LinearLayout ?: continue
+            val rowId = row.id
+            if (rowId == R.id.number_row || rowId == R.id.auto_suggestions_bar || row.childCount > 0) {
+                if (rowId == R.id.auto_suggestions_bar) continue
+
+                val lp = row.layoutParams as? LinearLayout.LayoutParams ?: continue
+                lp.height = when (heightSelection) {
+                    "SMALL" -> (44 * density).toInt()
+                    "LARGE" -> (64 * density).toInt()
+                    else -> (54 * density).toInt() // MEDIUM
+                }
+                row.layoutParams = lp
+            }
+        }
+    }
+
+    private fun applyKeyboardTheme(theme: String) {
+        val root = keyboardRootView ?: return
+        val isLight = theme == "LIGHT"
+
+        val bgColor = when (theme) {
+            "AMOLED" -> android.graphics.Color.BLACK
+            "LIGHT" -> android.graphics.Color.parseColor("#F3F4F6")
+            "BLUE" -> android.graphics.Color.parseColor("#1E3A8A")
+            "PURPLE" -> android.graphics.Color.parseColor("#4C1D95")
+            "GREEN" -> android.graphics.Color.parseColor("#064E3B")
+            else -> android.graphics.Color.parseColor("#0B0F19") // DARK
+        }
+
+        val keyBgColor = when (theme) {
+            "AMOLED" -> android.graphics.Color.parseColor("#111111")
+            "LIGHT" -> android.graphics.Color.parseColor("#FFFFFF")
+            "BLUE" -> android.graphics.Color.parseColor("#3B82F6")
+            "PURPLE" -> android.graphics.Color.parseColor("#7C3AED")
+            "GREEN" -> android.graphics.Color.parseColor("#10B981")
+            else -> android.graphics.Color.parseColor("#1F2937") // DARK
+        }
+
+        val textColor = if (isLight) android.graphics.Color.parseColor("#1F2937") else android.graphics.Color.WHITE
+
+        root.setBackgroundColor(bgColor)
+
+        // Apply themes to keys
+        for (id in letterKeyIds) {
+            val key = keyViews[id] ?: continue
+            key.setBackgroundColor(keyBgColor)
+            key.setTextColor(textColor)
+        }
+        for (id in numKeyIds) {
+            val key = root.findViewById<TextView>(id) ?: continue
+            key.setBackgroundColor(keyBgColor)
+            key.setTextColor(textColor)
+        }
+
+        val specialBgColor = if (isLight) android.graphics.Color.parseColor("#E5E7EB") else android.graphics.Color.parseColor("#111827")
+        val specialIds = listOf(R.id.btn_shift, R.id.btn_backspace, R.id.btn_mode, R.id.btn_space)
+        for (id in specialIds) {
+            val btn = root.findViewById<View>(id) ?: continue
+            btn.setBackgroundColor(specialBgColor)
+            if (btn is TextView) {
+                btn.setTextColor(textColor)
+            }
         }
     }
 }

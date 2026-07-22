@@ -17,10 +17,9 @@ class UnicodeStylingEngineTest {
     fun testBoldStyle() {
         val input = "Ab"
         val result = UnicodeStylingEngine.applyStyle(input, UnicodeStyle.BOLD)
-        // Check that result is styled
         assertNotEquals(input, result)
-        assertTrue(result.contains("𝐀")) // bold capital A
-        assertTrue(result.contains("𝐛")) // bold small b
+        assertTrue(result.contains("𝐀"))
+        assertTrue(result.contains("𝐛"))
     }
 
     @Test
@@ -28,7 +27,6 @@ class UnicodeStylingEngineTest {
         val input = "Ah"
         val result = UnicodeStylingEngine.applyStyle(input, UnicodeStyle.ITALIC)
         assertNotEquals(input, result)
-        // italic small h has code point U+210E
         assertTrue(result.contains("ℎ") || result.contains("𝘈"))
     }
 
@@ -47,6 +45,13 @@ class UnicodeStylingEngineTest {
     }
 
     @Test
+    fun testSquaredSolidStyle() {
+        val input = "A"
+        val result = UnicodeStylingEngine.applyStyle(input, UnicodeStyle.SQUARED_SOLID)
+        assertEquals("🅰", result)
+    }
+
+    @Test
     fun testBubbleStyle() {
         val input = "B"
         val result = UnicodeStylingEngine.applyStyle(input, UnicodeStyle.BUBBLE)
@@ -54,9 +59,44 @@ class UnicodeStylingEngineTest {
     }
 
     @Test
-    fun testSquaredSolidStyle() {
+    fun testFullWidthStyle() {
+        val input = "Ab"
+        val result = UnicodeStylingEngine.applyStyle(input, UnicodeStyle.FULL_WIDTH)
+        assertEquals("Ａｂ", result)
+    }
+
+    @Test
+    fun testStrikethroughStyle() {
+        val input = "Ab"
+        val result = UnicodeStylingEngine.applyStyle(input, UnicodeStyle.STRIKETHROUGH)
+        assertTrue(result.contains("\u0336"))
+    }
+
+    @Test
+    fun testUnderlineStyle() {
+        val input = "Ab"
+        val result = UnicodeStylingEngine.applyStyle(input, UnicodeStyle.UNDERLINE)
+        assertTrue(result.contains("\u0332"))
+    }
+
+    @Test
+    fun testSuperscriptStyle() {
+        val input = "0"
+        val result = UnicodeStylingEngine.applyStyle(input, UnicodeStyle.SUPERSCRIPT)
+        assertEquals("⁰", result)
+    }
+
+    @Test
+    fun testSubscriptStyle() {
+        val input = "0"
+        val result = UnicodeStylingEngine.applyStyle(input, UnicodeStyle.SUBSCRIPT)
+        assertEquals("₀", result)
+    }
+
+    @Test
+    fun testBoldItalicStyle() {
         val input = "A"
-        val result = UnicodeStylingEngine.applyStyle(input, UnicodeStyle.SQUARED_SOLID)
-        assertEquals("🅰", result)
+        val result = UnicodeStylingEngine.applyStyle(input, UnicodeStyle.BOLD_ITALIC)
+        assertEquals("𝑨", result)
     }
 }

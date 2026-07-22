@@ -42,5 +42,30 @@ interface KeyboardRepository {
     fun getPremiumUnlocked(): Flow<Boolean>
     suspend fun savePremiumUnlocked(unlocked: Boolean)
 
+    // Phase 6 Preferences
+    fun getColorfulPreviewEnabled(): Flow<Boolean>
+    suspend fun saveColorfulPreviewEnabled(enabled: Boolean)
+
+    fun getGiantWordsEnabled(): Flow<Boolean>
+    suspend fun saveGiantWordsEnabled(enabled: Boolean)
+
+    fun getKeyboardHeight(): Flow<String>
+    suspend fun saveKeyboardHeight(height: String)
+
+    fun getVibrationStrength(): Flow<Int>
+    suspend fun saveVibrationStrength(strength: Int)
+
+    fun getKeySoundVolume(): Flow<Int>
+    suspend fun saveKeySoundVolume(volume: Int)
+
+    fun getNumberRowEnabled(): Flow<Boolean>
+    suspend fun saveNumberRowEnabled(enabled: Boolean)
+
+    fun getAutoSuggestionsEnabled(): Flow<Boolean>
+    suspend fun saveAutoSuggestionsEnabled(enabled: Boolean)
+
+    fun getSwipeTypingEnabled(): Flow<Boolean>
+    suspend fun saveSwipeTypingEnabled(enabled: Boolean)
+
     suspend fun clearAllArt()
 }
