@@ -35,5 +35,11 @@
             </intent-filter>
         </activity>
 
+        <!-- Art Gallery Activity -->
+        <activity
+            android:name=".presentation.settings.ArtGalleryActivity"
+            android:exported="false"
+            android:theme="@style/Theme.SpellType" />
+
     </application>
 </manifest>

@@ -66,6 +66,46 @@ class KeyboardRepositoryImpl(
         preferences.saveCustomSignature(signature)
     }
 
+    override fun getFavoriteStyles(): Flow<Set<String>> {
+        return preferences.favoriteStylesFlow
+    }
+
+    override suspend fun saveFavoriteStyles(favorites: Set<String>) {
+        preferences.saveFavoriteStyles(favorites)
+    }
+
+    override fun getVibrationEnabled(): Flow<Boolean> {
+        return preferences.vibrationEnabledFlow
+    }
+
+    override suspend fun saveVibrationEnabled(enabled: Boolean) {
+        preferences.saveVibrationEnabled(enabled)
+    }
+
+    override fun getSoundEnabled(): Flow<Boolean> {
+        return preferences.soundEnabledFlow
+    }
+
+    override suspend fun saveSoundEnabled(enabled: Boolean) {
+        preferences.saveSoundEnabled(enabled)
+    }
+
+    override fun getThemeSelection(): Flow<String> {
+        return preferences.themeSelectionFlow
+    }
+
+    override suspend fun saveThemeSelection(theme: String) {
+        preferences.saveThemeSelection(theme)
+    }
+
+    override fun getPremiumUnlocked(): Flow<Boolean> {
+        return preferences.premiumUnlockedFlow
+    }
+
+    override suspend fun savePremiumUnlocked(unlocked: Boolean) {
+        preferences.savePremiumUnlocked(unlocked)
+    }
+
     override suspend fun clearAllArt() {
         savedArtDao.deleteAll()
     }

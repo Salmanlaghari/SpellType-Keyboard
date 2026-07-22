@@ -27,5 +27,20 @@ interface KeyboardRepository {
     fun getCustomSignature(): Flow<String>
     suspend fun saveCustomSignature(signature: String)
 
+    fun getFavoriteStyles(): Flow<Set<String>>
+    suspend fun saveFavoriteStyles(favorites: Set<String>)
+
+    fun getVibrationEnabled(): Flow<Boolean>
+    suspend fun saveVibrationEnabled(enabled: Boolean)
+
+    fun getSoundEnabled(): Flow<Boolean>
+    suspend fun saveSoundEnabled(enabled: Boolean)
+
+    fun getThemeSelection(): Flow<String>
+    suspend fun saveThemeSelection(theme: String)
+
+    fun getPremiumUnlocked(): Flow<Boolean>
+    suspend fun savePremiumUnlocked(unlocked: Boolean)
+
     suspend fun clearAllArt()
 }

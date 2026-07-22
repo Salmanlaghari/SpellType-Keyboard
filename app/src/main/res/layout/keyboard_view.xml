@@ -32,74 +32,30 @@
             android:fillViewport="true">
 
             <LinearLayout
+                android:id="@+id/quick_art_container"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
-
-                <TextView
-                    android:id="@+id/chip_none"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Normal"
-                    android:textColor="@color/key_text_color"
-                    android:textSize="12sp"
-                    android:background="@drawable/chip_active_background"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:layout_marginHorizontal="4dp"/>
-
-                <TextView
-                    android:id="@+id/chip_box"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Box ┌─┐"
-                    android:textColor="@color/key_text_color"
-                    android:textSize="12sp"
-                    android:background="@drawable/chip_inactive_background"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:layout_marginHorizontal="4dp"/>
-
-                <TextView
-                    android:id="@+id/chip_star"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Star ★"
-                    android:textColor="@color/key_text_color"
-                    android:textSize="12sp"
-                    android:background="@drawable/chip_inactive_background"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:layout_marginHorizontal="4dp"/>
-
-                <TextView
-                    android:id="@+id/chip_bracket"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Bracket 【】"
-                    android:textColor="@color/key_text_color"
-                    android:textSize="12sp"
-                    android:background="@drawable/chip_inactive_background"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:layout_marginHorizontal="4dp"/>
-
-                <TextView
-                    android:id="@+id/chip_diamond"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Diamond ◆"
-                    android:textColor="@color/key_text_color"
-                    android:textSize="12sp"
-                    android:background="@drawable/chip_inactive_background"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:layout_marginHorizontal="4dp"/>
-
+                <!-- Programmatically populated with style chips at runtime -->
             </LinearLayout>
         </HorizontalScrollView>
     </LinearLayout>
+
+    <!-- Live Preview Bar -->
+    <TextView
+        android:id="@+id/tv_keyboard_live_preview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#05070C"
+        android:textColor="@color/key_text_color"
+        android:textSize="12sp"
+        android:fontFamily="monospace"
+        android:gravity="center"
+        android:paddingVertical="4dp"
+        android:paddingHorizontal="16dp"
+        android:visibility="gone"
+        android:text="Preview goes here"/>
 
     <!-- Row 1 -->
     <LinearLayout

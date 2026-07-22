@@ -4,11 +4,16 @@ import android.inputmethodservice.InputMethodService
 import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.InputConnection
+import android.widget.LinearLayout
 import android.widget.TextView
 import com.spelltype.keyboard.R
 import com.spelltype.keyboard.data.datastore.KeyboardPreferences
 import com.spelltype.keyboard.data.db.SpellTypeDatabase
 import com.spelltype.keyboard.data.repository.KeyboardRepositoryImpl
+import com.spelltype.keyboard.domain.ArtEngine
+import com.spelltype.keyboard.domain.ShapeEngine
+import com.spelltype.keyboard.domain.StyleCategorizer
+import com.spelltype.keyboard.domain.UnicodeStylingEngine
 import com.spelltype.keyboard.domain.model.FrameStyle
 import com.spelltype.keyboard.domain.model.ShapeLayout
 import com.spelltype.keyboard.domain.model.UnicodeStyle
@@ -31,6 +36,9 @@ class SpellTypeIME : InputMethodService() {
     private var activeUnicode = UnicodeStyle.NONE
     private var glitterEnabled = false
     private var customSignature = ""
+    private var favoriteStyles = emptySet<String>()
+    private var vibrationEnabled = true
+    private var soundEnabled = true
 
     private var isShifted = false
     private var isSymbolMode = false
@@ -66,11 +74,6 @@ class SpellTypeIME : InputMethodService() {
 
     private var keyViews = mutableMapOf<Int, TextView>()
     private var keyboardRootView: View? = null
-    private var chipNone: TextView? = null
-    private var chipBox: TextView? = null
-    private var chipStar: TextView? = null
-    private var chipBracket: TextView? = null
-    private var chipDiamond: TextView? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -83,64 +86,113 @@ class SpellTypeIME : InputMethodService() {
         getSelectedFrameStyleUseCase = GetSelectedFrameStyleUseCase(repository)
     }
 
+    override fun onStartInputView(info: android.view.inputmethod.EditorInfo?, restarting: Boolean) {
+        super.onStartInputView(info, restarting)
+        composingText.clear()
+        updateLivePreviewBar()
+    }
+
     override fun onCreateInputView(): View {
         val keyboardView = layoutInflater.inflate(R.layout.keyboard_view, null)
         keyboardRootView = keyboardView
 
-        // Initialize frame style chips
-        chipNone = keyboardView.findViewById(R.id.chip_none)
-        chipBox = keyboardView.findViewById(R.id.chip_box)
-        chipStar = keyboardView.findViewById(R.id.chip_star)
-        chipBracket = keyboardView.findViewById(R.id.chip_bracket)
-        chipDiamond = keyboardView.findViewById(R.id.chip_diamond)
-
-        // Register click listeners for style chips
-        chipNone?.setOnClickListener { selectFrameStyle(FrameStyle.NONE) }
-        chipBox?.setOnClickListener { selectFrameStyle(FrameStyle.BOX) }
-        chipStar?.setOnClickListener { selectFrameStyle(FrameStyle.STAR) }
-        chipBracket?.setOnClickListener { selectFrameStyle(FrameStyle.BRACKET) }
-        chipDiamond?.setOnClickListener { selectFrameStyle(FrameStyle.DIAMOND) }
-
-        // Find and map letter keys
+        // Map standard and special letter keys
         for (id in letterKeyIds) {
             val keyView: TextView = keyboardView.findViewById(id)
             keyViews[id] = keyView
-            keyView.setOnClickListener { handleKeyClick(keyView.text.toString()) }
+            keyView.setOnClickListener {
+                onKeyClickFeedback(keyView)
+                handleKeyClick(keyView.text.toString())
+            }
         }
 
         // Special keys
-        keyboardView.findViewById<View>(R.id.btn_shift).setOnClickListener { toggleShift() }
-        keyboardView.findViewById<View>(R.id.btn_backspace).setOnClickListener { handleBackspace() }
-        keyboardView.findViewById<View>(R.id.btn_mode).setOnClickListener { toggleMode() }
-        keyboardView.findViewById<View>(R.id.btn_space).setOnClickListener { handleSpace() }
-        keyboardView.findViewById<View>(R.id.btn_enter).setOnClickListener { handleEnter() }
+        val btnShift = keyboardView.findViewById<View>(R.id.btn_shift)
+        btnShift.setOnClickListener {
+            onKeyClickFeedback(btnShift)
+            toggleShift()
+        }
+
+        val btnBackspace = keyboardView.findViewById<View>(R.id.btn_backspace)
+        btnBackspace.setOnClickListener {
+            onKeyClickFeedback(btnBackspace)
+            handleBackspace()
+        }
+
+        val btnMode = keyboardView.findViewById<View>(R.id.btn_mode)
+        btnMode.setOnClickListener {
+            onKeyClickFeedback(btnMode)
+            toggleMode()
+        }
+
+        val btnSpace = keyboardView.findViewById<View>(R.id.btn_space)
+        btnSpace.setOnClickListener {
+            onKeyClickFeedback(btnSpace)
+            handleSpace()
+        }
+
+        val btnEnter = keyboardView.findViewById<View>(R.id.btn_enter)
+        btnEnter.setOnClickListener {
+            onKeyClickFeedback(btnEnter)
+            handleEnter()
+        }
 
         // Load dynamic settings flow
         serviceScope.launch {
             getSelectedFrameStyleUseCase().collect { style ->
                 activeStyle = style
                 updateChipHighlighting()
+                updateLivePreviewBar()
             }
         }
         serviceScope.launch {
             repository.getSelectedShapeLayout().collect { shape ->
                 activeShape = shape
+                updateLivePreviewBar()
             }
         }
         serviceScope.launch {
             repository.getSelectedUnicodeStyle().collect { unicode ->
                 activeUnicode = unicode
+                updateLivePreviewBar()
             }
         }
         serviceScope.launch {
             repository.getGlitterEnabled().collect { enabled ->
                 glitterEnabled = enabled
+                updateLivePreviewBar()
             }
         }
         serviceScope.launch {
             repository.getCustomSignature().collect { signature ->
                 customSignature = signature
+                updateLivePreviewBar()
             }
+        }
+        serviceScope.launch {
+            repository.getFavoriteStyles().collect { favorites ->
+                favoriteStyles = favorites
+                val container: LinearLayout? = keyboardRootView?.findViewById(R.id.quick_art_container)
+                if (container != null) {
+                    populateQuickArtBar(container)
+                }
+            }
+        }
+        serviceScope.launch {
+            repository.getVibrationEnabled().collect { enabled ->
+                vibrationEnabled = enabled
+            }
+        }
+        serviceScope.launch {
+            repository.getSoundEnabled().collect { enabled ->
+                soundEnabled = enabled
+            }
+        }
+
+        // Programmatically populate Quick Art Bar container with 36+ chips
+        val container: LinearLayout? = keyboardView.findViewById(R.id.quick_art_container)
+        if (container != null) {
+            populateQuickArtBar(container)
         }
 
         updateKeyLabels()
@@ -152,23 +204,102 @@ class SpellTypeIME : InputMethodService() {
         serviceJob.cancel()
     }
 
+    private fun getSortedStyles(): List<FrameStyle> {
+        val allStyles = FrameStyle.values().toList()
+        return allStyles.sortedWith(compareBy(
+            { it != FrameStyle.NONE },
+            { !favoriteStyles.contains(it.name) }
+        ))
+    }
+
+    private fun populateQuickArtBar(container: LinearLayout) {
+        container.removeAllViews()
+        val styles = getSortedStyles()
+        for (style in styles) {
+            val textView = TextView(this)
+
+            // Add custom visual decorators for favorites or premiums
+            val isFav = favoriteStyles.contains(style.name)
+            val isPrem = com.spelltype.keyboard.domain.StyleCategorizer.isPremium(style)
+            val prefix = when {
+                isFav -> "♥ "
+                isPrem -> "👑 "
+                else -> ""
+            }
+
+            val name = if (style == FrameStyle.NONE) "Normal" else style.name.lowercase().replace("_", " ").replaceFirstChar { it.uppercase() }
+            textView.text = "$prefix$name"
+            textView.setTextColor(resources.getColor(R.color.key_text_color, null))
+            textView.textSize = 12f
+
+            val density = resources.displayMetrics.density
+            val padLR = (12 * density).toInt()
+            val padTB = (6 * density).toInt()
+            textView.setPadding(padLR, padTB, padLR, padTB)
+
+            val params = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            val margin = (4 * density).toInt()
+            params.setMargins(margin, 0, margin, 0)
+            textView.layoutParams = params
+
+            textView.isClickable = true
+            textView.isFocusable = true
+            textView.setBackgroundResource(
+                if (activeStyle == style) R.drawable.chip_active_background
+                else R.drawable.chip_inactive_background
+            )
+
+            textView.setOnClickListener {
+                selectFrameStyle(style)
+            }
+            container.addView(textView)
+        }
+    }
+
+    private fun onKeyClickFeedback(view: View) {
+        if (vibrationEnabled) {
+            view.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
+        }
+        if (soundEnabled) {
+            val am = getSystemService(android.content.Context.AUDIO_SERVICE) as? android.media.AudioManager
+            am?.playSoundEffect(android.media.AudioManager.FX_KEYPRESS_STANDARD)
+        }
+        view.animate()
+            .scaleX(1.15f)
+            .scaleY(1.15f)
+            .setDuration(70)
+            .withEndAction {
+                view.animate()
+                    .scaleX(1.0f)
+                    .scaleY(1.0f)
+                    .setDuration(70)
+                    .start()
+            }.start()
+    }
+
     private fun selectFrameStyle(style: FrameStyle) {
         serviceScope.launch {
-            if (composingText.isNotEmpty()) {
-                commitComposingText()
-            }
             saveSelectedFrameStyleUseCase(style)
             activeStyle = style
             updateChipHighlighting()
+            updateLivePreviewBar()
         }
     }
 
     private fun updateChipHighlighting() {
-        chipNone?.setBackgroundResource(if (activeStyle == FrameStyle.NONE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        chipBox?.setBackgroundResource(if (activeStyle == FrameStyle.BOX) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        chipStar?.setBackgroundResource(if (activeStyle == FrameStyle.STAR) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        chipBracket?.setBackgroundResource(if (activeStyle == FrameStyle.BRACKET) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        chipDiamond?.setBackgroundResource(if (activeStyle == FrameStyle.DIAMOND) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        val container = keyboardRootView?.findViewById<LinearLayout>(R.id.quick_art_container) ?: return
+        val styles = getSortedStyles()
+        for (i in 0 until container.childCount) {
+            val child = container.getChildAt(i) as? TextView ?: continue
+            val style = styles.getOrNull(i) ?: continue
+            child.setBackgroundResource(
+                if (activeStyle == style) R.drawable.chip_active_background
+                else R.drawable.chip_inactive_background
+            )
+        }
     }
 
     private fun isStylingActive(): Boolean {
@@ -185,9 +316,9 @@ class SpellTypeIME : InputMethodService() {
         } else {
             composingText.append(text)
             ic.setComposingText(composingText.toString(), 1)
+            updateLivePreviewBar()
         }
 
-        // Auto reset Shift if it was standard shifted
         if (isShifted && !isSymbolMode) {
             isShifted = false
             updateKeyLabels()
@@ -237,6 +368,7 @@ class SpellTypeIME : InputMethodService() {
             } else {
                 ic.setComposingText(composingText.toString(), 1)
             }
+            updateLivePreviewBar()
         } else {
             ic.deleteSurroundingText(1, 0)
         }
@@ -269,6 +401,7 @@ class SpellTypeIME : InputMethodService() {
     private fun commitComposingText(onComplete: (() -> Unit)? = null) {
         val textToFormat = composingText.toString()
         composingText.clear()
+        updateLivePreviewBar()
         val ic: InputConnection = currentInputConnection ?: return
 
         serviceScope.launch {
@@ -282,6 +415,40 @@ class SpellTypeIME : InputMethodService() {
             )
             ic.commitText(styled, 1)
             onComplete?.invoke()
+        }
+    }
+
+    private fun updateLivePreviewBar() {
+        val previewTextView = keyboardRootView?.findViewById<TextView>(R.id.tv_keyboard_live_preview) ?: return
+        if (composingText.isEmpty()) {
+            previewTextView.visibility = View.GONE
+        } else {
+            previewTextView.visibility = View.VISIBLE
+
+            val textToFormat = composingText.toString()
+            var processed = UnicodeStylingEngine.applyStyle(textToFormat, activeUnicode)
+
+            if (glitterEnabled) {
+                val glitterSymbols = listOf("✨", "🌟", "⭐", "💫")
+                val words = processed.split(" ")
+                val sb = StringBuilder()
+                for (i in words.indices) {
+                    sb.append(words[i])
+                    if (i < words.size - 1) {
+                        val symbol = glitterSymbols[i % glitterSymbols.size]
+                        sb.append(" $symbol ")
+                    }
+                }
+                processed = if (words.size == 1) "✨ $processed ✨" else sb.toString()
+            }
+
+            processed = ShapeEngine.applyShape(processed, activeShape)
+            processed = ArtEngine.applyFrame(processed, activeStyle)
+            if (customSignature.isNotEmpty()) {
+                processed = "$processed\n$customSignature"
+            }
+
+            previewTextView.text = processed
         }
     }
 }

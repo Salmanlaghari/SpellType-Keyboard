@@ -40,6 +40,21 @@ class SettingsViewModel(
     val customSignature: StateFlow<String> = repository.getCustomSignature()
         .stateIn(viewModelScope, SharingStarted.Eagerly, "")
 
+    val favoriteStyles: StateFlow<Set<String>> = repository.getFavoriteStyles()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
+
+    val vibrationEnabled: StateFlow<Boolean> = repository.getVibrationEnabled()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    val soundEnabled: StateFlow<Boolean> = repository.getSoundEnabled()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    val themeSelection: StateFlow<String> = repository.getThemeSelection()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, "DARK")
+
+    val premiumUnlocked: StateFlow<Boolean> = repository.getPremiumUnlocked()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
     fun selectFrameStyle(style: FrameStyle) {
         viewModelScope.launch {
             saveSelectedFrameStyleUseCase(style)
@@ -67,6 +82,42 @@ class SettingsViewModel(
     fun setCustomSignature(signature: String) {
         viewModelScope.launch {
             repository.saveCustomSignature(signature)
+        }
+    }
+
+    fun toggleFavoriteStyle(style: FrameStyle) {
+        viewModelScope.launch {
+            val current = favoriteStyles.value.toMutableSet()
+            if (current.contains(style.name)) {
+                current.remove(style.name)
+            } else {
+                current.add(style.name)
+            }
+            repository.saveFavoriteStyles(current)
+        }
+    }
+
+    fun setVibrationEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            repository.saveVibrationEnabled(enabled)
+        }
+    }
+
+    fun setSoundEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            repository.saveSoundEnabled(enabled)
+        }
+    }
+
+    fun setThemeSelection(theme: String) {
+        viewModelScope.launch {
+            repository.saveThemeSelection(theme)
+        }
+    }
+
+    fun setPremiumUnlocked(unlocked: Boolean) {
+        viewModelScope.launch {
+            repository.savePremiumUnlocked(unlocked)
         }
     }
 
