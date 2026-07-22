@@ -10,10 +10,11 @@ import com.spelltype.keyboard.data.datastore.KeyboardPreferences
 import com.spelltype.keyboard.data.db.SpellTypeDatabase
 import com.spelltype.keyboard.data.repository.KeyboardRepositoryImpl
 import com.spelltype.keyboard.domain.model.FrameStyle
+import com.spelltype.keyboard.domain.model.ShapeLayout
+import com.spelltype.keyboard.domain.model.UnicodeStyle
 import com.spelltype.keyboard.domain.repository.KeyboardRepository
 import com.spelltype.keyboard.domain.usecase.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.first
 
 class SpellTypeIME : InputMethodService() {
 
@@ -26,12 +27,16 @@ class SpellTypeIME : InputMethodService() {
     private lateinit var getSelectedFrameStyleUseCase: GetSelectedFrameStyleUseCase
 
     private var activeStyle = FrameStyle.NONE
+    private var activeShape = ShapeLayout.NONE
+    private var activeUnicode = UnicodeStyle.NONE
+    private var glitterEnabled = false
+    private var customSignature = ""
+
     private var isShifted = false
     private var isSymbolMode = false
 
     private val composingText = StringBuilder()
 
-    // Key views mapping for easy letter updates
     private val letterKeyIds = listOf(
         R.id.btn_q, R.id.btn_w, R.id.btn_e, R.id.btn_r, R.id.btn_t,
         R.id.btn_y, R.id.btn_u, R.id.btn_i, R.id.btn_o, R.id.btn_p,
@@ -110,11 +115,31 @@ class SpellTypeIME : InputMethodService() {
         keyboardView.findViewById<View>(R.id.btn_space).setOnClickListener { handleSpace() }
         keyboardView.findViewById<View>(R.id.btn_enter).setOnClickListener { handleEnter() }
 
-        // Load initially saved style
+        // Load dynamic settings flow
         serviceScope.launch {
             getSelectedFrameStyleUseCase().collect { style ->
                 activeStyle = style
                 updateChipHighlighting()
+            }
+        }
+        serviceScope.launch {
+            repository.getSelectedShapeLayout().collect { shape ->
+                activeShape = shape
+            }
+        }
+        serviceScope.launch {
+            repository.getSelectedUnicodeStyle().collect { unicode ->
+                activeUnicode = unicode
+            }
+        }
+        serviceScope.launch {
+            repository.getGlitterEnabled().collect { enabled ->
+                glitterEnabled = enabled
+            }
+        }
+        serviceScope.launch {
+            repository.getCustomSignature().collect { signature ->
+                customSignature = signature
             }
         }
 
@@ -146,9 +171,16 @@ class SpellTypeIME : InputMethodService() {
         chipDiamond?.setBackgroundResource(if (activeStyle == FrameStyle.DIAMOND) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
     }
 
+    private fun isStylingActive(): Boolean {
+        return activeStyle != FrameStyle.NONE ||
+                activeShape != ShapeLayout.NONE ||
+                activeUnicode != UnicodeStyle.NONE ||
+                glitterEnabled
+    }
+
     private fun handleKeyClick(text: String) {
         val ic: InputConnection = currentInputConnection ?: return
-        if (activeStyle == FrameStyle.NONE) {
+        if (!isStylingActive()) {
             ic.commitText(text, 1)
         } else {
             composingText.append(text)
@@ -183,7 +215,6 @@ class SpellTypeIME : InputMethodService() {
             val view = keyViews[id] ?: continue
 
             if (isSymbolMode) {
-                // Symbols mode mapping
                 if (i < symbols.size) {
                     view.text = symbols[i]
                     view.visibility = View.VISIBLE
@@ -191,7 +222,6 @@ class SpellTypeIME : InputMethodService() {
                     view.visibility = View.INVISIBLE
                 }
             } else {
-                // Normal letters mode mapping
                 view.visibility = View.VISIBLE
                 view.text = if (isShifted) lettersUpper[i] else lettersLower[i]
             }
@@ -200,7 +230,7 @@ class SpellTypeIME : InputMethodService() {
 
     private fun handleBackspace() {
         val ic: InputConnection = currentInputConnection ?: return
-        if (activeStyle != FrameStyle.NONE && composingText.isNotEmpty()) {
+        if (isStylingActive() && composingText.isNotEmpty()) {
             composingText.deleteAt(composingText.length - 1)
             if (composingText.isEmpty()) {
                 ic.commitText("", 1)
@@ -214,7 +244,7 @@ class SpellTypeIME : InputMethodService() {
 
     private fun handleSpace() {
         val ic: InputConnection = currentInputConnection ?: return
-        if (activeStyle != FrameStyle.NONE && composingText.isNotEmpty()) {
+        if (isStylingActive() && composingText.isNotEmpty()) {
             commitComposingText {
                 ic.commitText(" ", 1)
             }
@@ -225,7 +255,7 @@ class SpellTypeIME : InputMethodService() {
 
     private fun handleEnter() {
         val ic: InputConnection = currentInputConnection ?: return
-        if (activeStyle != FrameStyle.NONE && composingText.isNotEmpty()) {
+        if (isStylingActive() && composingText.isNotEmpty()) {
             commitComposingText {
                 ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER))
                 ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER))
@@ -242,7 +272,14 @@ class SpellTypeIME : InputMethodService() {
         val ic: InputConnection = currentInputConnection ?: return
 
         serviceScope.launch {
-            val styled = applyFrameUseCase(textToFormat, activeStyle)
+            val styled = applyFrameUseCase(
+                text = textToFormat,
+                style = activeStyle,
+                shape = activeShape,
+                unicode = activeUnicode,
+                glitterEnabled = glitterEnabled,
+                signature = customSignature
+            )
             ic.commitText(styled, 1)
             onComplete?.invoke()
         }

@@ -14,7 +14,7 @@
         <com.google.android.material.appbar.MaterialToolbar
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:title="SpellType Keyboard"
+            app:title="SpellType Keyboard 🪄"
             app:titleTextColor="@color/key_text_color"
             app:titleCentered="true"/>
     </com.google.android.material.appbar.AppBarLayout>
@@ -30,7 +30,6 @@
             android:orientation="vertical"
             android:paddingBottom="32dp">
 
-            <!-- Subtitle/Mlogan -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -122,13 +121,87 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Try Frame Art Generator"
+                        android:text="Try Art Engine Features"
                         android:textColor="@color/key_text_color"
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:layout_marginBottom="12dp"/>
 
-                    <!-- Frame Selector Chips inside Scroll -->
+                    <!-- Category 1: Frame Styles -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Decorative Frame Styles (30+)"
+                        android:textColor="@color/accent_color"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="6dp"/>
+
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:scrollbars="none"
+                        android:layout_marginBottom="12dp">
+
+                        <LinearLayout
+                            android:id="@+id/container_frame_chips"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+                            <!-- Populated dynamically or defined in layout, let's keep the core ones visible here -->
+                            <TextView android:id="@+id/sett_chip_none" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Normal" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_active_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_chip_box" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Box ┌─┐" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_chip_box_double" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Double ╔═╗" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_chip_box_rounded" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Rounded ╭─╮" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_chip_star" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Star ★" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_chip_diamond" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Diamond ◆" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_chip_fire" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Fire 🔥" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_chip_hearts" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Hearts ❤️" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_chip_sparks" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sparks ✨" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_chip_party" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Party 🎉" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                        </LinearLayout>
+                    </HorizontalScrollView>
+
+                    <!-- Category 2: Shape Layouts -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Shape Layouts"
+                        android:textColor="@color/accent_color"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="6dp"/>
+
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:scrollbars="none"
+                        android:layout_marginBottom="12dp">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView android:id="@+id/sett_shape_none" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="No Shape" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_active_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_shape_pyramid" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Pyramid ▲" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_shape_heart" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Heart ♥" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_shape_diamond" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Diamond ◆" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_shape_zigzag" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Zigzag 〰" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_shape_wave" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Wave 🌊" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                        </LinearLayout>
+                    </HorizontalScrollView>
+
+                    <!-- Category 3: Unicode Fonts -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Mixed Unicode Styles"
+                        android:textColor="@color/accent_color"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="6dp"/>
+
                     <HorizontalScrollView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -140,67 +213,51 @@
                             android:layout_height="wrap_content"
                             android:orientation="horizontal">
 
-                            <TextView
-                                android:id="@+id/sett_chip_none"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Normal"
-                                android:textColor="@color/key_text_color"
-                                android:textSize="12sp"
-                                android:background="@drawable/chip_active_background"
-                                android:clickable="true"
-                                android:focusable="true"
-                                android:layout_marginRight="8dp"/>
-
-                            <TextView
-                                android:id="@+id/sett_chip_box"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Box ┌─┐"
-                                android:textColor="@color/key_text_color"
-                                android:textSize="12sp"
-                                android:background="@drawable/chip_inactive_background"
-                                android:clickable="true"
-                                android:focusable="true"
-                                android:layout_marginRight="8dp"/>
-
-                            <TextView
-                                android:id="@+id/sett_chip_star"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Star ★"
-                                android:textColor="@color/key_text_color"
-                                android:textSize="12sp"
-                                android:background="@drawable/chip_inactive_background"
-                                android:clickable="true"
-                                android:focusable="true"
-                                android:layout_marginRight="8dp"/>
-
-                            <TextView
-                                android:id="@+id/sett_chip_bracket"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Bracket 【】"
-                                android:textColor="@color/key_text_color"
-                                android:textSize="12sp"
-                                android:background="@drawable/chip_inactive_background"
-                                android:clickable="true"
-                                android:focusable="true"
-                                android:layout_marginRight="8dp"/>
-
-                            <TextView
-                                android:id="@+id/sett_chip_diamond"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Diamond ◆"
-                                android:textColor="@color/key_text_color"
-                                android:textSize="12sp"
-                                android:background="@drawable/chip_inactive_background"
-                                android:clickable="true"
-                                android:focusable="true"
-                                android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_unicode_none" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Standard" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_active_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_unicode_bold" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Bold 𝐀" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_unicode_italic" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Italic 𝘈" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_unicode_gothic" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Gothic 𝔄" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_unicode_cursive" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Cursive 𝒜" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_unicode_circled" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Circled Ⓐ" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_unicode_squared" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Squared 🄰" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_unicode_bubble" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Bubble 𝔸" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
                         </LinearLayout>
                     </HorizontalScrollView>
+
+                    <!-- Glitter Toggle & Custom Signature -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Enable Glitter Effect ✨"
+                            android:textColor="@color/key_text_color"
+                            android:textSize="14sp"
+                            android:textStyle="bold"/>
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_glitter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+                    </LinearLayout>
+
+                    <EditText
+                        android:id="@+id/et_custom_signature"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Custom Signature (e.g. — SpellType)"
+                        android:textColorHint="@color/text_secondary"
+                        android:textColor="@color/key_text_color"
+                        android:backgroundTint="@color/accent_color"
+                        android:textSize="14sp"
+                        android:inputType="text"
+                        android:layout_marginBottom="16dp"/>
 
                     <!-- Input text box -->
                     <EditText

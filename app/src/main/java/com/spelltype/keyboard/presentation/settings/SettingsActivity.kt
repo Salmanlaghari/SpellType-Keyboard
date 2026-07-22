@@ -19,7 +19,11 @@ import com.spelltype.keyboard.data.db.SpellTypeDatabase
 import com.spelltype.keyboard.data.datastore.KeyboardPreferences
 import com.spelltype.keyboard.data.repository.KeyboardRepositoryImpl
 import com.spelltype.keyboard.domain.ArtEngine
+import com.spelltype.keyboard.domain.ShapeEngine
+import com.spelltype.keyboard.domain.UnicodeStylingEngine
 import com.spelltype.keyboard.domain.model.FrameStyle
+import com.spelltype.keyboard.domain.model.ShapeLayout
+import com.spelltype.keyboard.domain.model.UnicodeStyle
 import kotlinx.coroutines.launch
 
 class SettingsActivity : AppCompatActivity() {
@@ -64,16 +68,49 @@ class SettingsActivity : AppCompatActivity() {
             im.showInputMethodPicker()
         }
 
-        // Chip selection listeners
+        // Frame selection chips
         binding.settChipNone.setOnClickListener { viewModel.selectFrameStyle(FrameStyle.NONE) }
         binding.settChipBox.setOnClickListener { viewModel.selectFrameStyle(FrameStyle.BOX) }
+        binding.settChipBoxDouble.setOnClickListener { viewModel.selectFrameStyle(FrameStyle.BOX_DOUBLE) }
+        binding.settChipBoxRounded.setOnClickListener { viewModel.selectFrameStyle(FrameStyle.BOX_ROUNDED) }
         binding.settChipStar.setOnClickListener { viewModel.selectFrameStyle(FrameStyle.STAR) }
-        binding.settChipBracket.setOnClickListener { viewModel.selectFrameStyle(FrameStyle.BRACKET) }
         binding.settChipDiamond.setOnClickListener { viewModel.selectFrameStyle(FrameStyle.DIAMOND) }
+        binding.settChipFire.setOnClickListener { viewModel.selectFrameStyle(FrameStyle.FIRE) }
+        binding.settChipHearts.setOnClickListener { viewModel.selectFrameStyle(FrameStyle.HEARTS) }
+        binding.settChipSparks.setOnClickListener { viewModel.selectFrameStyle(FrameStyle.SPARKS) }
+        binding.settChipParty.setOnClickListener { viewModel.selectFrameStyle(FrameStyle.PARTY) }
+
+        // Shape selection chips
+        binding.settShapeNone.setOnClickListener { viewModel.selectShapeLayout(ShapeLayout.NONE) }
+        binding.settShapePyramid.setOnClickListener { viewModel.selectShapeLayout(ShapeLayout.PYRAMID) }
+        binding.settShapeHeart.setOnClickListener { viewModel.selectShapeLayout(ShapeLayout.HEART) }
+        binding.settShapeDiamond.setOnClickListener { viewModel.selectShapeLayout(ShapeLayout.DIAMOND) }
+        binding.settShapeZigzag.setOnClickListener { viewModel.selectShapeLayout(ShapeLayout.ZIGZAG) }
+        binding.settShapeWave.setOnClickListener { viewModel.selectShapeLayout(ShapeLayout.WAVE) }
+
+        // Unicode styling chips
+        binding.settUnicodeNone.setOnClickListener { viewModel.selectUnicodeStyle(UnicodeStyle.NONE) }
+        binding.settUnicodeBold.setOnClickListener { viewModel.selectUnicodeStyle(UnicodeStyle.BOLD) }
+        binding.settUnicodeItalic.setOnClickListener { viewModel.selectUnicodeStyle(UnicodeStyle.ITALIC) }
+        binding.settUnicodeGothic.setOnClickListener { viewModel.selectUnicodeStyle(UnicodeStyle.GOTHIC) }
+        binding.settUnicodeCursive.setOnClickListener { viewModel.selectUnicodeStyle(UnicodeStyle.CURSIVE) }
+        binding.settUnicodeCircled.setOnClickListener { viewModel.selectUnicodeStyle(UnicodeStyle.CIRCLED) }
+        binding.settUnicodeSquared.setOnClickListener { viewModel.selectUnicodeStyle(UnicodeStyle.SQUARED) }
+        binding.settUnicodeBubble.setOnClickListener { viewModel.selectUnicodeStyle(UnicodeStyle.BUBBLE) }
+
+        // Glitter Switch listener
+        binding.switchGlitter.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.setGlitterEnabled(isChecked)
+        }
+
+        // Custom signature input listener
+        binding.etCustomSignature.addTextChangedListener { text ->
+            viewModel.setCustomSignature(text?.toString() ?: "")
+        }
 
         // Live preview input listener
-        binding.etPreviewInput.addTextChangedListener { text ->
-            updateLivePreview(text?.toString() ?: "", viewModel.selectedFrameStyle.value)
+        binding.etPreviewInput.addTextChangedListener {
+            updateLivePreview()
         }
 
         // Clear all history listener
@@ -85,11 +122,47 @@ class SettingsActivity : AppCompatActivity() {
     private fun observeState() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                // Collect selected frame style
+                // Collect and highlight selected frame style
                 launch {
                     viewModel.selectedFrameStyle.collect { style ->
-                        updateChipHighlighting(style)
-                        updateLivePreview(binding.etPreviewInput.text?.toString() ?: "", style)
+                        updateFrameHighlighting(style)
+                        updateLivePreview()
+                    }
+                }
+
+                // Collect and highlight selected shape layout
+                launch {
+                    viewModel.selectedShapeLayout.collect { shape ->
+                        updateShapeHighlighting(shape)
+                        updateLivePreview()
+                    }
+                }
+
+                // Collect and highlight selected unicode style
+                launch {
+                    viewModel.selectedUnicodeStyle.collect { unicode ->
+                        updateUnicodeHighlighting(unicode)
+                        updateLivePreview()
+                    }
+                }
+
+                // Collect and set glitter toggle state
+                launch {
+                    viewModel.glitterEnabled.collect { enabled ->
+                        if (binding.switchGlitter.isChecked != enabled) {
+                            binding.switchGlitter.isChecked = enabled
+                        }
+                        updateLivePreview()
+                    }
+                }
+
+                // Collect custom signature text
+                launch {
+                    viewModel.customSignature.collect { signature ->
+                        if (binding.etCustomSignature.text?.toString() != signature) {
+                            binding.etCustomSignature.setText(signature)
+                        }
+                        updateLivePreview()
                     }
                 }
 
@@ -110,19 +183,62 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateChipHighlighting(activeStyle: FrameStyle) {
-        binding.settChipNone.setBackgroundResource(if (activeStyle == FrameStyle.NONE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settChipBox.setBackgroundResource(if (activeStyle == FrameStyle.BOX) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settChipStar.setBackgroundResource(if (activeStyle == FrameStyle.STAR) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settChipBracket.setBackgroundResource(if (activeStyle == FrameStyle.BRACKET) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settChipDiamond.setBackgroundResource(if (activeStyle == FrameStyle.DIAMOND) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+    private fun updateFrameHighlighting(active: FrameStyle) {
+        binding.settChipNone.setBackgroundResource(if (active == FrameStyle.NONE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settChipBox.setBackgroundResource(if (active == FrameStyle.BOX) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settChipBoxDouble.setBackgroundResource(if (active == FrameStyle.BOX_DOUBLE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settChipBoxRounded.setBackgroundResource(if (active == FrameStyle.BOX_ROUNDED) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settChipStar.setBackgroundResource(if (active == FrameStyle.STAR) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settChipDiamond.setBackgroundResource(if (active == FrameStyle.DIAMOND) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settChipFire.setBackgroundResource(if (active == FrameStyle.FIRE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settChipHearts.setBackgroundResource(if (active == FrameStyle.HEARTS) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settChipSparks.setBackgroundResource(if (active == FrameStyle.SPARKS) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settChipParty.setBackgroundResource(if (active == FrameStyle.PARTY) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
     }
 
-    private fun updateLivePreview(text: String, style: FrameStyle) {
+    private fun updateShapeHighlighting(active: ShapeLayout) {
+        binding.settShapeNone.setBackgroundResource(if (active == ShapeLayout.NONE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settShapePyramid.setBackgroundResource(if (active == ShapeLayout.PYRAMID) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settShapeHeart.setBackgroundResource(if (active == ShapeLayout.HEART) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settShapeDiamond.setBackgroundResource(if (active == ShapeLayout.DIAMOND) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settShapeZigzag.setBackgroundResource(if (active == ShapeLayout.ZIGZAG) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settShapeWave.setBackgroundResource(if (active == ShapeLayout.WAVE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+    }
+
+    private fun updateUnicodeHighlighting(active: UnicodeStyle) {
+        binding.settUnicodeNone.setBackgroundResource(if (active == UnicodeStyle.NONE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settUnicodeBold.setBackgroundResource(if (active == UnicodeStyle.BOLD) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settUnicodeItalic.setBackgroundResource(if (active == UnicodeStyle.ITALIC) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settUnicodeGothic.setBackgroundResource(if (active == UnicodeStyle.GOTHIC) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settUnicodeCursive.setBackgroundResource(if (active == UnicodeStyle.CURSIVE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settUnicodeCircled.setBackgroundResource(if (active == UnicodeStyle.CIRCLED) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settUnicodeSquared.setBackgroundResource(if (active == UnicodeStyle.SQUARED) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settUnicodeBubble.setBackgroundResource(if (active == UnicodeStyle.BUBBLE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+    }
+
+    private fun updateLivePreview() {
+        val text = binding.etPreviewInput.text?.toString() ?: ""
         if (text.isEmpty()) {
             binding.tvRealtimePreview.text = getString(R.string.type_preview_hint)
-        } else {
-            binding.tvRealtimePreview.text = ArtEngine.applyFrame(text, style)
+            return
         }
+
+        val unicode = viewModel.selectedUnicodeStyle.value
+        val shape = viewModel.selectedShapeLayout.value
+        val frame = viewModel.selectedFrameStyle.value
+        val glitter = viewModel.glitterEnabled.value
+        val signature = viewModel.customSignature.value
+
+        var processed = UnicodeStylingEngine.applyStyle(text, unicode)
+        processed = ShapeEngine.applyShape(processed, shape)
+        processed = ArtEngine.applyFrame(processed, frame)
+        if (glitter) {
+            processed = processed.split("\n").joinToString("\n") { "✨ $it ✨" }
+        }
+        if (signature.isNotEmpty()) {
+            processed = "$processed\n$signature"
+        }
+
+        binding.tvRealtimePreview.text = processed
     }
 }

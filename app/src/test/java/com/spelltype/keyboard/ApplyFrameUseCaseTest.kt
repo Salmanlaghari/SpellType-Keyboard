@@ -1,6 +1,8 @@
 package com.spelltype.keyboard
 
 import com.spelltype.keyboard.domain.model.FrameStyle
+import com.spelltype.keyboard.domain.model.ShapeLayout
+import com.spelltype.keyboard.domain.model.UnicodeStyle
 import com.spelltype.keyboard.domain.usecase.ApplyFrameUseCase
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -43,5 +45,32 @@ class ApplyFrameUseCaseTest {
         assertEquals("Frame Me", savedItem.originalText)
         assertEquals(expected, savedItem.styledText)
         assertEquals(FrameStyle.BOX.name, savedItem.styleName)
+    }
+
+    @Test
+    fun testCombinedPipeline_appliesAllFeatures() = runTest {
+        // Text: "A"
+        // Unicode: CIRCLED ("Ⓐ")
+        // Shape: PYRAMID ("Ⓐ")
+        // Frame: STAR ("★★★★★\n★ Ⓐ ★\n★★★★★")
+        // Glitter: True ("✨ ★★★★★ ✨\n✨ ★ Ⓐ ★ ✨\n✨ ★★★★★ ✨")
+        // Signature: "- Me" ("✨ ★★★★★ ✨\n✨ ★ Ⓐ ★ ✨\n✨ ★★★★★ ✨\n- Me")
+
+        val result = applyFrameUseCase(
+            text = "A",
+            style = FrameStyle.STAR,
+            shape = ShapeLayout.PYRAMID,
+            unicode = UnicodeStyle.CIRCLED,
+            glitterEnabled = true,
+            signature = "- Me"
+        )
+
+        assertTrue(result.contains("Ⓐ"))
+        assertTrue(result.contains("★"))
+        assertTrue(result.contains("✨"))
+        assertTrue(result.endsWith("- Me"))
+
+        val savedList = fakeRepository.getSavedArtList().first()
+        assertEquals(1, savedList.size)
     }
 }

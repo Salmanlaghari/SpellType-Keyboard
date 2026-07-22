@@ -4,6 +4,9 @@ import com.spelltype.keyboard.domain.model.FrameStyle
 import com.spelltype.keyboard.domain.model.SavedArt
 import kotlinx.coroutines.flow.Flow
 
+import com.spelltype.keyboard.domain.model.ShapeLayout
+import com.spelltype.keyboard.domain.model.UnicodeStyle
+
 interface KeyboardRepository {
     fun getSavedArtList(): Flow<List<SavedArt>>
     suspend fun saveArt(art: SavedArt)
@@ -11,5 +14,18 @@ interface KeyboardRepository {
 
     fun getSelectedFrameStyle(): Flow<FrameStyle>
     suspend fun saveSelectedFrameStyle(style: FrameStyle)
+
+    fun getSelectedShapeLayout(): Flow<ShapeLayout>
+    suspend fun saveSelectedShapeLayout(shape: ShapeLayout)
+
+    fun getSelectedUnicodeStyle(): Flow<UnicodeStyle>
+    suspend fun saveSelectedUnicodeStyle(style: UnicodeStyle)
+
+    fun getGlitterEnabled(): Flow<Boolean>
+    suspend fun saveGlitterEnabled(enabled: Boolean)
+
+    fun getCustomSignature(): Flow<String>
+    suspend fun saveCustomSignature(signature: String)
+
     suspend fun clearAllArt()
 }
