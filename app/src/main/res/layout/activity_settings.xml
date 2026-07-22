@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://tools.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/keyboard_background">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/keyboard_background">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:title="SpellType Keyboard 🪄"
+            app:titleTextColor="@color/key_text_color"
+            app:titleCentered="true"/>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="32dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Turn text into eye-catching visual ASCII &amp; Unicode Art"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:textAlignment="center"
+                android:layout_marginHorizontal="24dp"
+                android:layout_marginBottom="16dp"/>
+
+            <!-- Setup Instructions Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardBackgroundColor="@color/toolbar_background">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="How to Enable Keyboard"
+                        android:textColor="@color/key_text_color"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="1. Click 'Enable in Settings' below.\n2. Turn on 'SpellType Keyboard' switch.\n3. Click 'Select Active IME' and choose SpellType."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp"
+                        android:lineSpacingMultiplier="1.2"
+                        android:layout_marginBottom="16dp"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/btn_enable_settings"
+                            style="@style/Widget.Material3.Button.TonalButton"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Enable in Settings"
+                            android:textColor="@color/key_text_color"
+                            app:backgroundTint="@color/key_background_pressed"
+                            android:layout_marginRight="4dp"/>
+
+                        <Button
+                            android:id="@+id/btn_select_ime"
+                            style="@style/Widget.Material3.Button"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Select Active IME"
+                            android:textColor="@color/key_text_color"
+                            app:backgroundTint="@color/accent_color"
+                            android:layout_marginLeft="4dp"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Realtime Preview Section -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="24dp"
+                app:cardCornerRadius="16dp"
+                app:cardBackgroundColor="@color/toolbar_background">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Try Art Engine Features"
+                        android:textColor="@color/key_text_color"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp"/>
+
+                    <!-- Category 1: Frame Styles -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Decorative Frame Styles (30+)"
+                        android:textColor="@color/accent_color"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="6dp"/>
+
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:scrollbars="none"
+                        android:layout_marginBottom="12dp">
+
+                        <LinearLayout
+                            android:id="@+id/container_frame_chips"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+                            <!-- Populated dynamically or defined in layout, let's keep the core ones visible here -->
+                            <TextView android:id="@+id/sett_chip_none" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Normal" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_active_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_chip_box" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Box ┌─┐" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_chip_box_double" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Double ╔═╗" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_chip_box_rounded" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Rounded ╭─╮" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_chip_star" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Star ★" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_chip_diamond" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Diamond ◆" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_chip_fire" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Fire 🔥" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_chip_hearts" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Hearts ❤️" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_chip_sparks" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sparks ✨" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_chip_party" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Party 🎉" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                        </LinearLayout>
+                    </HorizontalScrollView>
+
+                    <!-- Category 2: Shape Layouts -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Shape Layouts"
+                        android:textColor="@color/accent_color"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="6dp"/>
+
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:scrollbars="none"
+                        android:layout_marginBottom="12dp">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView android:id="@+id/sett_shape_none" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="No Shape" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_active_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_shape_pyramid" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Pyramid ▲" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_shape_heart" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Heart ♥" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_shape_diamond" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Diamond ◆" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_shape_zigzag" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Zigzag 〰" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_shape_wave" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Wave 🌊" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                        </LinearLayout>
+                    </HorizontalScrollView>
+
+                    <!-- Category 3: Unicode Fonts -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Mixed Unicode Styles"
+                        android:textColor="@color/accent_color"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="6dp"/>
+
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:scrollbars="none"
+                        android:layout_marginBottom="16dp">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView android:id="@+id/sett_unicode_none" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Standard" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_active_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_unicode_bold" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Bold 𝐀" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_unicode_italic" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Italic 𝘈" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_unicode_gothic" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Gothic 𝔄" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_unicode_cursive" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Cursive 𝒜" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_unicode_circled" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Circled Ⓐ" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_unicode_squared" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Squared 🄰" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_unicode_squared_solid" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Squared Solid 🅰" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_unicode_bubble" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Bubble 𝔸" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                        </LinearLayout>
+                    </HorizontalScrollView>
+
+                    <!-- Glitter Toggle & Custom Signature -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Enable Glitter Effect ✨"
+                            android:textColor="@color/key_text_color"
+                            android:textSize="14sp"
+                            android:textStyle="bold"/>
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_glitter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+                    </LinearLayout>
+
+                    <EditText
+                        android:id="@+id/et_custom_signature"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Custom Signature (e.g. — SpellType)"
+                        android:textColorHint="@color/text_secondary"
+                        android:textColor="@color/key_text_color"
+                        android:backgroundTint="@color/accent_color"
+                        android:textSize="14sp"
+                        android:inputType="text"
+                        android:layout_marginBottom="16dp"/>
+
+                    <!-- Input text box -->
+                    <EditText
+                        android:id="@+id/et_preview_input"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Type something here..."
+                        android:textColorHint="@color/text_secondary"
+                        android:textColor="@color/key_text_color"
+                        android:backgroundTint="@color/accent_color"
+                        android:textSize="15sp"
+                        android:inputType="text"
+                        android:layout_marginBottom="16dp"/>
+
+                    <!-- Realtime preview box -->
+                    <TextView
+                        android:id="@+id/tv_realtime_preview"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Type above to see live preview"
+                        android:textColor="@color/key_text_color"
+                        android:textSize="14sp"
+                        android:fontFamily="monospace"
+                        android:background="#05070C"
+                        android:padding="16dp"
+                        android:gravity="center_horizontal"
+                        android:scrollHorizontally="true"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Saved History Section Title -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Saved Art History"
+                    android:textColor="@color/key_text_color"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:id="@+id/btn_clear_all"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Clear All"
+                    android:textColor="#EF4444"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="4dp"/>
+            </LinearLayout>
+
+            <!-- RecyclerView of Saved Art History -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_history"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                tools:listitem="@layout/item_saved_art"/>
+
+            <!-- Empty history text view -->
+            <TextView
+                android:id="@+id/tv_empty_history"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Your saved Visual Art history will appear here."
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:gravity="center"
+                android:layout_marginTop="24dp"
+                android:visibility="gone"/>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
