@@ -12,6 +12,7 @@ import com.spelltype.keyboard.data.db.SpellTypeDatabase
 import com.spelltype.keyboard.data.repository.KeyboardRepositoryImpl
 import com.spelltype.keyboard.domain.ArtEngine
 import com.spelltype.keyboard.domain.ShapeEngine
+import com.spelltype.keyboard.domain.StyleCategorizer
 import com.spelltype.keyboard.domain.UnicodeStylingEngine
 import com.spelltype.keyboard.domain.model.FrameStyle
 import com.spelltype.keyboard.domain.model.ShapeLayout
@@ -35,6 +36,9 @@ class SpellTypeIME : InputMethodService() {
     private var activeUnicode = UnicodeStyle.NONE
     private var glitterEnabled = false
     private var customSignature = ""
+    private var favoriteStyles = emptySet<String>()
+    private var vibrationEnabled = true
+    private var soundEnabled = true
 
     private var isShifted = false
     private var isSymbolMode = false
@@ -165,6 +169,25 @@ class SpellTypeIME : InputMethodService() {
                 updateLivePreviewBar()
             }
         }
+        serviceScope.launch {
+            repository.getFavoriteStyles().collect { favorites ->
+                favoriteStyles = favorites
+                val container: LinearLayout? = keyboardRootView?.findViewById(R.id.quick_art_container)
+                if (container != null) {
+                    populateQuickArtBar(container)
+                }
+            }
+        }
+        serviceScope.launch {
+            repository.getVibrationEnabled().collect { enabled ->
+                vibrationEnabled = enabled
+            }
+        }
+        serviceScope.launch {
+            repository.getSoundEnabled().collect { enabled ->
+                soundEnabled = enabled
+            }
+        }
 
         // Programmatically populate Quick Art Bar container with 36+ chips
         val container: LinearLayout? = keyboardView.findViewById(R.id.quick_art_container)
@@ -181,13 +204,31 @@ class SpellTypeIME : InputMethodService() {
         serviceJob.cancel()
     }
 
+    private fun getSortedStyles(): List<FrameStyle> {
+        val allStyles = FrameStyle.values().toList()
+        return allStyles.sortedWith(compareBy(
+            { it != FrameStyle.NONE },
+            { !favoriteStyles.contains(it.name) }
+        ))
+    }
+
     private fun populateQuickArtBar(container: LinearLayout) {
         container.removeAllViews()
-        val styles = FrameStyle.values()
+        val styles = getSortedStyles()
         for (style in styles) {
             val textView = TextView(this)
+
+            // Add custom visual decorators for favorites or premiums
+            val isFav = favoriteStyles.contains(style.name)
+            val isPrem = com.spelltype.keyboard.domain.StyleCategorizer.isPremium(style)
+            val prefix = when {
+                isFav -> "♥ "
+                isPrem -> "👑 "
+                else -> ""
+            }
+
             val name = if (style == FrameStyle.NONE) "Normal" else style.name.lowercase().replace("_", " ").replaceFirstChar { it.uppercase() }
-            textView.text = name
+            textView.text = "$prefix$name"
             textView.setTextColor(resources.getColor(R.color.key_text_color, null))
             textView.textSize = 12f
 
@@ -219,7 +260,13 @@ class SpellTypeIME : InputMethodService() {
     }
 
     private fun onKeyClickFeedback(view: View) {
-        view.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
+        if (vibrationEnabled) {
+            view.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
+        }
+        if (soundEnabled) {
+            val am = getSystemService(android.content.Context.AUDIO_SERVICE) as? android.media.AudioManager
+            am?.playSoundEffect(android.media.AudioManager.FX_KEYPRESS_STANDARD)
+        }
         view.animate()
             .scaleX(1.15f)
             .scaleY(1.15f)
@@ -244,7 +291,7 @@ class SpellTypeIME : InputMethodService() {
 
     private fun updateChipHighlighting() {
         val container = keyboardRootView?.findViewById<LinearLayout>(R.id.quick_art_container) ?: return
-        val styles = FrameStyle.values()
+        val styles = getSortedStyles()
         for (i in 0 until container.childCount) {
             val child = container.getChildAt(i) as? TextView ?: continue
             val style = styles.getOrNull(i) ?: continue

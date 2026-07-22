@@ -17,6 +17,11 @@ class FakeKeyboardRepository : KeyboardRepository {
     private val selectedUnicodeStyleFlow = MutableStateFlow(UnicodeStyle.NONE)
     private val glitterEnabledFlow = MutableStateFlow(false)
     private val customSignatureFlow = MutableStateFlow("")
+    private val favoriteStylesFlow = MutableStateFlow<Set<String>>(emptySet())
+    private val vibrationEnabledFlow = MutableStateFlow(true)
+    private val soundEnabledFlow = MutableStateFlow(true)
+    private val themeSelectionFlow = MutableStateFlow("DARK")
+    private val premiumUnlockedFlow = MutableStateFlow(false)
 
     override fun getSavedArtList(): Flow<List<SavedArt>> {
         return savedArtFlow
@@ -71,6 +76,46 @@ class FakeKeyboardRepository : KeyboardRepository {
 
     override suspend fun saveCustomSignature(signature: String) {
         customSignatureFlow.value = signature
+    }
+
+    override fun getFavoriteStyles(): Flow<Set<String>> {
+        return favoriteStylesFlow
+    }
+
+    override suspend fun saveFavoriteStyles(favorites: Set<String>) {
+        favoriteStylesFlow.value = favorites
+    }
+
+    override fun getVibrationEnabled(): Flow<Boolean> {
+        return vibrationEnabledFlow
+    }
+
+    override suspend fun saveVibrationEnabled(enabled: Boolean) {
+        vibrationEnabledFlow.value = enabled
+    }
+
+    override fun getSoundEnabled(): Flow<Boolean> {
+        return soundEnabledFlow
+    }
+
+    override suspend fun saveSoundEnabled(enabled: Boolean) {
+        soundEnabledFlow.value = enabled
+    }
+
+    override fun getThemeSelection(): Flow<String> {
+        return themeSelectionFlow
+    }
+
+    override suspend fun saveThemeSelection(theme: String) {
+        themeSelectionFlow.value = theme
+    }
+
+    override fun getPremiumUnlocked(): Flow<Boolean> {
+        return premiumUnlockedFlow
+    }
+
+    override suspend fun savePremiumUnlocked(unlocked: Boolean) {
+        premiumUnlockedFlow.value = unlocked
     }
 
     override suspend fun clearAllArt() {

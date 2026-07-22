@@ -20,6 +20,11 @@ class KeyboardPreferences(private val context: Context) {
         val SELECTED_UNICODE_STYLE = stringPreferencesKey("selected_unicode_style")
         val GLITTER_ENABLED = booleanPreferencesKey("glitter_enabled")
         val CUSTOM_SIGNATURE = stringPreferencesKey("custom_signature")
+        val FAVORITE_STYLES = stringSetPreferencesKey("favorite_styles")
+        val VIBRATION_ENABLED = booleanPreferencesKey("vibration_enabled")
+        val SOUND_ENABLED = booleanPreferencesKey("sound_enabled")
+        val THEME_SELECTION = stringPreferencesKey("theme_selection")
+        val PREMIUM_UNLOCKED = booleanPreferencesKey("premium_unlocked")
     }
 
     val selectedFrameStyleFlow: Flow<FrameStyle> = context.dataStore.data
@@ -50,6 +55,31 @@ class KeyboardPreferences(private val context: Context) {
             preferences[CUSTOM_SIGNATURE] ?: ""
         }
 
+    val favoriteStylesFlow: Flow<Set<String>> = context.dataStore.data
+        .map { preferences ->
+            preferences[FAVORITE_STYLES] ?: emptySet()
+        }
+
+    val vibrationEnabledFlow: Flow<Boolean> = context.dataStore.data
+        .map { preferences ->
+            preferences[VIBRATION_ENABLED] ?: true
+        }
+
+    val soundEnabledFlow: Flow<Boolean> = context.dataStore.data
+        .map { preferences ->
+            preferences[SOUND_ENABLED] ?: true
+        }
+
+    val themeSelectionFlow: Flow<String> = context.dataStore.data
+        .map { preferences ->
+            preferences[THEME_SELECTION] ?: "DARK"
+        }
+
+    val premiumUnlockedFlow: Flow<Boolean> = context.dataStore.data
+        .map { preferences ->
+            preferences[PREMIUM_UNLOCKED] ?: false
+        }
+
     suspend fun saveSelectedFrameStyle(style: FrameStyle) {
         context.dataStore.edit { preferences ->
             preferences[SELECTED_FRAME_STYLE] = style.name
@@ -77,6 +107,36 @@ class KeyboardPreferences(private val context: Context) {
     suspend fun saveCustomSignature(signature: String) {
         context.dataStore.edit { preferences ->
             preferences[CUSTOM_SIGNATURE] = signature
+        }
+    }
+
+    suspend fun saveFavoriteStyles(favorites: Set<String>) {
+        context.dataStore.edit { preferences ->
+            preferences[FAVORITE_STYLES] = favorites
+        }
+    }
+
+    suspend fun saveVibrationEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[VIBRATION_ENABLED] = enabled
+        }
+    }
+
+    suspend fun saveSoundEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[SOUND_ENABLED] = enabled
+        }
+    }
+
+    suspend fun saveThemeSelection(theme: String) {
+        context.dataStore.edit { preferences ->
+            preferences[THEME_SELECTION] = theme
+        }
+    }
+
+    suspend fun savePremiumUnlocked(unlocked: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PREMIUM_UNLOCKED] = unlocked
         }
     }
 }

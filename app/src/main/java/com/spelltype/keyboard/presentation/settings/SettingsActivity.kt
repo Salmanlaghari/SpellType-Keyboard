@@ -55,6 +55,12 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun setupListeners() {
+        // Open Art Gallery Button
+        binding.btnLaunchGallery.setOnClickListener {
+            val intent = Intent(this, ArtGalleryActivity::class.java)
+            startActivity(intent)
+        }
+
         // Guide Button 1: Enable settings
         binding.btnEnableSettings.setOnClickListener {
             val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
@@ -103,6 +109,21 @@ class SettingsActivity : AppCompatActivity() {
         binding.switchGlitter.setOnCheckedChangeListener { _, isChecked ->
             viewModel.setGlitterEnabled(isChecked)
         }
+
+        // Sound switch listener
+        binding.switchSound.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.setSoundEnabled(isChecked)
+        }
+
+        // Vibration switch listener
+        binding.switchVibration.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.setVibrationEnabled(isChecked)
+        }
+
+        // Theme selection chips
+        binding.themeDark.setOnClickListener { viewModel.setThemeSelection("DARK") }
+        binding.themeAmoled.setOnClickListener { viewModel.setThemeSelection("AMOLED") }
+        binding.themeLight.setOnClickListener { viewModel.setThemeSelection("LIGHT") }
 
         // Custom signature input listener
         binding.etCustomSignature.addTextChangedListener { text ->
@@ -154,6 +175,31 @@ class SettingsActivity : AppCompatActivity() {
                             binding.switchGlitter.isChecked = enabled
                         }
                         updateLivePreview()
+                    }
+                }
+
+                // Collect and set sound state
+                launch {
+                    viewModel.soundEnabled.collect { enabled ->
+                        if (binding.switchSound.isChecked != enabled) {
+                            binding.switchSound.isChecked = enabled
+                        }
+                    }
+                }
+
+                // Collect and set vibration state
+                launch {
+                    viewModel.vibrationEnabled.collect { enabled ->
+                        if (binding.switchVibration.isChecked != enabled) {
+                            binding.switchVibration.isChecked = enabled
+                        }
+                    }
+                }
+
+                // Collect and highlight selected theme
+                launch {
+                    viewModel.themeSelection.collect { theme ->
+                        updateThemeHighlighting(theme)
                     }
                 }
 
@@ -216,6 +262,12 @@ class SettingsActivity : AppCompatActivity() {
         binding.settUnicodeSquared.setBackgroundResource(if (active == UnicodeStyle.SQUARED) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
         binding.settUnicodeSquaredSolid.setBackgroundResource(if (active == UnicodeStyle.SQUARED_SOLID) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
         binding.settUnicodeBubble.setBackgroundResource(if (active == UnicodeStyle.BUBBLE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+    }
+
+    private fun updateThemeHighlighting(theme: String) {
+        binding.themeDark.setBackgroundResource(if (theme == "DARK") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.themeAmoled.setBackgroundResource(if (theme == "AMOLED") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.themeLight.setBackgroundResource(if (theme == "LIGHT") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
     }
 
     private fun updateLivePreview() {
