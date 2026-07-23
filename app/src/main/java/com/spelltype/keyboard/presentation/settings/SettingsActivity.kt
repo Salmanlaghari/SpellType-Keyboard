@@ -95,6 +95,11 @@ class SettingsActivity : AppCompatActivity() {
         binding.settShapeDiamond.setOnClickListener { viewModel.selectShapeLayout(ShapeLayout.DIAMOND) }
         binding.settShapeZigzag.setOnClickListener { viewModel.selectShapeLayout(ShapeLayout.ZIGZAG) }
         binding.settShapeWave.setOnClickListener { viewModel.selectShapeLayout(ShapeLayout.WAVE) }
+        binding.settShapeCircle.setOnClickListener { viewModel.selectShapeLayout(ShapeLayout.CIRCLE) }
+        binding.settShapeLove.setOnClickListener { viewModel.selectShapeLayout(ShapeLayout.LOVE) }
+        binding.settShapeRevenge.setOnClickListener { viewModel.selectShapeLayout(ShapeLayout.REVENGE) }
+        binding.settShapePubg.setOnClickListener { viewModel.selectShapeLayout(ShapeLayout.PUBG) }
+        binding.settShapeSocial.setOnClickListener { viewModel.selectShapeLayout(ShapeLayout.SOCIAL_MEDIA) }
 
         // Unicode styling chips
         binding.settUnicodeNone.setOnClickListener { viewModel.selectUnicodeStyle(UnicodeStyle.NONE) }
@@ -233,6 +238,12 @@ class SettingsActivity : AppCompatActivity() {
         // Clear all history listener
         binding.btnClearAll.setOnClickListener {
             viewModel.clearAllArt()
+        }
+
+        // Close Ad Banner
+        binding.btnCloseSettingsAd.setOnClickListener {
+            binding.settingsAdBanner.visibility = View.GONE
+            android.widget.Toast.makeText(this, "Ad hidden. Get Premium to remove all ads!", android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -464,6 +475,11 @@ class SettingsActivity : AppCompatActivity() {
         binding.settShapeDiamond.setBackgroundResource(if (active == ShapeLayout.DIAMOND) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
         binding.settShapeZigzag.setBackgroundResource(if (active == ShapeLayout.ZIGZAG) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
         binding.settShapeWave.setBackgroundResource(if (active == ShapeLayout.WAVE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settShapeCircle.setBackgroundResource(if (active == ShapeLayout.CIRCLE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settShapeLove.setBackgroundResource(if (active == ShapeLayout.LOVE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settShapeRevenge.setBackgroundResource(if (active == ShapeLayout.REVENGE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settShapePubg.setBackgroundResource(if (active == ShapeLayout.PUBG) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settShapeSocial.setBackgroundResource(if (active == ShapeLayout.SOCIAL_MEDIA) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
     }
 
     private fun updateUnicodeHighlighting(active: UnicodeStyle) {

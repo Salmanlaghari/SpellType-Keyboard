@@ -123,6 +123,74 @@ object ShapeEngine {
                 }
                 resultLists.joinToString("\n") { it.toString() }
             }
+            ShapeLayout.CIRCLE -> {
+                val mask = listOf(
+                    "  x x x  ",
+                    " x x x x ",
+                    "x x x x x",
+                    " x x x x ",
+                    "  x x x  "
+                )
+                var index = 0
+                val resultLines = mask.map { row ->
+                    val sb = StringBuilder()
+                    for (char in row) {
+                        if (char == 'x') {
+                            sb.append(cleanText[index % cleanText.length])
+                            index++
+                        } else {
+                            sb.append(char)
+                        }
+                    }
+                    sb.toString()
+                }
+                resultLines.joinToString("\n")
+            }
+            ShapeLayout.LOVE -> {
+                val mask = listOf(
+                    " (♡_♡) (♡_♡) ",
+                    "  x x x x x  ",
+                    "   x x x x   ",
+                    "    x x x    ",
+                    "     x x     ",
+                    "      x      "
+                )
+                var index = 0
+                val resultLines = mask.map { row ->
+                    val sb = StringBuilder()
+                    for (char in row) {
+                        if (char == 'x') {
+                            sb.append(cleanText[index % cleanText.length])
+                            index++
+                        } else {
+                            sb.append(char)
+                        }
+                    }
+                    sb.toString()
+                }
+                resultLines.joinToString("\n")
+            }
+            ShapeLayout.REVENGE -> {
+                val bannerTop = "☠️ REVENGE ☠️\n"
+                val bannerBottom = "\n⚔️⚔️⚔️⚔️⚔️⚔️"
+                val lines = cleanText.chunked(12)
+                val body = lines.take(3).joinToString("\n") { "  $it  " }
+                bannerTop + body + bannerBottom
+            }
+            ShapeLayout.PUBG -> {
+                val bannerTop = "🍳 AIRDROP 🍳\n"
+                val bannerBottom = "\n🏆 WINNER 🏆"
+                val lines = cleanText.chunked(12)
+                val body = lines.take(3).joinToString("\n") { "  $it  " }
+                bannerTop + body + bannerBottom
+            }
+            ShapeLayout.SOCIAL_MEDIA -> {
+                val bannerTop = "📢 COMMENT 📢\n"
+                val bannerBottom = "\n👍 LIKE & SHARE 🔔"
+                val lines = cleanText.chunked(14)
+                val body = lines.take(3).joinToString("\n") { "  $it  " }
+                bannerTop + body + bannerBottom
+            }
         }
     }
 }

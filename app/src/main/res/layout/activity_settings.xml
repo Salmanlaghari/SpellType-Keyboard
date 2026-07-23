@@ -30,6 +30,56 @@
             android:orientation="vertical"
             android:paddingBottom="32dp">
 
+            <!-- Sponsored Settings Ad Banner -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/settings_ad_banner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardBackgroundColor="#FEF08A">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="12dp"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text=" [SPONSORED] "
+                        android:textColor="#92400E"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:background="#FEF3C7"
+                        android:padding="4dp"
+                        android:layout_marginRight="8dp"/>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Special Offer: Unlock Ad-Free pro tools and keyboard highlights!"
+                        android:textColor="#78350F"
+                        android:textStyle="bold"
+                        android:textSize="12sp"/>
+
+                    <Button
+                        android:id="@+id/btn_close_settings_ad"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Hide"
+                        android:textColor="#78350F"
+                        android:textSize="11sp"
+                        app:backgroundTint="#FEF3C7"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -676,6 +726,11 @@
                             <TextView android:id="@+id/sett_shape_diamond" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Diamond ◆" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
                             <TextView android:id="@+id/sett_shape_zigzag" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Zigzag 〰" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
                             <TextView android:id="@+id/sett_shape_wave" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Wave 🌊" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_shape_circle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Circle 🔴" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_shape_love" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Love 💖" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_shape_revenge" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Revenge ⚔️" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_shape_pubg" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="PUBG 🍳" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
+                            <TextView android:id="@+id/sett_shape_social" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Social Media 📢" android:textColor="@color/key_text_color" android:textSize="12sp" android:background="@drawable/chip_inactive_background" android:clickable="true" android:focusable="true" android:layout_marginRight="8dp"/>
                         </LinearLayout>
                     </HorizontalScrollView>
 

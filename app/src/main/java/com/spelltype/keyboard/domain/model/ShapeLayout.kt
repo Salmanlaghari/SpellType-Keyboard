@@ -6,5 +6,10 @@ enum class ShapeLayout {
     HEART,
     DIAMOND,
     ZIGZAG,
-    WAVE
+    WAVE,
+    CIRCLE,
+    LOVE,
+    REVENGE,
+    PUBG,
+    SOCIAL_MEDIA
 }

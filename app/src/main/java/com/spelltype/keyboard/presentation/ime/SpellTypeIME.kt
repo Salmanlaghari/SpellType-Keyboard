@@ -201,6 +201,30 @@ class SpellTypeIME : InputMethodService() {
                 handleEnter()
             }
 
+            // Ad Banner Setup
+            val adBanner = keyboardView.findViewById<View>(R.id.keyboard_ad_banner)
+            val btnCloseAd = keyboardView.findViewById<View>(R.id.btn_close_keyboard_ad)
+            btnCloseAd?.setOnClickListener {
+                onKeyClickFeedback(it)
+                adBanner?.visibility = View.GONE
+            }
+
+            // Pro Tools Click Listeners
+            keyboardView.findViewById<View>(R.id.tool_clipboard)?.setOnClickListener {
+                onKeyClickFeedback(it)
+                handleClipboardTool()
+            }
+
+            keyboardView.findViewById<View>(R.id.tool_translate)?.setOnClickListener {
+                onKeyClickFeedback(it)
+                handleTranslateTool()
+            }
+
+            keyboardView.findViewById<View>(R.id.tool_templates)?.setOnClickListener {
+                onKeyClickFeedback(it)
+                handleTemplatesTool()
+            }
+
             // Setup suggestions click listeners
             keyboardView.findViewById<View>(R.id.suggestion_left)?.setOnClickListener {
                 suggestedStyleLeft?.let { style ->
@@ -528,6 +552,8 @@ class SpellTypeIME : InputMethodService() {
         }
     }
 
+    private val glowingKeys = mutableSetOf<Int>()
+
     private fun onKeyClickFeedback(view: View) {
         try {
             if (vibrationEnabled) {
@@ -552,6 +578,25 @@ class SpellTypeIME : InputMethodService() {
                 val am = getSystemService(android.content.Context.AUDIO_SERVICE) as? android.media.AudioManager
                 val vol = soundVolume / 100f
                 am?.playSoundEffect(android.media.AudioManager.FX_KEYPRESS_STANDARD, vol)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        try {
+            // Neon Glow click lighting effect + 3D tactile pressed squish
+            val viewId = view.id
+            if (view is TextView && (letterKeyIds.contains(viewId) || numKeyIds.contains(viewId) ||
+                viewId == R.id.btn_shift || viewId == R.id.btn_backspace || viewId == R.id.btn_mode || viewId == R.id.btn_space || viewId == R.id.btn_enter)) {
+
+                glowingKeys.add(viewId)
+                applyKeyStyle(view, isPressed = true)
+
+                serviceScope.launch {
+                    delay(150)
+                    glowingKeys.remove(viewId)
+                    applyKeyStyle(view, isPressed = false)
+                }
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -761,6 +806,29 @@ class SpellTypeIME : InputMethodService() {
     private fun handleSpace() {
         try {
             val ic: InputConnection = currentInputConnection ?: return
+
+            // Smart Text Expander (Shortcut Expander Ease Function)
+            if (composingText.isNotEmpty()) {
+                val text = composingText.toString().trim()
+                val lower = text.lowercase()
+                val shortcuts = mapOf(
+                    "brb" to "Be Right Back 🏃‍♂️",
+                    "hru" to "How are you? 🤔",
+                    "omg" to "Oh My God! 😱",
+                    "np" to "No Problem 👍",
+                    "ty" to "Thank You So Much! ❤️",
+                    "lol" to "Laughing Out Loud! 😂",
+                    "g2g" to "Got To Go! 👋",
+                    "idk" to "I Don't Know 🤷‍♂️",
+                    "btw" to "By The Way 📌"
+                )
+                if (shortcuts.containsKey(lower)) {
+                    composingText.clear()
+                    composingText.append(shortcuts[lower])
+                    updateLivePreviewBar()
+                }
+            }
+
             if (isStylingActive() && composingText.isNotEmpty()) {
                 commitComposingText {
                     ic.commitText(" ", 1)
@@ -768,6 +836,57 @@ class SpellTypeIME : InputMethodService() {
             } else {
                 ic.commitText(" ", 1)
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun handleClipboardTool() {
+        try {
+            val clipboard = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
+            val clipText = clipboard?.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
+            if (clipText.isNotEmpty()) {
+                composingText.clear()
+                composingText.append(clipText)
+                updateLivePreviewBar()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun handleTranslateTool() {
+        try {
+            val raw = composingText.toString()
+            if (raw.isNotEmpty()) {
+                // Cyber translator leet mock converter
+                val translated = raw.lowercase()
+                    .replace("a", "@")
+                    .replace("e", "3")
+                    .replace("i", "1")
+                    .replace("o", "0")
+                    .replace("s", "$")
+                    .replace("t", "7")
+                composingText.clear()
+                composingText.append(translated)
+                updateLivePreviewBar()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun handleTemplatesTool() {
+        try {
+            val templates = listOf(
+                "★ S P E L L T Y P E ★",
+                "꧁𓊈𒆜 ⓈⓅⒺⓁⓁⓉⓎⓅⒺ 𒆜𓊉꧂",
+                "┌────── ∘°❉°∘ ──────┐\n   WELCOME TO MY BIO\n└────── °∘❉∘° ──────┘"
+            )
+            val index = (0..2).random()
+            composingText.clear()
+            composingText.append(templates[index])
+            updateLivePreviewBar()
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -984,81 +1103,122 @@ class SpellTypeIME : InputMethodService() {
     private fun styleAllTextViewsUnder(view: View) {
         try {
             if (view is TextView) {
-                val id = view.id
-                val isStandardKey = letterKeyIds.contains(id) || numKeyIds.contains(id)
-                val isSpecialKey = id == R.id.btn_shift || id == R.id.btn_backspace || id == R.id.btn_mode || id == R.id.btn_space || id == R.id.btn_enter
-
-                if (isStandardKey || isSpecialKey) {
-                    val density = resources.displayMetrics.density
-
-                    // A. Text Size
-                    val size = when (keyTextSize) {
-                        "SMALL" -> if (isStandardKey) 15f else 11f
-                        "LARGE" -> if (isStandardKey) 24f else 16f
-                        "HUGE" -> if (isStandardKey) 28f else 18f
-                        else -> if (isStandardKey) 19f else 13f // MEDIUM
-                    }
-                    view.textSize = size
-
-                    // B. Key Color and Shapes
-                    val isLight = themeSelection == "LIGHT"
-                    val baseKeyColor = when (themeSelection) {
-                        "AMOLED" -> android.graphics.Color.parseColor("#111111")
-                        "LIGHT" -> android.graphics.Color.parseColor("#FFFFFF")
-                        "BLUE" -> android.graphics.Color.parseColor("#3B82F6")
-                        "PURPLE" -> android.graphics.Color.parseColor("#7C3AED")
-                        "GREEN" -> android.graphics.Color.parseColor("#10B981")
-                        else -> android.graphics.Color.parseColor("#1F2937") // DARK
-                    }
-                    val baseSpecialColor = if (isLight) android.graphics.Color.parseColor("#E5E7EB") else android.graphics.Color.parseColor("#111827")
-                    val keyColor = if (isSpecialKey) baseSpecialColor else baseKeyColor
-
-                    val drawable = android.graphics.drawable.GradientDrawable()
-                    drawable.shape = android.graphics.drawable.GradientDrawable.RECTANGLE
-
-                    val radius = when (keyShape) {
-                        "SQUARE" -> 0f
-                        "CIRCULAR" -> 1000f
-                        "GLASSMORPHISM" -> 16f * density
-                        else -> 8f * density // ROUNDED
-                    }
-                    drawable.cornerRadius = radius
-
-                    if (keyShape == "GLASSMORPHISM") {
-                        val glassColor = if (isLight) {
-                            android.graphics.Color.argb(60, 255, 255, 255)
-                        } else {
-                            android.graphics.Color.argb(45, 255, 255, 255)
-                        }
-                        drawable.setColor(glassColor)
-                    } else {
-                        drawable.setColor(keyColor)
-                    }
-
-                    // C. Key Borders & Thickness
-                    if (keyBorderEnabled) {
-                        val thicknessPx = (keyBorderThickness * density).toInt().coerceAtLeast(1)
-                        val borderColor = if (keyShape == "GLASSMORPHISM") {
-                            if (isLight) android.graphics.Color.argb(120, 0, 0, 0)
-                            else android.graphics.Color.argb(100, 255, 255, 255)
-                        } else {
-                            if (isLight) android.graphics.Color.parseColor("#D1D5DB")
-                            else android.graphics.Color.parseColor("#4B5563")
-                        }
-                        drawable.setStroke(thicknessPx, borderColor)
-                    }
-
-                    view.background = drawable
-
-                    // D. Text Color matching the theme
-                    val textColor = if (isLight) android.graphics.Color.parseColor("#1F2937") else android.graphics.Color.WHITE
-                    view.setTextColor(textColor)
-                }
+                applyKeyStyle(view, false)
             } else if (view is android.view.ViewGroup) {
                 for (i in 0 until view.childCount) {
                     styleAllTextViewsUnder(view.getChildAt(i))
                 }
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun applyKeyStyle(view: TextView, isPressed: Boolean) {
+        try {
+            val id = view.id
+            val isStandardKey = letterKeyIds.contains(id) || numKeyIds.contains(id)
+            val isSpecialKey = id == R.id.btn_shift || id == R.id.btn_backspace || id == R.id.btn_mode || id == R.id.btn_space || id == R.id.btn_enter
+
+            if (!isStandardKey && !isSpecialKey) return
+
+            val density = resources.displayMetrics.density
+
+            // A. Text Size
+            val size = when (keyTextSize) {
+                "SMALL" -> if (isStandardKey) 15f else 11f
+                "LARGE" -> if (isStandardKey) 24f else 16f
+                "HUGE" -> if (isStandardKey) 28f else 18f
+                else -> if (isStandardKey) 19f else 13f // MEDIUM
+            }
+            view.textSize = size
+
+            // B. Colors
+            val isLight = themeSelection == "LIGHT"
+            val baseKeyColor = when (themeSelection) {
+                "AMOLED" -> android.graphics.Color.parseColor("#111111")
+                "LIGHT" -> android.graphics.Color.parseColor("#FFFFFF")
+                "BLUE" -> android.graphics.Color.parseColor("#3B82F6")
+                "PURPLE" -> android.graphics.Color.parseColor("#7C3AED")
+                "GREEN" -> android.graphics.Color.parseColor("#10B981")
+                else -> android.graphics.Color.parseColor("#1F2937") // DARK
+            }
+            val baseSpecialColor = if (isLight) android.graphics.Color.parseColor("#E5E7EB") else android.graphics.Color.parseColor("#111827")
+            var keyColor = if (isSpecialKey) baseSpecialColor else baseKeyColor
+
+            // Handle Glow / pressed lighting state
+            if (isPressed || glowingKeys.contains(id)) {
+                keyColor = when (themeSelection) {
+                    "LIGHT" -> android.graphics.Color.parseColor("#F43F5E") // Radiant Pink
+                    "BLUE" -> android.graphics.Color.parseColor("#6EE7B7") // Neon Mint
+                    "GREEN" -> android.graphics.Color.parseColor("#FBBF24") // Neon Amber
+                    else -> android.graphics.Color.parseColor("#38BDF8") // Solar Cyan
+                }
+            }
+
+            // Radius
+            val radius = when (keyShape) {
+                "SQUARE" -> 0f
+                "CIRCULAR" -> 1000f
+                "GLASSMORPHISM" -> 16f * density
+                else -> 8f * density // ROUNDED
+            }
+
+            // Create LayerDrawable for 3D Bevel/Shadow Effect
+            val shadowDrawable = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                cornerRadius = radius
+                setColor(android.graphics.Color.parseColor("#090D16")) // solid deep 3D bevel shadow
+            }
+
+            val frontDrawable = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                cornerRadius = radius
+
+                if (keyShape == "GLASSMORPHISM") {
+                    val glassColor = if (isLight) {
+                        android.graphics.Color.argb(if (isPressed || glowingKeys.contains(id)) 160 else 60, 255, 255, 255)
+                    } else {
+                        android.graphics.Color.argb(if (isPressed || glowingKeys.contains(id)) 140 else 45, 255, 255, 255)
+                    }
+                    setColor(glassColor)
+                } else {
+                    setColor(keyColor)
+                }
+
+                // Borders
+                if (keyBorderEnabled) {
+                    val thicknessPx = (keyBorderThickness * density).toInt().coerceAtLeast(1)
+                    val borderColor = if (isPressed || glowingKeys.contains(id)) {
+                        android.graphics.Color.WHITE
+                    } else if (keyShape == "GLASSMORPHISM") {
+                        if (isLight) android.graphics.Color.argb(120, 0, 0, 0)
+                        else android.graphics.Color.argb(100, 255, 255, 255)
+                    } else {
+                        if (isLight) android.graphics.Color.parseColor("#D1D5DB")
+                        else android.graphics.Color.parseColor("#4B5563")
+                    }
+                    setStroke(thicknessPx, borderColor)
+                }
+            }
+
+            // Wrap in LayerDrawable to offset the front layer, creating an organic 3D push-button effect!
+            val layers = arrayOf(shadowDrawable, frontDrawable)
+            val layerDrawable = android.graphics.drawable.LayerDrawable(layers)
+
+            // Offset front drawable to show the bottom shadow
+            val shadowHeight = if (isPressed || glowingKeys.contains(id)) (1 * density).toInt() else (4 * density).toInt()
+            layerDrawable.setLayerInset(1, 0, 0, 0, shadowHeight) // offset bottom
+
+            view.background = layerDrawable
+
+            // Text Color
+            val textColor = if (isLight) {
+                if (isPressed || glowingKeys.contains(id)) android.graphics.Color.WHITE else android.graphics.Color.parseColor("#1F2937")
+            } else {
+                android.graphics.Color.WHITE
+            }
+            view.setTextColor(textColor)
         } catch (e: Exception) {
             e.printStackTrace()
         }
