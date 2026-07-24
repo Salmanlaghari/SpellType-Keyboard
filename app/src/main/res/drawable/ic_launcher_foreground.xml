@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Premium 3D Bevel Keyboard base -->
+    <path
+        android:pathData="M24,36h60c4.4,0 8,3.6 8,8v24c0,4.4 -3.6,8 -8,8h-60c-4.4,0 -8,-3.6 -8,-8v-24c0,-4.4 3.6,-8 8,-8z"
+        android:strokeWidth="1.5"
+        android:strokeColor="#FFD700">
+        <aapt:attr name="android:fillColor" xmlns:aapt="http://schemas.android.com/apk/res/ap">
+            <gradient
+                android:type="linear"
+                android:startX="54"
+                android:startY="36"
+                android:endX="54"
+                android:endY="76">
+                <item android:color="#3B2D54" android:offset="0.0" />
+                <item android:color="#1A112A" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Bevel shadow overlay -->
+    <path
+        android:pathData="M24,40h60c2.2,0 4,1.8 4,4v20c0,2.2 -1.8,4 -4,4h-60c-2.2,0 -4,-1.8 -4,-4v-20c0,-2.2 1.8,-4 4,-4z"
+        android:fillColor="#2D1F47"/>
+
+    <!-- Key Caps -->
+    <!-- Row 1 -->
+    <path android:pathData="M30,44h6v6h-6z" android:fillColor="#FFD700"/>
+    <path android:pathData="M40,44h6v6h-6z" android:fillColor="#F43F5E"/>
+    <path android:pathData="M50,44h6v6h-6z" android:fillColor="#38BDF8"/>
+    <path android:pathData="M60,44h6v6h-6z" android:fillColor="#10B981"/>
+    <path android:pathData="M70,44h6v6h-6z" android:fillColor="#FFD700"/>
+
+    <!-- Row 2 -->
+    <path android:pathData="M34,54h6v6h-6z" android:fillColor="#38BDF8"/>
+    <path android:pathData="M44,54h6v6h-6z" android:fillColor="#10B981"/>
+    <path android:pathData="M54,54h6v6h-6z" android:fillColor="#FFD700"/>
+    <path android:pathData="M64,54h6v6h-6z" android:fillColor="#F43F5E"/>
+    <path android:pathData="M74,54h6v6h-6z" android:fillColor="#38BDF8"/>
+
+    <!-- Spacebar -->
+    <path android:pathData="M40,64h28v4h-28z" android:fillColor="#FFD700"/>
+
+    <!-- Magical Star Sparkle -->
+    <path
+        android:pathData="M84,30l2,4l4,2l-4,2l-2,4l-2,-4l-4,-2l4,-2z"
+        android:fillColor="#FFD700"/>
+
+    <path
+        android:pathData="M20,74l1.5,3l3,1.5l-3,1.5l-1.5,3l-1.5,-3l-3,-1.5l3,-1.5z"
+        android:fillColor="#38BDF8"/>
+</vector>
