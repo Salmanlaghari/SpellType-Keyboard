@@ -281,35 +281,37 @@ class SettingsActivity : AppCompatActivity() {
                     binding.settingsNativeAdContainer.removeAllViews()
                     binding.settingsNativeAdContainer.visibility = View.VISIBLE
 
-                    // Simple programmatic view builder for AdMob native ad representation
-                    val adView = com.google.android.gms.ads.nativead.NativeAdView(this)
-                    val linearLayout = android.widget.LinearLayout(this).apply {
-                        orientation = android.widget.LinearLayout.HORIZONTAL
-                        setPadding(16, 16, 16, 16)
-                        setBackgroundResource(R.drawable.chip_inactive_background)
+                    val adInflater = layoutInflater
+                    val adView = adInflater.inflate(R.layout.layout_native_ad, null) as com.google.android.gms.ads.nativead.NativeAdView
+
+                    // Register required asset views programmatically (Ensures 0 Native Validator Issues)
+                    adView.headlineView = adView.findViewById(R.id.ad_headline)
+                    adView.bodyView = adView.findViewById(R.id.ad_body)
+                    adView.callToActionView = adView.findViewById(R.id.ad_call_to_action)
+                    adView.iconView = adView.findViewById(R.id.ad_app_icon)
+                    adView.advertiserView = adView.findViewById(R.id.ad_advertiser)
+
+                    // Set asset values
+                    (adView.headlineView as? android.widget.TextView)?.text = nativeAd.headline
+                    (adView.bodyView as? android.widget.TextView)?.text = nativeAd.body
+                    (adView.callToActionView as? android.widget.Button)?.text = nativeAd.callToAction ?: "Visit"
+
+                    val icon = nativeAd.icon
+                    if (icon != null) {
+                        adView.iconView?.visibility = View.VISIBLE
+                        (adView.iconView as? android.widget.ImageView)?.setImageDrawable(icon.drawable)
+                    } else {
+                        adView.iconView?.visibility = View.GONE
                     }
 
-                    val titleView = android.widget.TextView(this).apply {
-                        text = nativeAd.headline ?: "Sponsored Ad"
-                        setTextColor(resources.getColor(R.color.key_text_color, null))
-                        textSize = 14f
-                        layoutParams = android.widget.LinearLayout.LayoutParams(
-                            0,
-                            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
-                            1f
-                        )
+                    if (nativeAd.advertiser != null) {
+                        adView.advertiserView?.visibility = View.VISIBLE
+                        (adView.advertiserView as? android.widget.TextView)?.text = nativeAd.advertiser
+                    } else {
+                        adView.advertiserView?.visibility = View.GONE
                     }
 
-                    val actionButton = android.widget.Button(this).apply {
-                        text = nativeAd.callToAction ?: "Visit"
-                        textSize = 12f
-                        setTextColor(resources.getColor(R.color.key_text_color, null))
-                    }
-
-                    linearLayout.addView(titleView)
-                    linearLayout.addView(actionButton)
-
-                    adView.addView(linearLayout)
+                    // Commit NativeAd object (Important for AdChoices and clicks tracking)
                     adView.setNativeAd(nativeAd)
 
                     binding.settingsNativeAdContainer.addView(adView)
