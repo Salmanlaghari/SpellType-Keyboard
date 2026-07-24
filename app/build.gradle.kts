@@ -25,6 +25,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            manifestPlaceholders["admobAppId"] = "ca-app-pub-8178045957849630~9682432362"
+        }
+        debug {
+            manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
         }
     }
     compileOptions {
@@ -36,6 +40,7 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
     testOptions {
         unitTests {
@@ -45,6 +50,8 @@ android {
 }
 
 dependencies {
+    implementation("com.google.android.gms:play-services-ads:23.2.0")
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)

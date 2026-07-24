@@ -12,6 +12,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SpellType">
 
+        <!-- Google AdMob Application ID -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="${admobAppId}"/>
+
         <!-- Keyboard IME Service -->
         <service
             android:name=".presentation.ime.SpellTypeIME"

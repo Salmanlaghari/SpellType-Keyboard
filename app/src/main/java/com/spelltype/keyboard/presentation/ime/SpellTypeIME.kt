@@ -59,6 +59,7 @@ class SpellTypeIME : InputMethodService() {
     private var keyBorderEnabled = true
     private var keyBorderThickness = 1
     private var keyTextSize = "MEDIUM"
+    private var premiumUnlocked = false
 
     private var isShifted = false
     private var isSymbolMode = false
@@ -133,6 +134,50 @@ class SpellTypeIME : InputMethodService() {
         }
     }
 
+    private fun updateKeyboardAdBanners() {
+        try {
+            val root = keyboardRootView ?: return
+            val topContainer = root.findViewById<android.widget.FrameLayout>(R.id.keyboard_top_ad_container)
+            val bottomContainer = root.findViewById<android.widget.FrameLayout>(R.id.keyboard_bottom_ad_container)
+
+            if (premiumUnlocked) {
+                topContainer?.visibility = View.GONE
+                bottomContainer?.visibility = View.GONE
+            } else {
+                // Initialize AdMob SDK first
+                com.spelltype.keyboard.presentation.ads.AdManager.init(applicationContext ?: this)
+
+                // Load Top Banner
+                topContainer?.let { container ->
+                    container.visibility = View.VISIBLE
+                    com.spelltype.keyboard.presentation.ads.AdManager.loadBanner(
+                        context = this,
+                        type = com.spelltype.keyboard.presentation.ads.BannerType.KEYBOARD_TOP,
+                        adSize = com.google.android.gms.ads.AdSize.BANNER
+                    ) { adView ->
+                        container.removeAllViews()
+                        container.addView(adView)
+                    }
+                }
+
+                // Load Bottom Banner
+                bottomContainer?.let { container ->
+                    container.visibility = View.VISIBLE
+                    com.spelltype.keyboard.presentation.ads.AdManager.loadBanner(
+                        context = this,
+                        type = com.spelltype.keyboard.presentation.ads.BannerType.KEYBOARD_BOTTOM,
+                        adSize = com.google.android.gms.ads.AdSize.BANNER
+                    ) { adView ->
+                        container.removeAllViews()
+                        container.addView(adView)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     override fun onStartInputView(info: android.view.inputmethod.EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
         try {
@@ -201,28 +246,23 @@ class SpellTypeIME : InputMethodService() {
                 handleEnter()
             }
 
-            // Ad Banner Setup
-            val adBanner = keyboardView.findViewById<View>(R.id.keyboard_ad_banner)
-            val btnCloseAd = keyboardView.findViewById<View>(R.id.btn_close_keyboard_ad)
-            btnCloseAd?.setOnClickListener {
-                onKeyClickFeedback(it)
-                adBanner?.visibility = View.GONE
-            }
+            // Trigger Ad Banner loading
+            updateKeyboardAdBanners()
 
             // Pro Tools Click Listeners
             keyboardView.findViewById<View>(R.id.tool_clipboard)?.setOnClickListener {
                 onKeyClickFeedback(it)
-                handleClipboardTool()
+                handleClipboardToolWithAd()
             }
 
             keyboardView.findViewById<View>(R.id.tool_translate)?.setOnClickListener {
                 onKeyClickFeedback(it)
-                handleTranslateTool()
+                handleTranslateToolWithAd()
             }
 
             keyboardView.findViewById<View>(R.id.tool_templates)?.setOnClickListener {
                 onKeyClickFeedback(it)
-                handleTemplatesTool()
+                handleTemplatesToolWithAd()
             }
 
             // Setup suggestions click listeners
@@ -374,6 +414,12 @@ class SpellTypeIME : InputMethodService() {
                     repo.getKeyTextSize().collect { size ->
                         keyTextSize = size
                         applyCustomConfigurations()
+                    }
+                }
+                serviceScope.launch {
+                    repo.getPremiumUnlocked().collect { unlocked ->
+                        premiumUnlocked = unlocked
+                        updateKeyboardAdBanners()
                     }
                 }
             }
@@ -855,6 +901,24 @@ class SpellTypeIME : InputMethodService() {
         }
     }
 
+    private fun handleClipboardToolWithAd() {
+        if (premiumUnlocked) {
+            handleClipboardTool()
+        } else {
+            com.spelltype.keyboard.presentation.ads.AdManager.loadInterstitial(
+                context = this,
+                type = com.spelltype.keyboard.presentation.ads.InterstitialType.PRO_TOOLS,
+                onLoaded = { _ ->
+                    // Service context safety fallback
+                    handleClipboardTool()
+                },
+                onFailed = {
+                    handleClipboardTool()
+                }
+            )
+        }
+    }
+
     private fun handleTranslateTool() {
         try {
             val raw = composingText.toString()
@@ -876,6 +940,24 @@ class SpellTypeIME : InputMethodService() {
         }
     }
 
+    private fun handleTranslateToolWithAd() {
+        if (premiumUnlocked) {
+            handleTranslateTool()
+        } else {
+            com.spelltype.keyboard.presentation.ads.AdManager.loadInterstitial(
+                context = this,
+                type = com.spelltype.keyboard.presentation.ads.InterstitialType.PRO_TOOLS,
+                onLoaded = { _ ->
+                    // Service context safety fallback
+                    handleTranslateTool()
+                },
+                onFailed = {
+                    handleTranslateTool()
+                }
+            )
+        }
+    }
+
     private fun handleTemplatesTool() {
         try {
             val templates = listOf(
@@ -889,6 +971,24 @@ class SpellTypeIME : InputMethodService() {
             updateLivePreviewBar()
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    private fun handleTemplatesToolWithAd() {
+        if (premiumUnlocked) {
+            handleTemplatesTool()
+        } else {
+            com.spelltype.keyboard.presentation.ads.AdManager.loadInterstitial(
+                context = this,
+                type = com.spelltype.keyboard.presentation.ads.InterstitialType.PRO_TOOLS,
+                onLoaded = { _ ->
+                    // Service context safety fallback
+                    handleTemplatesTool()
+                },
+                onFailed = {
+                    handleTemplatesTool()
+                }
+            )
         }
     }
 
@@ -1092,6 +1192,16 @@ class SpellTypeIME : InputMethodService() {
                 root.background = drawable
             } else {
                 root.setBackgroundColor(baseBgColor)
+            }
+
+            // Load theme_rewarded ad dynamically for premium theme selections
+            if (!premiumUnlocked && (themeSelection == "BLUE" || themeSelection == "PURPLE" || themeSelection == "GREEN" || keyboardWallpaperPath.isNotEmpty())) {
+                com.spelltype.keyboard.presentation.ads.AdManager.loadRewarded(
+                    context = this,
+                    onLoaded = { _ ->
+                        // Preloaded successfully
+                    }
+                )
             }
 
             styleAllTextViewsUnder(root)

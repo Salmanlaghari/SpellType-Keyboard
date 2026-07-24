@@ -60,7 +60,37 @@ class SettingsActivity : AppCompatActivity() {
         // Open Art Gallery Button
         binding.btnLaunchGallery.setOnClickListener {
             val intent = Intent(this, ArtGalleryActivity::class.java)
-            startActivity(intent)
+            if (viewModel.premiumUnlocked.value) {
+                startActivity(intent)
+            } else {
+                // Initialize AdMob
+                com.spelltype.keyboard.presentation.ads.AdManager.init(this)
+
+                // Show loading toast / feedback
+                val toast = android.widget.Toast.makeText(this, "Loading sponsored gallery...", android.widget.Toast.LENGTH_SHORT)
+                toast.show()
+
+                com.spelltype.keyboard.presentation.ads.AdManager.loadInterstitial(
+                    context = this,
+                    type = com.spelltype.keyboard.presentation.ads.InterstitialType.SETTINGS,
+                    onLoaded = { interstitialAd ->
+                        toast.cancel()
+                        interstitialAd.fullScreenContentCallback = object : com.google.android.gms.ads.FullScreenContentCallback() {
+                            override fun onAdDismissedFullScreenContent() {
+                                startActivity(intent)
+                            }
+                            override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
+                                startActivity(intent)
+                            }
+                        }
+                        interstitialAd.show(this)
+                    },
+                    onFailed = {
+                        toast.cancel()
+                        startActivity(intent)
+                    }
+                )
+            }
         }
 
         // Guide Button 1: Enable settings
@@ -240,10 +270,56 @@ class SettingsActivity : AppCompatActivity() {
             viewModel.clearAllArt()
         }
 
-        // Close Ad Banner
-        binding.btnCloseSettingsAd.setOnClickListener {
-            binding.settingsAdBanner.visibility = View.GONE
-            android.widget.Toast.makeText(this, "Ad hidden. Get Premium to remove all ads!", android.widget.Toast.LENGTH_SHORT).show()
+    }
+
+    private fun loadSettingsNativeAd() {
+        try {
+            com.spelltype.keyboard.presentation.ads.AdManager.init(this)
+            com.spelltype.keyboard.presentation.ads.AdManager.loadNativeAd(
+                context = this,
+                onLoaded = { nativeAd ->
+                    binding.settingsNativeAdContainer.removeAllViews()
+                    binding.settingsNativeAdContainer.visibility = View.VISIBLE
+
+                    // Simple programmatic view builder for AdMob native ad representation
+                    val adView = com.google.android.gms.ads.nativead.NativeAdView(this)
+                    val linearLayout = android.widget.LinearLayout(this).apply {
+                        orientation = android.widget.LinearLayout.HORIZONTAL
+                        setPadding(16, 16, 16, 16)
+                        setBackgroundResource(R.drawable.chip_inactive_background)
+                    }
+
+                    val titleView = android.widget.TextView(this).apply {
+                        text = nativeAd.headline ?: "Sponsored Ad"
+                        setTextColor(resources.getColor(R.color.key_text_color, null))
+                        textSize = 14f
+                        layoutParams = android.widget.LinearLayout.LayoutParams(
+                            0,
+                            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                            1f
+                        )
+                    }
+
+                    val actionButton = android.widget.Button(this).apply {
+                        text = nativeAd.callToAction ?: "Visit"
+                        textSize = 12f
+                        setTextColor(resources.getColor(R.color.key_text_color, null))
+                    }
+
+                    linearLayout.addView(titleView)
+                    linearLayout.addView(actionButton)
+
+                    adView.addView(linearLayout)
+                    adView.setNativeAd(nativeAd)
+
+                    binding.settingsNativeAdContainer.addView(adView)
+                },
+                onFailed = {
+                    binding.settingsNativeAdContainer.visibility = View.GONE
+                }
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
@@ -375,6 +451,17 @@ class SettingsActivity : AppCompatActivity() {
                 launch {
                     viewModel.themeSelection.collect { theme ->
                         updateThemeHighlighting(theme)
+                    }
+                }
+
+                // Collect Premium status
+                launch {
+                    viewModel.premiumUnlocked.collect { unlocked ->
+                        if (unlocked) {
+                            binding.settingsNativeAdContainer.visibility = View.GONE
+                        } else {
+                            loadSettingsNativeAd()
+                        }
                     }
                 }
 

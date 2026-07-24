@@ -7,48 +7,12 @@
     android:background="@color/keyboard_background"
     android:paddingBottom="4dp">
 
-    <!-- Sponsored Ad Banner -->
-    <LinearLayout
-        android:id="@+id/keyboard_ad_banner"
+    <!-- Top Ad Banner Container -->
+    <FrameLayout
+        android:id="@+id/keyboard_top_ad_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#FEF08A"
-        android:orientation="horizontal"
-        android:padding="4dp"
-        android:gravity="center_vertical"
-        android:visibility="visible">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=" [AD] "
-            android:textColor="#92400E"
-            android:textSize="9sp"
-            android:textStyle="bold"
-            android:background="#FEF3C7"
-            android:padding="2dp"
-            android:layout_marginRight="4dp"/>
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Upgrade to Premium for AD-FREE Custom Fonts! 👑"
-            android:textColor="#78350F"
-            android:textStyle="bold"
-            android:textSize="11sp"/>
-
-        <TextView
-            android:id="@+id/btn_close_keyboard_ad"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="✕"
-            android:textColor="#78350F"
-            android:textSize="12sp"
-            android:padding="4dp"
-            android:clickable="true"
-            android:focusable="true"/>
-    </LinearLayout>
+        android:visibility="gone"/>
 
     <!-- Active Frame Selector Toolbar / Quick Art Bar -->
     <LinearLayout
@@ -309,5 +273,12 @@
         <TextView android:id="@+id/btn_space" style="@style/KeyboardKey" android:layout_weight="5" android:text=""/>
         <TextView android:id="@+id/btn_enter" style="@style/KeyboardKey.Accent" android:layout_weight="2" android:text="Enter"/>
     </LinearLayout>
+
+    <!-- Bottom Ad Banner Container -->
+    <FrameLayout
+        android:id="@+id/keyboard_bottom_ad_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"/>
 
 </LinearLayout>
