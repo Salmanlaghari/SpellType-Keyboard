@@ -50,6 +50,7 @@ object ArtEngine {
             FrameStyle.FLORAL -> formatUniformBorder(text, "✿")
             FrameStyle.GEM -> formatUniformBorder(text, "💎")
             FrameStyle.CLOVER -> formatUniformBorder(text, "🍀")
+            FrameStyle.LINE_BORDER -> formatStandardBox(text, "☰", "☰", "☰", "☰", "☰", "☰", "☰", "☰")
         }
     }
 

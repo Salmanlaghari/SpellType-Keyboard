@@ -67,5 +67,24 @@ interface KeyboardRepository {
     fun getSwipeTypingEnabled(): Flow<Boolean>
     suspend fun saveSwipeTypingEnabled(enabled: Boolean)
 
+    // Phase 6 Upgrades Preferences
+    fun getKeyboardWallpaperPath(): Flow<String>
+    suspend fun saveKeyboardWallpaperPath(path: String)
+
+    fun getKeyboardWallpaperOpacity(): Flow<Int>
+    suspend fun saveKeyboardWallpaperOpacity(opacity: Int)
+
+    fun getKeyShape(): Flow<String>
+    suspend fun saveKeyShape(shape: String)
+
+    fun getKeyBorderEnabled(): Flow<Boolean>
+    suspend fun saveKeyBorderEnabled(enabled: Boolean)
+
+    fun getKeyBorderThickness(): Flow<Int>
+    suspend fun saveKeyBorderThickness(thickness: Int)
+
+    fun getKeyTextSize(): Flow<String>
+    suspend fun saveKeyTextSize(size: String)
+
     suspend fun clearAllArt()
 }

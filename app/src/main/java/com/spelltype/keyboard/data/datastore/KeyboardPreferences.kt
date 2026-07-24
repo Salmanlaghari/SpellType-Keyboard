@@ -35,6 +35,14 @@ class KeyboardPreferences(private val context: Context) {
         val NUMBER_ROW_ENABLED = booleanPreferencesKey("number_row_enabled")
         val AUTO_SUGGESTIONS_ENABLED = booleanPreferencesKey("auto_suggestions_enabled")
         val SWIPE_TYPING_ENABLED = booleanPreferencesKey("swipe_typing_enabled")
+
+        // Phase 6 Premium Enhancements Settings
+        val KEYBOARD_WALLPAPER_PATH = stringPreferencesKey("keyboard_wallpaper_path")
+        val KEYBOARD_WALLPAPER_OPACITY = intPreferencesKey("keyboard_wallpaper_opacity")
+        val KEY_SHAPE = stringPreferencesKey("key_shape")
+        val KEY_BORDER_ENABLED = booleanPreferencesKey("key_border_enabled")
+        val KEY_BORDER_THICKNESS = intPreferencesKey("key_border_thickness")
+        val KEY_TEXT_SIZE = stringPreferencesKey("key_text_size")
     }
 
     val selectedFrameStyleFlow: Flow<FrameStyle> = context.dataStore.data
@@ -90,7 +98,7 @@ class KeyboardPreferences(private val context: Context) {
             preferences[PREMIUM_UNLOCKED] ?: false
         }
 
-    // Phase 6 Flow Getters
+    // Phase 6 Flows
     val colorfulPreviewEnabledFlow: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
             preferences[COLORFUL_PREVIEW_ENABLED] ?: true
@@ -129,6 +137,37 @@ class KeyboardPreferences(private val context: Context) {
     val swipeTypingEnabledFlow: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
             preferences[SWIPE_TYPING_ENABLED] ?: false
+        }
+
+    // Premium UI & Upgrades Flow Getters
+    val keyboardWallpaperPathFlow: Flow<String> = context.dataStore.data
+        .map { preferences ->
+            preferences[KEYBOARD_WALLPAPER_PATH] ?: ""
+        }
+
+    val keyboardWallpaperOpacityFlow: Flow<Int> = context.dataStore.data
+        .map { preferences ->
+            preferences[KEYBOARD_WALLPAPER_OPACITY] ?: 50
+        }
+
+    val keyShapeFlow: Flow<String> = context.dataStore.data
+        .map { preferences ->
+            preferences[KEY_SHAPE] ?: "ROUNDED"
+        }
+
+    val keyBorderEnabledFlow: Flow<Boolean> = context.dataStore.data
+        .map { preferences ->
+            preferences[KEY_BORDER_ENABLED] ?: true
+        }
+
+    val keyBorderThicknessFlow: Flow<Int> = context.dataStore.data
+        .map { preferences ->
+            preferences[KEY_BORDER_THICKNESS] ?: 1
+        }
+
+    val keyTextSizeFlow: Flow<String> = context.dataStore.data
+        .map { preferences ->
+            preferences[KEY_TEXT_SIZE] ?: "MEDIUM"
         }
 
     suspend fun saveSelectedFrameStyle(style: FrameStyle) {
@@ -191,7 +230,7 @@ class KeyboardPreferences(private val context: Context) {
         }
     }
 
-    // Phase 6 Flow Setters
+    // Phase 6 Setters
     suspend fun saveColorfulPreviewEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[COLORFUL_PREVIEW_ENABLED] = enabled
@@ -237,6 +276,43 @@ class KeyboardPreferences(private val context: Context) {
     suspend fun saveSwipeTypingEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[SWIPE_TYPING_ENABLED] = enabled
+        }
+    }
+
+    // Premium UI & Upgrades Setters
+    suspend fun saveKeyboardWallpaperPath(path: String) {
+        context.dataStore.edit { preferences ->
+            preferences[KEYBOARD_WALLPAPER_PATH] = path
+        }
+    }
+
+    suspend fun saveKeyboardWallpaperOpacity(opacity: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[KEYBOARD_WALLPAPER_OPACITY] = opacity
+        }
+    }
+
+    suspend fun saveKeyShape(shape: String) {
+        context.dataStore.edit { preferences ->
+            preferences[KEY_SHAPE] = shape
+        }
+    }
+
+    suspend fun saveKeyBorderEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[KEY_BORDER_ENABLED] = enabled
+        }
+    }
+
+    suspend fun saveKeyBorderThickness(thickness: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[KEY_BORDER_THICKNESS] = thickness
+        }
+    }
+
+    suspend fun saveKeyTextSize(size: String) {
+        context.dataStore.edit { preferences ->
+            preferences[KEY_TEXT_SIZE] = size
         }
     }
 }

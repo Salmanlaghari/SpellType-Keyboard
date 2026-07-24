@@ -95,6 +95,11 @@ class SettingsActivity : AppCompatActivity() {
         binding.settShapeDiamond.setOnClickListener { viewModel.selectShapeLayout(ShapeLayout.DIAMOND) }
         binding.settShapeZigzag.setOnClickListener { viewModel.selectShapeLayout(ShapeLayout.ZIGZAG) }
         binding.settShapeWave.setOnClickListener { viewModel.selectShapeLayout(ShapeLayout.WAVE) }
+        binding.settShapeCircle.setOnClickListener { viewModel.selectShapeLayout(ShapeLayout.CIRCLE) }
+        binding.settShapeLove.setOnClickListener { viewModel.selectShapeLayout(ShapeLayout.LOVE) }
+        binding.settShapeRevenge.setOnClickListener { viewModel.selectShapeLayout(ShapeLayout.REVENGE) }
+        binding.settShapePubg.setOnClickListener { viewModel.selectShapeLayout(ShapeLayout.PUBG) }
+        binding.settShapeSocial.setOnClickListener { viewModel.selectShapeLayout(ShapeLayout.SOCIAL_MEDIA) }
 
         // Unicode styling chips
         binding.settUnicodeNone.setOnClickListener { viewModel.selectUnicodeStyle(UnicodeStyle.NONE) }
@@ -143,6 +148,50 @@ class SettingsActivity : AppCompatActivity() {
             viewModel.saveGiantWordsEnabled(isChecked)
         }
 
+        // Premium Wallpapers
+        binding.wallNone.setOnClickListener { viewModel.saveKeyboardWallpaperPath("") }
+        binding.wallOcean.setOnClickListener { viewModel.saveKeyboardWallpaperPath("OCEAN") }
+        binding.wallSunset.setOnClickListener { viewModel.saveKeyboardWallpaperPath("SUNSET") }
+        binding.wallMidnight.setOnClickListener { viewModel.saveKeyboardWallpaperPath("MIDNIGHT") }
+        binding.wallGlass.setOnClickListener { viewModel.saveKeyboardWallpaperPath("GLASS") }
+
+        // Wallpaper Opacity Slider
+        binding.sliderWallOpacity.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                binding.tvWallOpacity.text = "Background Opacity: $progress%"
+                if (fromUser) viewModel.saveKeyboardWallpaperOpacity(progress)
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        // Key Shapes
+        binding.shapeRounded.setOnClickListener { viewModel.saveKeyShape("ROUNDED") }
+        binding.shapeSquare.setOnClickListener { viewModel.saveKeyShape("SQUARE") }
+        binding.shapeCircular.setOnClickListener { viewModel.saveKeyShape("CIRCULAR") }
+        binding.shapeGlassmorphic.setOnClickListener { viewModel.saveKeyShape("GLASSMORPHISM") }
+
+        // Key Border Switch
+        binding.switchKeyBorder.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.saveKeyBorderEnabled(isChecked)
+        }
+
+        // Key Border Thickness
+        binding.sliderBorderThickness.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                binding.tvBorderThickness.text = "Key Border Thickness: ${progress}dp"
+                if (fromUser) viewModel.saveKeyBorderThickness(progress)
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        // Key Text Size Profile
+        binding.txtSizeSmall.setOnClickListener { viewModel.saveKeyTextSize("SMALL") }
+        binding.txtSizeMedium.setOnClickListener { viewModel.saveKeyTextSize("MEDIUM") }
+        binding.txtSizeLarge.setOnClickListener { viewModel.saveKeyTextSize("LARGE") }
+        binding.txtSizeHuge.setOnClickListener { viewModel.saveKeyTextSize("HUGE") }
+
         // Vibration Strength SeekBar
         binding.sliderVibrationStrength.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -189,6 +238,12 @@ class SettingsActivity : AppCompatActivity() {
         // Clear all history listener
         binding.btnClearAll.setOnClickListener {
             viewModel.clearAllArt()
+        }
+
+        // Close Ad Banner
+        binding.btnCloseSettingsAd.setOnClickListener {
+            binding.settingsAdBanner.visibility = View.GONE
+            android.widget.Toast.makeText(this, "Ad hidden. Get Premium to remove all ads!", android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -323,6 +378,56 @@ class SettingsActivity : AppCompatActivity() {
                     }
                 }
 
+                // Collect Premium Theme Wallpaper Profile
+                launch {
+                    viewModel.keyboardWallpaperPath.collect { path ->
+                        updateWallpaperHighlighting(path)
+                    }
+                }
+
+                launch {
+                    viewModel.keyboardWallpaperOpacity.collect { opacity ->
+                        if (binding.sliderWallOpacity.progress != opacity) {
+                            binding.sliderWallOpacity.progress = opacity
+                        }
+                        binding.tvWallOpacity.text = "Background Opacity: $opacity%"
+                    }
+                }
+
+                // Collect Key Shape Profile
+                launch {
+                    viewModel.keyShape.collect { shape ->
+                        updateKeyShapeHighlighting(shape)
+                    }
+                }
+
+                // Collect Key Border Enabled
+                launch {
+                    viewModel.keyBorderEnabled.collect { enabled ->
+                        if (binding.switchKeyBorder.isChecked != enabled) {
+                            binding.switchKeyBorder.isChecked = enabled
+                        }
+                        binding.containerBorderThickness.visibility = if (enabled) View.VISIBLE else View.GONE
+                    }
+                }
+
+                // Collect Key Border Thickness
+                launch {
+                    viewModel.keyBorderThickness.collect { thickness ->
+                        if (binding.sliderBorderThickness.progress != thickness) {
+                            binding.sliderBorderThickness.progress = thickness
+                        }
+                        binding.tvBorderThickness.text = "Key Border Thickness: ${thickness}dp"
+                    }
+                }
+
+                // Collect Key Text Size Profile
+                launch {
+                    viewModel.keyTextSize.collect { size ->
+                        updateKeyTextSizeHighlighting(size)
+                    }
+                }
+
                 // Collect custom signature text
                 launch {
                     viewModel.customSignature.collect { signature ->
@@ -370,6 +475,11 @@ class SettingsActivity : AppCompatActivity() {
         binding.settShapeDiamond.setBackgroundResource(if (active == ShapeLayout.DIAMOND) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
         binding.settShapeZigzag.setBackgroundResource(if (active == ShapeLayout.ZIGZAG) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
         binding.settShapeWave.setBackgroundResource(if (active == ShapeLayout.WAVE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settShapeCircle.setBackgroundResource(if (active == ShapeLayout.CIRCLE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settShapeLove.setBackgroundResource(if (active == ShapeLayout.LOVE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settShapeRevenge.setBackgroundResource(if (active == ShapeLayout.REVENGE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settShapePubg.setBackgroundResource(if (active == ShapeLayout.PUBG) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settShapeSocial.setBackgroundResource(if (active == ShapeLayout.SOCIAL_MEDIA) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
     }
 
     private fun updateUnicodeHighlighting(active: UnicodeStyle) {
@@ -397,6 +507,28 @@ class SettingsActivity : AppCompatActivity() {
         binding.themeBlue.setBackgroundResource(if (theme == "BLUE") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
         binding.themePurple.setBackgroundResource(if (theme == "PURPLE") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
         binding.themeGreen.setBackgroundResource(if (theme == "GREEN") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+    }
+
+    private fun updateWallpaperHighlighting(path: String) {
+        binding.wallNone.setBackgroundResource(if (path.isEmpty()) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.wallOcean.setBackgroundResource(if (path == "OCEAN") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.wallSunset.setBackgroundResource(if (path == "SUNSET") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.wallMidnight.setBackgroundResource(if (path == "MIDNIGHT") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.wallGlass.setBackgroundResource(if (path == "GLASS") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+    }
+
+    private fun updateKeyShapeHighlighting(shape: String) {
+        binding.shapeRounded.setBackgroundResource(if (shape == "ROUNDED") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.shapeSquare.setBackgroundResource(if (shape == "SQUARE") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.shapeCircular.setBackgroundResource(if (shape == "CIRCULAR") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.shapeGlassmorphic.setBackgroundResource(if (shape == "GLASSMORPHISM") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+    }
+
+    private fun updateKeyTextSizeHighlighting(size: String) {
+        binding.txtSizeSmall.setBackgroundResource(if (size == "SMALL") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.txtSizeMedium.setBackgroundResource(if (size == "MEDIUM") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.txtSizeLarge.setBackgroundResource(if (size == "LARGE") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.txtSizeHuge.setBackgroundResource(if (size == "HUGE") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
     }
 
     private fun updateLivePreview() {

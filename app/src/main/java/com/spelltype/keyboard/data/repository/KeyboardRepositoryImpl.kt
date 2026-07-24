@@ -171,6 +171,55 @@ class KeyboardRepositoryImpl(
         preferences.saveSwipeTypingEnabled(enabled)
     }
 
+    // Phase 6 Upgrades Mappings
+    override fun getKeyboardWallpaperPath(): Flow<String> {
+        return preferences.keyboardWallpaperPathFlow
+    }
+
+    override suspend fun saveKeyboardWallpaperPath(path: String) {
+        preferences.saveKeyboardWallpaperPath(path)
+    }
+
+    override fun getKeyboardWallpaperOpacity(): Flow<Int> {
+        return preferences.keyboardWallpaperOpacityFlow
+    }
+
+    override suspend fun saveKeyboardWallpaperOpacity(opacity: Int) {
+        preferences.saveKeyboardWallpaperOpacity(opacity)
+    }
+
+    override fun getKeyShape(): Flow<String> {
+        return preferences.keyShapeFlow
+    }
+
+    override suspend fun saveKeyShape(shape: String) {
+        preferences.saveKeyShape(shape)
+    }
+
+    override fun getKeyBorderEnabled(): Flow<Boolean> {
+        return preferences.keyBorderEnabledFlow
+    }
+
+    override suspend fun saveKeyBorderEnabled(enabled: Boolean) {
+        preferences.saveKeyBorderEnabled(enabled)
+    }
+
+    override fun getKeyBorderThickness(): Flow<Int> {
+        return preferences.keyBorderThicknessFlow
+    }
+
+    override suspend fun saveKeyBorderThickness(thickness: Int) {
+        preferences.saveKeyBorderThickness(thickness)
+    }
+
+    override fun getKeyTextSize(): Flow<String> {
+        return preferences.keyTextSizeFlow
+    }
+
+    override suspend fun saveKeyTextSize(size: String) {
+        preferences.saveKeyTextSize(size)
+    }
+
     override suspend fun clearAllArt() {
         savedArtDao.deleteAll()
     }

@@ -52,6 +52,14 @@ class SpellTypeIME : InputMethodService() {
     private var giantWordsEnabled = false
     private var themeSelection = "DARK"
 
+    // Premium Configurations
+    private var keyboardWallpaperPath = ""
+    private var keyboardWallpaperOpacity = 50
+    private var keyShape = "ROUNDED"
+    private var keyBorderEnabled = true
+    private var keyBorderThickness = 1
+    private var keyTextSize = "MEDIUM"
+
     private var isShifted = false
     private var isSymbolMode = false
 
@@ -88,6 +96,17 @@ class SpellTypeIME : InputMethodService() {
         "@", "#", "$", "%", "&", "-", "+", "(", ")",
         "*", "\"", "'", ":", ";", "!", "?"
     )
+
+    private val emojis3D = listOf(
+        "🔥", "💖", "✨", "⭐", "🌟", "💫", "🎉", "🎈", "👑", "💎",
+        "🍀", "🌸", "🎵", "❄️", "🍁", "⚔️", "💀", "☕", "🐟", "👻",
+        "👽", "🧸", "🍭", "🎁", "🚀", "🛸", "🎮", "🍕", "🥑", "🦁",
+        "🦄", "🌈", "🌍", "⚡", "🔮", "🧬", "🧸", "🦾", "🧿", "🎨",
+        "🎸", "🛹", "🍿", "🍩", "🍦", "🧁", "🍹", "🍷", "🔔", "📿",
+        "🥺", "🥰", "🥶", "🥳", "🤠", "🤖"
+    )
+
+    private var isEmojiMode = false
 
     private var keyViews = mutableMapOf<Int, TextView>()
     private var keyboardRootView: View? = null
@@ -182,6 +201,30 @@ class SpellTypeIME : InputMethodService() {
                 handleEnter()
             }
 
+            // Ad Banner Setup
+            val adBanner = keyboardView.findViewById<View>(R.id.keyboard_ad_banner)
+            val btnCloseAd = keyboardView.findViewById<View>(R.id.btn_close_keyboard_ad)
+            btnCloseAd?.setOnClickListener {
+                onKeyClickFeedback(it)
+                adBanner?.visibility = View.GONE
+            }
+
+            // Pro Tools Click Listeners
+            keyboardView.findViewById<View>(R.id.tool_clipboard)?.setOnClickListener {
+                onKeyClickFeedback(it)
+                handleClipboardTool()
+            }
+
+            keyboardView.findViewById<View>(R.id.tool_translate)?.setOnClickListener {
+                onKeyClickFeedback(it)
+                handleTranslateTool()
+            }
+
+            keyboardView.findViewById<View>(R.id.tool_templates)?.setOnClickListener {
+                onKeyClickFeedback(it)
+                handleTemplatesTool()
+            }
+
             // Setup suggestions click listeners
             keyboardView.findViewById<View>(R.id.suggestion_left)?.setOnClickListener {
                 suggestedStyleLeft?.let { style ->
@@ -204,7 +247,7 @@ class SpellTypeIME : InputMethodService() {
                     serviceScope.launch {
                         getStyleUseCase().collect { style ->
                             activeStyle = style
-                            updateChipHighlighting()
+                            refreshQuickArtBar()
                             updateLivePreviewBar()
                         }
                     }
@@ -218,12 +261,14 @@ class SpellTypeIME : InputMethodService() {
                 serviceScope.launch {
                     repo.getSelectedUnicodeStyle().collect { unicode ->
                         activeUnicode = unicode
+                        refreshQuickArtBar()
                         updateLivePreviewBar()
                     }
                 }
                 serviceScope.launch {
                     repo.getGlitterEnabled().collect { enabled ->
                         glitterEnabled = enabled
+                        refreshQuickArtBar()
                         updateLivePreviewBar()
                     }
                 }
@@ -236,10 +281,7 @@ class SpellTypeIME : InputMethodService() {
                 serviceScope.launch {
                     repo.getFavoriteStyles().collect { favorites ->
                         favoriteStyles = favorites
-                        val container = keyboardRootView?.findViewById<LinearLayout>(R.id.quick_art_container)
-                        if (container != null) {
-                            populateQuickArtBar(container)
-                        }
+                        refreshQuickArtBar()
                     }
                 }
                 serviceScope.launch {
@@ -295,7 +337,43 @@ class SpellTypeIME : InputMethodService() {
                 serviceScope.launch {
                     repo.getThemeSelection().collect { theme ->
                         themeSelection = theme
-                        applyKeyboardTheme(theme)
+                        applyCustomConfigurations()
+                    }
+                }
+                serviceScope.launch {
+                    repo.getKeyboardWallpaperPath().collect { path ->
+                        keyboardWallpaperPath = path
+                        applyCustomConfigurations()
+                    }
+                }
+                serviceScope.launch {
+                    repo.getKeyboardWallpaperOpacity().collect { opacity ->
+                        keyboardWallpaperOpacity = opacity
+                        applyCustomConfigurations()
+                    }
+                }
+                serviceScope.launch {
+                    repo.getKeyShape().collect { shape ->
+                        keyShape = shape
+                        applyCustomConfigurations()
+                    }
+                }
+                serviceScope.launch {
+                    repo.getKeyBorderEnabled().collect { enabled ->
+                        keyBorderEnabled = enabled
+                        applyCustomConfigurations()
+                    }
+                }
+                serviceScope.launch {
+                    repo.getKeyBorderThickness().collect { thickness ->
+                        keyBorderThickness = thickness
+                        applyCustomConfigurations()
+                    }
+                }
+                serviceScope.launch {
+                    repo.getKeyTextSize().collect { size ->
+                        keyTextSize = size
+                        applyCustomConfigurations()
                     }
                 }
             }
@@ -337,6 +415,62 @@ class SpellTypeIME : InputMethodService() {
     private fun populateQuickArtBar(container: LinearLayout) {
         try {
             container.removeAllViews()
+
+            val density = resources.displayMetrics.density
+            val padLR = (12 * density).toInt()
+            val padTB = (6 * density).toInt()
+            val margin = (4 * density).toInt()
+
+            // 1. Add 3D Emoji Toggle Chip
+            val emojiChip = TextView(this)
+            emojiChip.text = "😎 3D Emoji"
+            emojiChip.setTextColor(resources.getColor(R.color.key_text_color, null))
+            emojiChip.textSize = 12f
+            emojiChip.setPadding(padLR, padTB, padLR, padTB)
+            val emojiParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            emojiParams.setMargins(margin, 0, margin, 0)
+            emojiChip.layoutParams = emojiParams
+            emojiChip.isClickable = true
+            emojiChip.isFocusable = true
+            emojiChip.setBackgroundResource(
+                if (isEmojiMode) R.drawable.chip_active_background
+                else R.drawable.chip_inactive_background
+            )
+            emojiChip.setOnClickListener {
+                onKeyClickFeedback(emojiChip)
+                toggleEmojiMode()
+                refreshQuickArtBar()
+            }
+            container.addView(emojiChip)
+
+            // 2. Add Glitter Toggle Chip
+            val glitterChip = TextView(this)
+            glitterChip.text = if (glitterEnabled) "✨ Glitter: ON" else "✨ Glitter: OFF"
+            glitterChip.setTextColor(resources.getColor(R.color.key_text_color, null))
+            glitterChip.textSize = 12f
+            glitterChip.setPadding(padLR, padTB, padLR, padTB)
+            val glitterParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            glitterParams.setMargins(margin, 0, margin, 0)
+            glitterChip.layoutParams = glitterParams
+            glitterChip.isClickable = true
+            glitterChip.isFocusable = true
+            glitterChip.setBackgroundResource(
+                if (glitterEnabled) R.drawable.chip_active_background
+                else R.drawable.chip_inactive_background
+            )
+            glitterChip.setOnClickListener {
+                onKeyClickFeedback(glitterChip)
+                toggleGlitter()
+            }
+            container.addView(glitterChip)
+
+            // 3. Add standard styles
             val styles = getSortedStyles()
             for (style in styles) {
                 val textView = TextView(this)
@@ -354,28 +488,62 @@ class SpellTypeIME : InputMethodService() {
                 textView.setTextColor(resources.getColor(R.color.key_text_color, null))
                 textView.textSize = 12f
 
-                val density = resources.displayMetrics.density
-                val padLR = (12 * density).toInt()
-                val padTB = (6 * density).toInt()
                 textView.setPadding(padLR, padTB, padLR, padTB)
 
                 val params = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
                 )
-                val margin = (4 * density).toInt()
                 params.setMargins(margin, 0, margin, 0)
                 textView.layoutParams = params
 
                 textView.isClickable = true
                 textView.isFocusable = true
                 textView.setBackgroundResource(
-                    if (activeStyle == style) R.drawable.chip_active_background
+                    if (activeStyle == style && !isEmojiMode) R.drawable.chip_active_background
                     else R.drawable.chip_inactive_background
                 )
 
                 textView.setOnClickListener {
+                    if (isEmojiMode) {
+                        isEmojiMode = false
+                        updateKeyLabels()
+                    }
                     selectFrameStyle(style)
+                }
+                container.addView(textView)
+            }
+
+            // 4. Add Unicode Font Style Chips (excluding NONE)
+            val unicodeStyles = UnicodeStyle.values().filter { it != UnicodeStyle.NONE }
+            for (uStyle in unicodeStyles) {
+                val textView = TextView(this)
+                val name = uStyle.name.lowercase().replace("_", " ").replaceFirstChar { it.uppercase() }
+
+                textView.text = "𝔽 $name"
+                textView.setTextColor(resources.getColor(R.color.key_text_color, null))
+                textView.textSize = 12f
+                textView.setPadding(padLR, padTB, padLR, padTB)
+
+                val params = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                params.setMargins(margin, 0, margin, 0)
+                textView.layoutParams = params
+                textView.isClickable = true
+                textView.isFocusable = true
+                textView.setBackgroundResource(
+                    if (activeUnicode == uStyle && !isEmojiMode) R.drawable.chip_active_background
+                    else R.drawable.chip_inactive_background
+                )
+
+                textView.setOnClickListener {
+                    if (isEmojiMode) {
+                        isEmojiMode = false
+                        updateKeyLabels()
+                    }
+                    selectUnicodeStyle(uStyle)
                 }
                 container.addView(textView)
             }
@@ -383,6 +551,8 @@ class SpellTypeIME : InputMethodService() {
             e.printStackTrace()
         }
     }
+
+    private val glowingKeys = mutableSetOf<Int>()
 
     private fun onKeyClickFeedback(view: View) {
         try {
@@ -414,6 +584,25 @@ class SpellTypeIME : InputMethodService() {
         }
 
         try {
+            // Neon Glow click lighting effect + 3D tactile pressed squish
+            val viewId = view.id
+            if (view is TextView && (letterKeyIds.contains(viewId) || numKeyIds.contains(viewId) ||
+                viewId == R.id.btn_shift || viewId == R.id.btn_backspace || viewId == R.id.btn_mode || viewId == R.id.btn_space || viewId == R.id.btn_enter)) {
+
+                glowingKeys.add(viewId)
+                applyKeyStyle(view, isPressed = true)
+
+                serviceScope.launch {
+                    delay(150)
+                    glowingKeys.remove(viewId)
+                    applyKeyStyle(view, isPressed = false)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        try {
             // Smooth 120fps animation
             view.animate()
                 .scaleX(1.15f)
@@ -438,7 +627,7 @@ class SpellTypeIME : InputMethodService() {
                 try {
                     saveStyleUseCase(style)
                     activeStyle = style
-                    updateChipHighlighting()
+                    refreshQuickArtBar()
                     updateLivePreviewBar()
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -447,18 +636,42 @@ class SpellTypeIME : InputMethodService() {
         }
     }
 
-    private fun updateChipHighlighting() {
+    private fun selectUnicodeStyle(style: UnicodeStyle) {
+        val repo = repository
+        if (repo != null) {
+            serviceScope.launch {
+                try {
+                    repo.saveSelectedUnicodeStyle(style)
+                    activeUnicode = style
+                    refreshQuickArtBar()
+                    updateLivePreviewBar()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+
+    private fun toggleGlitter() {
+        val repo = repository
+        if (repo != null) {
+            serviceScope.launch {
+                try {
+                    repo.saveGlitterEnabled(!glitterEnabled)
+                    glitterEnabled = !glitterEnabled
+                    refreshQuickArtBar()
+                    updateLivePreviewBar()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+
+    private fun refreshQuickArtBar() {
         try {
             val container = keyboardRootView?.findViewById<LinearLayout>(R.id.quick_art_container) ?: return
-            val styles = getSortedStyles()
-            for (i in 0 until container.childCount) {
-                val child = container.getChildAt(i) as? TextView ?: continue
-                val style = styles.getOrNull(i) ?: continue
-                child.setBackgroundResource(
-                    if (activeStyle == style) R.drawable.chip_active_background
-                    else R.drawable.chip_inactive_background
-                )
-            }
+            populateQuickArtBar(container)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -494,7 +707,7 @@ class SpellTypeIME : InputMethodService() {
 
     private fun toggleShift() {
         try {
-            if (isSymbolMode) return
+            if (isSymbolMode || isEmojiMode) return
             isShifted = !isShifted
             updateKeyLabels()
         } catch (e: Exception) {
@@ -504,7 +717,24 @@ class SpellTypeIME : InputMethodService() {
 
     private fun toggleMode() {
         try {
-            isSymbolMode = !isSymbolMode
+            if (isEmojiMode) {
+                isEmojiMode = false
+                isSymbolMode = false
+            } else {
+                isSymbolMode = !isSymbolMode
+                isEmojiMode = false
+            }
+            isShifted = false
+            updateKeyLabels()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun toggleEmojiMode() {
+        try {
+            isEmojiMode = !isEmojiMode
+            isSymbolMode = false
             isShifted = false
             updateKeyLabels()
         } catch (e: Exception) {
@@ -515,22 +745,37 @@ class SpellTypeIME : InputMethodService() {
     private fun updateKeyLabels() {
         try {
             val modeButton: TextView? = keyboardRootView?.findViewById(R.id.btn_mode)
-            modeButton?.text = if (isSymbolMode) "abc" else "?123"
+            modeButton?.text = when {
+                isEmojiMode -> "abc"
+                isSymbolMode -> "abc"
+                else -> "?123"
+            }
 
             for (i in letterKeyIds.indices) {
                 val id = letterKeyIds[i]
                 val view = keyViews[id] ?: continue
 
-                if (isSymbolMode) {
-                    if (i < symbols.size) {
-                        view.text = symbols[i]
-                        view.visibility = View.VISIBLE
-                    } else {
-                        view.visibility = View.INVISIBLE
+                when {
+                    isEmojiMode -> {
+                        if (i < emojis3D.size) {
+                            view.text = emojis3D[i]
+                            view.visibility = View.VISIBLE
+                        } else {
+                            view.visibility = View.INVISIBLE
+                        }
                     }
-                } else {
-                    view.visibility = View.VISIBLE
-                    view.text = if (isShifted) lettersUpper[i] else lettersLower[i]
+                    isSymbolMode -> {
+                        if (i < symbols.size) {
+                            view.text = symbols[i]
+                            view.visibility = View.VISIBLE
+                        } else {
+                            view.visibility = View.INVISIBLE
+                        }
+                    }
+                    else -> {
+                        view.visibility = View.VISIBLE
+                        view.text = if (isShifted) lettersUpper[i] else lettersLower[i]
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -561,6 +806,29 @@ class SpellTypeIME : InputMethodService() {
     private fun handleSpace() {
         try {
             val ic: InputConnection = currentInputConnection ?: return
+
+            // Smart Text Expander (Shortcut Expander Ease Function)
+            if (composingText.isNotEmpty()) {
+                val text = composingText.toString().trim()
+                val lower = text.lowercase()
+                val shortcuts = mapOf(
+                    "brb" to "Be Right Back 🏃‍♂️",
+                    "hru" to "How are you? 🤔",
+                    "omg" to "Oh My God! 😱",
+                    "np" to "No Problem 👍",
+                    "ty" to "Thank You So Much! ❤️",
+                    "lol" to "Laughing Out Loud! 😂",
+                    "g2g" to "Got To Go! 👋",
+                    "idk" to "I Don't Know 🤷‍♂️",
+                    "btw" to "By The Way 📌"
+                )
+                if (shortcuts.containsKey(lower)) {
+                    composingText.clear()
+                    composingText.append(shortcuts[lower])
+                    updateLivePreviewBar()
+                }
+            }
+
             if (isStylingActive() && composingText.isNotEmpty()) {
                 commitComposingText {
                     ic.commitText(" ", 1)
@@ -568,6 +836,57 @@ class SpellTypeIME : InputMethodService() {
             } else {
                 ic.commitText(" ", 1)
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun handleClipboardTool() {
+        try {
+            val clipboard = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
+            val clipText = clipboard?.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
+            if (clipText.isNotEmpty()) {
+                composingText.clear()
+                composingText.append(clipText)
+                updateLivePreviewBar()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun handleTranslateTool() {
+        try {
+            val raw = composingText.toString()
+            if (raw.isNotEmpty()) {
+                // Cyber translator leet mock converter
+                val translated = raw.lowercase()
+                    .replace("a", "@")
+                    .replace("e", "3")
+                    .replace("i", "1")
+                    .replace("o", "0")
+                    .replace("s", "$")
+                    .replace("t", "7")
+                composingText.clear()
+                composingText.append(translated)
+                updateLivePreviewBar()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun handleTemplatesTool() {
+        try {
+            val templates = listOf(
+                "★ S P E L L T Y P E ★",
+                "꧁𓊈𒆜 ⓈⓅⒺⓁⓁⓉⓎⓅⒺ 𒆜𓊉꧂",
+                "┌────── ∘°❉°∘ ──────┐\n   WELCOME TO MY BIO\n└────── °∘❉∘° ──────┘"
+            )
+            val index = (0..2).random()
+            composingText.clear()
+            composingText.append(templates[index])
+            updateLivePreviewBar()
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -735,12 +1054,12 @@ class SpellTypeIME : InputMethodService() {
         }
     }
 
-    private fun applyKeyboardTheme(theme: String) {
+    private fun applyCustomConfigurations() {
         try {
             val root = keyboardRootView ?: return
-            val isLight = theme == "LIGHT"
 
-            val bgColor = when (theme) {
+            // Base Theme Colors
+            val baseBgColor = when (themeSelection) {
                 "AMOLED" -> android.graphics.Color.BLACK
                 "LIGHT" -> android.graphics.Color.parseColor("#F3F4F6")
                 "BLUE" -> android.graphics.Color.parseColor("#1E3A8A")
@@ -749,7 +1068,74 @@ class SpellTypeIME : InputMethodService() {
                 else -> android.graphics.Color.parseColor("#0B0F19") // DARK
             }
 
-            val keyBgColor = when (theme) {
+            val wallBgColor = when (keyboardWallpaperPath) {
+                "OCEAN" -> android.graphics.Color.parseColor("#0F172A") // Deep ocean slate
+                "SUNSET" -> android.graphics.Color.parseColor("#31102F") // Sunset glow
+                "MIDNIGHT" -> android.graphics.Color.parseColor("#020617") // Midnight magic
+                "GLASS" -> android.graphics.Color.parseColor("#121214") // Glassmorphic translucent dark
+                else -> baseBgColor
+            }
+
+            // Apply Wallpaper/Theme with Opacity / Glassmorphic background
+            if (keyboardWallpaperPath.isNotEmpty()) {
+                val drawable = android.graphics.drawable.GradientDrawable()
+                drawable.shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+
+                val alpha = (keyboardWallpaperOpacity * 2.55).toInt().coerceIn(0, 255)
+                val blendedColor = android.graphics.Color.argb(
+                    alpha,
+                    android.graphics.Color.red(wallBgColor),
+                    android.graphics.Color.green(wallBgColor),
+                    android.graphics.Color.blue(wallBgColor)
+                )
+                drawable.setColor(blendedColor)
+                root.background = drawable
+            } else {
+                root.setBackgroundColor(baseBgColor)
+            }
+
+            styleAllTextViewsUnder(root)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun styleAllTextViewsUnder(view: View) {
+        try {
+            if (view is TextView) {
+                applyKeyStyle(view, false)
+            } else if (view is android.view.ViewGroup) {
+                for (i in 0 until view.childCount) {
+                    styleAllTextViewsUnder(view.getChildAt(i))
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun applyKeyStyle(view: TextView, isPressed: Boolean) {
+        try {
+            val id = view.id
+            val isStandardKey = letterKeyIds.contains(id) || numKeyIds.contains(id)
+            val isSpecialKey = id == R.id.btn_shift || id == R.id.btn_backspace || id == R.id.btn_mode || id == R.id.btn_space || id == R.id.btn_enter
+
+            if (!isStandardKey && !isSpecialKey) return
+
+            val density = resources.displayMetrics.density
+
+            // A. Text Size
+            val size = when (keyTextSize) {
+                "SMALL" -> if (isStandardKey) 15f else 11f
+                "LARGE" -> if (isStandardKey) 24f else 16f
+                "HUGE" -> if (isStandardKey) 28f else 18f
+                else -> if (isStandardKey) 19f else 13f // MEDIUM
+            }
+            view.textSize = size
+
+            // B. Colors
+            val isLight = themeSelection == "LIGHT"
+            val baseKeyColor = when (themeSelection) {
                 "AMOLED" -> android.graphics.Color.parseColor("#111111")
                 "LIGHT" -> android.graphics.Color.parseColor("#FFFFFF")
                 "BLUE" -> android.graphics.Color.parseColor("#3B82F6")
@@ -757,32 +1143,82 @@ class SpellTypeIME : InputMethodService() {
                 "GREEN" -> android.graphics.Color.parseColor("#10B981")
                 else -> android.graphics.Color.parseColor("#1F2937") // DARK
             }
+            val baseSpecialColor = if (isLight) android.graphics.Color.parseColor("#E5E7EB") else android.graphics.Color.parseColor("#111827")
+            var keyColor = if (isSpecialKey) baseSpecialColor else baseKeyColor
 
-            val textColor = if (isLight) android.graphics.Color.parseColor("#1F2937") else android.graphics.Color.WHITE
-
-            root.setBackgroundColor(bgColor)
-
-            // Apply themes to keys
-            for (id in letterKeyIds) {
-                val key = keyViews[id] ?: continue
-                key.setBackgroundColor(keyBgColor)
-                key.setTextColor(textColor)
-            }
-            for (id in numKeyIds) {
-                val key = root.findViewById<TextView>(id) ?: continue
-                key.setBackgroundColor(keyBgColor)
-                key.setTextColor(textColor)
-            }
-
-            val specialBgColor = if (isLight) android.graphics.Color.parseColor("#E5E7EB") else android.graphics.Color.parseColor("#111827")
-            val specialIds = listOf(R.id.btn_shift, R.id.btn_backspace, R.id.btn_mode, R.id.btn_space)
-            for (id in specialIds) {
-                val btn = root.findViewById<View>(id) ?: continue
-                btn.setBackgroundColor(specialBgColor)
-                if (btn is TextView) {
-                    btn.setTextColor(textColor)
+            // Handle Glow / pressed lighting state
+            if (isPressed || glowingKeys.contains(id)) {
+                keyColor = when (themeSelection) {
+                    "LIGHT" -> android.graphics.Color.parseColor("#F43F5E") // Radiant Pink
+                    "BLUE" -> android.graphics.Color.parseColor("#6EE7B7") // Neon Mint
+                    "GREEN" -> android.graphics.Color.parseColor("#FBBF24") // Neon Amber
+                    else -> android.graphics.Color.parseColor("#38BDF8") // Solar Cyan
                 }
             }
+
+            // Radius
+            val radius = when (keyShape) {
+                "SQUARE" -> 0f
+                "CIRCULAR" -> 1000f
+                "GLASSMORPHISM" -> 16f * density
+                else -> 8f * density // ROUNDED
+            }
+
+            // Create LayerDrawable for 3D Bevel/Shadow Effect
+            val shadowDrawable = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                cornerRadius = radius
+                setColor(android.graphics.Color.parseColor("#090D16")) // solid deep 3D bevel shadow
+            }
+
+            val frontDrawable = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                cornerRadius = radius
+
+                if (keyShape == "GLASSMORPHISM") {
+                    val glassColor = if (isLight) {
+                        android.graphics.Color.argb(if (isPressed || glowingKeys.contains(id)) 160 else 60, 255, 255, 255)
+                    } else {
+                        android.graphics.Color.argb(if (isPressed || glowingKeys.contains(id)) 140 else 45, 255, 255, 255)
+                    }
+                    setColor(glassColor)
+                } else {
+                    setColor(keyColor)
+                }
+
+                // Borders
+                if (keyBorderEnabled) {
+                    val thicknessPx = (keyBorderThickness * density).toInt().coerceAtLeast(1)
+                    val borderColor = if (isPressed || glowingKeys.contains(id)) {
+                        android.graphics.Color.WHITE
+                    } else if (keyShape == "GLASSMORPHISM") {
+                        if (isLight) android.graphics.Color.argb(120, 0, 0, 0)
+                        else android.graphics.Color.argb(100, 255, 255, 255)
+                    } else {
+                        if (isLight) android.graphics.Color.parseColor("#D1D5DB")
+                        else android.graphics.Color.parseColor("#4B5563")
+                    }
+                    setStroke(thicknessPx, borderColor)
+                }
+            }
+
+            // Wrap in LayerDrawable to offset the front layer, creating an organic 3D push-button effect!
+            val layers = arrayOf(shadowDrawable, frontDrawable)
+            val layerDrawable = android.graphics.drawable.LayerDrawable(layers)
+
+            // Offset front drawable to show the bottom shadow
+            val shadowHeight = if (isPressed || glowingKeys.contains(id)) (1 * density).toInt() else (4 * density).toInt()
+            layerDrawable.setLayerInset(1, 0, 0, 0, shadowHeight) // offset bottom
+
+            view.background = layerDrawable
+
+            // Text Color
+            val textColor = if (isLight) {
+                if (isPressed || glowingKeys.contains(id)) android.graphics.Color.WHITE else android.graphics.Color.parseColor("#1F2937")
+            } else {
+                android.graphics.Color.WHITE
+            }
+            view.setTextColor(textColor)
         } catch (e: Exception) {
             e.printStackTrace()
         }

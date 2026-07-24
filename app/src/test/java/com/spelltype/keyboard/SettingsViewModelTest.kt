@@ -89,4 +89,33 @@ class SettingsViewModelTest {
 
         assertTrue(viewModel.savedArtList.value.isEmpty())
     }
+
+    @Test
+    fun testPremiumThemeConfigurations_savesAndUpdatesCorrectly() = runTest(testDispatcher) {
+        // Assert defaults
+        assertEquals("", viewModel.keyboardWallpaperPath.value)
+        assertEquals(50, viewModel.keyboardWallpaperOpacity.value)
+        assertEquals("ROUNDED", viewModel.keyShape.value)
+        assertTrue(viewModel.keyBorderEnabled.value)
+        assertEquals(1, viewModel.keyBorderThickness.value)
+        assertEquals("MEDIUM", viewModel.keyTextSize.value)
+
+        // Set values via view model
+        viewModel.saveKeyboardWallpaperPath("OCEAN")
+        viewModel.saveKeyboardWallpaperOpacity(85)
+        viewModel.saveKeyShape("GLASSMORPHISM")
+        viewModel.saveKeyBorderEnabled(false)
+        viewModel.saveKeyBorderThickness(3)
+        viewModel.saveKeyTextSize("LARGE")
+
+        testScheduler.advanceUntilIdle()
+
+        // Verify values are updated in StateFlow
+        assertEquals("OCEAN", viewModel.keyboardWallpaperPath.value)
+        assertEquals(85, viewModel.keyboardWallpaperOpacity.value)
+        assertEquals("GLASSMORPHISM", viewModel.keyShape.value)
+        assertFalse(viewModel.keyBorderEnabled.value)
+        assertEquals(3, viewModel.keyBorderThickness.value)
+        assertEquals("LARGE", viewModel.keyTextSize.value)
+    }
 }

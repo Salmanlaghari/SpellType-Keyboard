@@ -7,6 +7,49 @@
     android:background="@color/keyboard_background"
     android:paddingBottom="4dp">
 
+    <!-- Sponsored Ad Banner -->
+    <LinearLayout
+        android:id="@+id/keyboard_ad_banner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FEF08A"
+        android:orientation="horizontal"
+        android:padding="4dp"
+        android:gravity="center_vertical"
+        android:visibility="visible">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" [AD] "
+            android:textColor="#92400E"
+            android:textSize="9sp"
+            android:textStyle="bold"
+            android:background="#FEF3C7"
+            android:padding="2dp"
+            android:layout_marginRight="4dp"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Upgrade to Premium for AD-FREE Custom Fonts! 👑"
+            android:textColor="#78350F"
+            android:textStyle="bold"
+            android:textSize="11sp"/>
+
+        <TextView
+            android:id="@+id/btn_close_keyboard_ad"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="✕"
+            android:textColor="#78350F"
+            android:textSize="12sp"
+            android:padding="4dp"
+            android:clickable="true"
+            android:focusable="true"/>
+    </LinearLayout>
+
     <!-- Active Frame Selector Toolbar / Quick Art Bar -->
     <LinearLayout
         android:layout_width="match_parent"
@@ -40,6 +83,67 @@
                 <!-- Programmatically populated with style chips at runtime -->
             </LinearLayout>
         </HorizontalScrollView>
+    </LinearLayout>
+
+    <!-- Pro Tools Floating Bar -->
+    <LinearLayout
+        android:id="@+id/pro_tools_bar"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:orientation="horizontal"
+        android:background="#1B1F2D"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🛠️ Pro Tools: "
+            android:textColor="@color/accent_color"
+            android:textStyle="bold"
+            android:textSize="12sp"
+            android:layout_marginRight="4dp"/>
+
+        <TextView
+            android:id="@+id/tool_clipboard"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📋 Clipboard"
+            android:textColor="@color/key_text_color"
+            android:textSize="12sp"
+            android:background="@drawable/chip_inactive_background"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="4dp"
+            android:layout_marginRight="8dp"
+            android:clickable="true"
+            android:focusable="true"/>
+
+        <TextView
+            android:id="@+id/tool_translate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🌐 Translate"
+            android:textColor="@color/key_text_color"
+            android:textSize="12sp"
+            android:background="@drawable/chip_inactive_background"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="4dp"
+            android:layout_marginRight="8dp"
+            android:clickable="true"
+            android:focusable="true"/>
+
+        <TextView
+            android:id="@+id/tool_templates"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="✨ Bios"
+            android:textColor="@color/key_text_color"
+            android:textSize="12sp"
+            android:background="@drawable/chip_inactive_background"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="4dp"
+            android:clickable="true"
+            android:focusable="true"/>
     </LinearLayout>
 
     <!-- Auto-Suggestions Bar -->

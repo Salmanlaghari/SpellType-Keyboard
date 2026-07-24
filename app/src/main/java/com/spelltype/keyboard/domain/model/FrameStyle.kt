@@ -36,5 +36,6 @@ enum class FrameStyle {
     GHOST,
     FLORAL,
     GEM,
-    CLOVER
+    CLOVER,
+    LINE_BORDER
 }

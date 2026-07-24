@@ -33,6 +33,13 @@ class FakeKeyboardRepository : KeyboardRepository {
     private val autoSuggestionsEnabledFlow = MutableStateFlow(true)
     private val swipeTypingEnabledFlow = MutableStateFlow(false)
 
+    private val keyboardWallpaperPathFlow = MutableStateFlow("")
+    private val keyboardWallpaperOpacityFlow = MutableStateFlow(50)
+    private val keyShapeFlow = MutableStateFlow("ROUNDED")
+    private val keyBorderEnabledFlow = MutableStateFlow(true)
+    private val keyBorderThicknessFlow = MutableStateFlow(1)
+    private val keyTextSizeFlow = MutableStateFlow("MEDIUM")
+
     override fun getSavedArtList(): Flow<List<SavedArt>> {
         return savedArtFlow
     }
@@ -191,6 +198,54 @@ class FakeKeyboardRepository : KeyboardRepository {
 
     override suspend fun saveSwipeTypingEnabled(enabled: Boolean) {
         swipeTypingEnabledFlow.value = enabled
+    }
+
+    override fun getKeyboardWallpaperPath(): Flow<String> {
+        return keyboardWallpaperPathFlow
+    }
+
+    override suspend fun saveKeyboardWallpaperPath(path: String) {
+        keyboardWallpaperPathFlow.value = path
+    }
+
+    override fun getKeyboardWallpaperOpacity(): Flow<Int> {
+        return keyboardWallpaperOpacityFlow
+    }
+
+    override suspend fun saveKeyboardWallpaperOpacity(opacity: Int) {
+        keyboardWallpaperOpacityFlow.value = opacity
+    }
+
+    override fun getKeyShape(): Flow<String> {
+        return keyShapeFlow
+    }
+
+    override suspend fun saveKeyShape(shape: String) {
+        keyShapeFlow.value = shape
+    }
+
+    override fun getKeyBorderEnabled(): Flow<Boolean> {
+        return keyBorderEnabledFlow
+    }
+
+    override suspend fun saveKeyBorderEnabled(enabled: Boolean) {
+        keyBorderEnabledFlow.value = enabled
+    }
+
+    override fun getKeyBorderThickness(): Flow<Int> {
+        return keyBorderThicknessFlow
+    }
+
+    override suspend fun saveKeyBorderThickness(thickness: Int) {
+        keyBorderThicknessFlow.value = thickness
+    }
+
+    override fun getKeyTextSize(): Flow<String> {
+        return keyTextSizeFlow
+    }
+
+    override suspend fun saveKeyTextSize(size: String) {
+        keyTextSizeFlow.value = size
     }
 
     override suspend fun clearAllArt() {

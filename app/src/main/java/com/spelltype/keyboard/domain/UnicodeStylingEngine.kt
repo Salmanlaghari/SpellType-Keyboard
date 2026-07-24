@@ -166,6 +166,36 @@ object UnicodeStylingEngine {
                     else -> char.toString()
                 }
             }
+            UnicodeStyle.MONOSPACE -> {
+                when (char) {
+                    in 'A'..'Z' -> codePointToString(0x1D670 + (char - 'A'))
+                    in 'a'..'z' -> codePointToString(0x1D68A + (char - 'a'))
+                    in '0'..'9' -> codePointToString(0x1D7F6 + (char - '0'))
+                    else -> char.toString()
+                }
+            }
+            UnicodeStyle.CIRCLED_NEGATIVE -> {
+                when (char) {
+                    in 'A'..'Z' -> codePointToString(0x1F150 + (char - 'A'))
+                    in 'a'..'z' -> codePointToString(0x1F150 + (char - 'a'))
+                    else -> char.toString()
+                }
+            }
+            UnicodeStyle.REGIONAL_INDICATOR -> {
+                when (char) {
+                    in 'A'..'Z' -> codePointToString(0x1F1E6 + (char - 'A'))
+                    in 'a'..'z' -> codePointToString(0x1F1E6 + (char - 'a'))
+                    else -> char.toString()
+                }
+            }
+            UnicodeStyle.GIANT_WORDS -> {
+                val upper = char.uppercaseChar()
+                when (upper) {
+                    in 'A'..'Z' -> codePointToString(0xFF21 + (upper - 'A'))
+                    in '0'..'9' -> codePointToString(0xFF10 + (upper - '0'))
+                    else -> upper.toString()
+                }
+            }
         }
     }
 

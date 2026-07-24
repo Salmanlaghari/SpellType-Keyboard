@@ -80,6 +80,25 @@ class SettingsViewModel(
     val swipeTypingEnabled: StateFlow<Boolean> = repository.getSwipeTypingEnabled()
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
+    // Premium Configurations StateFlows
+    val keyboardWallpaperPath: StateFlow<String> = repository.getKeyboardWallpaperPath()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, "")
+
+    val keyboardWallpaperOpacity: StateFlow<Int> = repository.getKeyboardWallpaperOpacity()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 50)
+
+    val keyShape: StateFlow<String> = repository.getKeyShape()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, "ROUNDED")
+
+    val keyBorderEnabled: StateFlow<Boolean> = repository.getKeyBorderEnabled()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    val keyBorderThickness: StateFlow<Int> = repository.getKeyBorderThickness()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 1)
+
+    val keyTextSize: StateFlow<String> = repository.getKeyTextSize()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, "MEDIUM")
+
     fun selectFrameStyle(style: FrameStyle) {
         viewModelScope.launch {
             saveSelectedFrameStyleUseCase(style)
@@ -193,6 +212,42 @@ class SettingsViewModel(
     fun saveSwipeTypingEnabled(enabled: Boolean) {
         viewModelScope.launch {
             repository.saveSwipeTypingEnabled(enabled)
+        }
+    }
+
+    fun saveKeyboardWallpaperPath(path: String) {
+        viewModelScope.launch {
+            repository.saveKeyboardWallpaperPath(path)
+        }
+    }
+
+    fun saveKeyboardWallpaperOpacity(opacity: Int) {
+        viewModelScope.launch {
+            repository.saveKeyboardWallpaperOpacity(opacity)
+        }
+    }
+
+    fun saveKeyShape(shape: String) {
+        viewModelScope.launch {
+            repository.saveKeyShape(shape)
+        }
+    }
+
+    fun saveKeyBorderEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            repository.saveKeyBorderEnabled(enabled)
+        }
+    }
+
+    fun saveKeyBorderThickness(thickness: Int) {
+        viewModelScope.launch {
+            repository.saveKeyBorderThickness(thickness)
+        }
+    }
+
+    fun saveKeyTextSize(size: String) {
+        viewModelScope.launch {
+            repository.saveKeyTextSize(size)
         }
     }
 
