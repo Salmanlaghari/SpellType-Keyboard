@@ -22,15 +22,35 @@ jobs:
           distribution: 'temurin'
           cache: 'gradle'
 
-      - name: Decode Release Keystore
+      - name: Generate Debug Keystore (for build process)
+        run: |
+          mkdir -p ~/.android
+          keytool -genkey -v -keystore ~/.android/debug.keystore \
+            -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass android -keypass android \
+            -dname "CN=Android Debug,O=Android,C=US"
+
+      - name: Prepare Release Keystore & Properties
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          echo "$KEYSTORE_BASE64" | base64 --decode > app/release-key.jks
-          echo "storeFile=release-key.jks" > keystore.properties
-          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> keystore.properties
-          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> keystore.properties
-          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> keystore.properties
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > app/release-key.jks
+            echo "storeFile=release-key.jks" > keystore.properties
+            echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> keystore.properties
+            echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> keystore.properties
+            echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> keystore.properties
+          else
+            # Fallback: generate temporary keystore for testing
+            keytool -genkey -v -keystore app/release-key.jks \
+              -alias spelltype -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass spelltypepass -keypass spelltypepass \
+              -dname "CN=SpellType Keyboard,O=SpellType,C=PK"
+            echo "storeFile=release-key.jks" > keystore.properties
+            echo "storePassword=spelltypepass" >> keystore.properties
+            echo "keyAlias=spelltype" >> keystore.properties
+            echo "keyPassword=spelltypepass" >> keystore.properties
+          fi
 
       - name: Grant Gradle Permission
         run: chmod +x gradlew
