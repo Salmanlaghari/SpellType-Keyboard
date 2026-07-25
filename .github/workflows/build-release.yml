@@ -1,0 +1,87 @@
+name: Build Signed Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Signed Production Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Decode Release Keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > app/release-key.jks
+          echo "storeFile=release-key.jks" > keystore.properties
+          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> keystore.properties
+          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> keystore.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> keystore.properties
+
+      - name: Grant Gradle Permission
+        run: chmod +x gradlew
+
+      - name: Build Signed Release APK
+        run: ./gradlew assembleRelease
+
+      - name: Build Signed AAB (Play Store)
+        run: ./gradlew bundleRelease
+
+      - name: Prepare Build Outputs
+        run: |
+          mkdir -p release-outputs
+          cp app/build/outputs/apk/release/*.apk release-outputs/
+          cp app/build/outputs/bundle/release/*.aab release-outputs/
+
+      - name: Upload Release APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SpellType-Keyboard-Release-APK
+          path: release-outputs/*.apk
+          retention-days: 90
+
+      - name: Upload Release AAB Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SpellType-Keyboard-Release-AAB
+          path: release-outputs/*.aab
+          retention-days: 90
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          name: SpellType Keyboard ${{ github.ref_name }}
+          body: |
+            ## ✨ SpellType Keyboard ${{ github.ref_name }}
+
+            🎯 **Features:**
+            - ✨ Magical text styling with frames, shapes & Unicode art
+            - 🎨 Premium 3D key design with neon lighting effects
+            - 🛠️ Floating Pro Tools (Clipboard, Translate, Templates)
+            - ⚡ Dynamic shortcut text expansion
+            - 📱 AdMob ads integrated (6 ad units)
+            - 🔒 Privacy compliant
+
+            🚀 Ready to install & use!
+          files: |
+            release-outputs/*.apk
+            release-outputs/*.aab
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
