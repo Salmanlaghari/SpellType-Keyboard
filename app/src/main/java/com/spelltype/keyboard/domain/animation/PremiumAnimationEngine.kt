@@ -1,5 +1,6 @@
 package com.spelltype.keyboard.domain.animation
 
+import android.animation.Animator
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
@@ -174,7 +175,7 @@ object PremiumAnimationEngine {
     /** Animated sparkle burst at position */
     fun animateSparkleBurst(view: View, centerX: Float, centerY: Float, color: Int) {
         val sparkleCount = 8
-        val animators = mutableListOf<ObjectAnimator>()
+        val animators = mutableListOf<Animator>()
 
         for (i in 0 until sparkleCount) {
             val angle = (i * 360f / sparkleCount) * (Math.PI / 180f)
