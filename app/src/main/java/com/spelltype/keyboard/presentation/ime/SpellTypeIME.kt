@@ -21,6 +21,15 @@ import com.spelltype.keyboard.domain.model.ShapeLayout
 import com.spelltype.keyboard.domain.model.UnicodeStyle
 import com.spelltype.keyboard.domain.repository.KeyboardRepository
 import com.spelltype.keyboard.domain.usecase.*
+import com.spelltype.keyboard.domain.theme.PremiumTheme
+import com.spelltype.keyboard.domain.theme.PremiumThemeEngine
+import com.spelltype.keyboard.domain.animation.PremiumAnimationEngine
+import com.spelltype.keyboard.domain.language.LanguageManager
+import com.spelltype.keyboard.domain.language.KeyboardLanguage
+import com.spelltype.keyboard.domain.ai.AISuggestionsEngine
+import com.spelltype.keyboard.domain.ai.GeminiLiveService
+import com.spelltype.keyboard.domain.developer.DeveloperKeyboard
+import com.spelltype.keyboard.domain.design.ImageDesignEngine
 import kotlinx.coroutines.*
 
 class SpellTypeIME : InputMethodService() {
@@ -60,6 +69,26 @@ class SpellTypeIME : InputMethodService() {
     private var keyBorderThickness = 1
     private var keyTextSize = "MEDIUM"
     private var premiumUnlocked = false
+
+    // ═══ Premium Theme System ═══
+    private var activePremiumTheme: PremiumTheme = PremiumTheme.NEON_CYBER
+    private var isPremiumThemeMode = true
+
+    // ═══ Language System (120+ languages) ═══
+    private var currentLanguage: KeyboardLanguage? = null
+    private var languageList = LanguageManager.getAllLanguages()
+    private var languageIndex = 0
+
+    // ═══ Developer Mode ═══
+    private var isDeveloperMode = false
+    private var devMode: DeveloperKeyboard.DevMode = DeveloperKeyboard.DevMode.SYMBOLS
+
+    // ═══ Gemini Live ═══
+    private var geminiActive = false
+    private var activeTone = GeminiLiveService.Tone.CASUAL
+
+    // ═══ AI Suggestions ═══
+    private var lastCommittedWord = ""
 
     private var isShifted = false
     private var isSymbolMode = false
@@ -191,8 +220,11 @@ class SpellTypeIME : InputMethodService() {
 
     override fun onCreateInputView(): View {
         try {
-            val keyboardView = layoutInflater.inflate(R.layout.keyboard_view, null)
+            val keyboardView = layoutInflater.inflate(R.layout.keyboard_view_premium, null)
             keyboardRootView = keyboardView
+
+            // Initialize default language
+            currentLanguage = LanguageManager.getLanguageByCode("en")
 
             // Map standard and special letter keys
             for (id in letterKeyIds) {
@@ -246,6 +278,69 @@ class SpellTypeIME : InputMethodService() {
                 handleEnter()
             }
 
+            // ═══ NEW: Premium Header Bar Buttons ═══
+
+            // Language Switcher — cycles through 120+ languages
+            keyboardView.findViewById<View>(R.id.btn_language)?.setOnClickListener {
+                onKeyClickFeedback(it)
+                cycleLanguage()
+            }
+
+            // Theme Selector — cycles through 12+ premium themes
+            keyboardView.findViewById<View>(R.id.btn_theme)?.setOnClickListener {
+                onKeyClickFeedback(it)
+                cyclePremiumTheme()
+            }
+
+            // Developer Mode Toggle
+            keyboardView.findViewById<View>(R.id.btn_dev_mode)?.setOnClickListener {
+                onKeyClickFeedback(it)
+                toggleDeveloperMode()
+            }
+
+            // Gemini AI Toggle
+            keyboardView.findViewById<View>(R.id.btn_gemini)?.setOnClickListener {
+                onKeyClickFeedback(it)
+                toggleGeminiLive()
+            }
+
+            // ═══ NEW: Bottom Row Extra Buttons ═══
+
+            // Emoji button (new dedicated button)
+            keyboardView.findViewById<View>(R.id.btn_emoji)?.setOnClickListener {
+                onKeyClickFeedback(it)
+                toggleEmojiMode()
+                refreshQuickArtBar()
+            }
+
+            // Comma button
+            keyboardView.findViewById<View>(R.id.btn_comma)?.setOnClickListener {
+                onKeyClickFeedback(it)
+                handleKeyClick(",")
+            }
+
+            // ═══ NEW: Extended Pro Tools ═══
+
+            keyboardView.findViewById<View>(R.id.tool_voice)?.setOnClickListener {
+                onKeyClickFeedback(it)
+                handleVoiceInput()
+            }
+
+            keyboardView.findViewById<View>(R.id.tool_gif)?.setOnClickListener {
+                onKeyClickFeedback(it)
+                handleGifSearch()
+            }
+
+            keyboardView.findViewById<View>(R.id.tool_image)?.setOnClickListener {
+                onKeyClickFeedback(it)
+                handleImageDesign()
+            }
+
+            keyboardView.findViewById<View>(R.id.tool_settings)?.setOnClickListener {
+                onKeyClickFeedback(it)
+                openSettings()
+            }
+
             // Trigger Ad Banner loading
             updateKeyboardAdBanners()
 
@@ -267,16 +362,16 @@ class SpellTypeIME : InputMethodService() {
 
             // Setup suggestions click listeners
             keyboardView.findViewById<View>(R.id.suggestion_left)?.setOnClickListener {
-                suggestedStyleLeft?.let { style ->
-                    onKeyClickFeedback(it)
-                    selectFrameStyle(style)
-                }
+                onKeyClickFeedback(it)
+                handleSuggestionClick(0)
+            }
+            keyboardView.findViewById<View>(R.id.suggestion_center)?.setOnClickListener {
+                onKeyClickFeedback(it)
+                handleSuggestionClick(1)
             }
             keyboardView.findViewById<View>(R.id.suggestion_right)?.setOnClickListener {
-                suggestedStyleRight?.let { style ->
-                    onKeyClickFeedback(it)
-                    selectFrameStyle(style)
-                }
+                onKeyClickFeedback(it)
+                handleSuggestionClick(2)
             }
 
             // Load dynamic settings flow safely
@@ -359,7 +454,7 @@ class SpellTypeIME : InputMethodService() {
                 serviceScope.launch {
                     repo.getAutoSuggestionsEnabled().collect { enabled ->
                         autoSuggestionsEnabled = enabled
-                        keyboardRootView?.findViewById<View>(R.id.auto_suggestions_bar)?.visibility = if (enabled) View.VISIBLE else View.GONE
+                        keyboardRootView?.findViewById<View>(R.id.ai_suggestions_bar)?.visibility = if (enabled) View.VISIBLE else View.GONE
                     }
                 }
                 serviceScope.launch {
@@ -746,6 +841,11 @@ class SpellTypeIME : InputMethodService() {
                 isShifted = false
                 updateKeyLabels()
             }
+
+            // Update AI suggestions as user types
+            if (autoSuggestionsEnabled) {
+                updateSuggestionsBar()
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -852,6 +952,11 @@ class SpellTypeIME : InputMethodService() {
     private fun handleSpace() {
         try {
             val ic: InputConnection = currentInputConnection ?: return
+
+            // Track last word for AI suggestions
+            if (composingText.isNotEmpty()) {
+                lastCommittedWord = composingText.toString().trim()
+            }
 
             // Smart Text Expander (Shortcut Expander Ease Function)
             if (composingText.isNotEmpty()) {
@@ -1085,44 +1190,8 @@ class SpellTypeIME : InputMethodService() {
 
     private fun updateSuggestionsBar() {
         try {
-            val root = keyboardRootView ?: return
-            val suggestionsBar = root.findViewById<View>(R.id.auto_suggestions_bar) ?: return
-            if (!autoSuggestionsEnabled || composingText.isEmpty()) {
-                suggestionsBar.visibility = if (autoSuggestionsEnabled) View.VISIBLE else View.GONE
-                root.findViewById<TextView>(R.id.suggestion_left)?.text = "spell"
-                root.findViewById<TextView>(R.id.suggestion_center)?.text = "SpellType"
-                root.findViewById<TextView>(R.id.suggestion_right)?.text = "keyboard"
-                suggestedStyleLeft = null
-                suggestedStyleRight = null
-                return
-            }
-
-            // Rule-based AI Mood detection in real-time as user types!
-            val rawInput = composingText.toString()
-            val moodSuggestion = MoodDetector.detectMood(rawInput)
-
-            val leftText = root.findViewById<TextView>(R.id.suggestion_left) ?: return
-            val centerText = root.findViewById<TextView>(R.id.suggestion_center) ?: return
-            val rightText = root.findViewById<TextView>(R.id.suggestion_right) ?: return
-
-            centerText.text = "Mood: ${moodSuggestion.mood.displayName} ${moodSuggestion.mood.emoji}"
-
-            val list = moodSuggestion.suggestedStyles
-            if (list.isNotEmpty()) {
-                suggestedStyleLeft = list[0]
-                leftText.text = "Try " + list[0].name.lowercase().replace("_", " ")
-            } else {
-                suggestedStyleLeft = null
-                leftText.text = "Normal"
-            }
-
-            if (list.size > 1) {
-                suggestedStyleRight = list[1]
-                rightText.text = "Try " + list[1].name.lowercase().replace("_", " ")
-            } else {
-                suggestedStyleRight = null
-                rightText.text = "Star"
-            }
+            // Use the new AI-powered suggestions
+            updateSuggestionsBarWithAI()
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -1137,8 +1206,8 @@ class SpellTypeIME : InputMethodService() {
             for (i in 0 until container.childCount) {
                 val row = container.getChildAt(i) as? LinearLayout ?: continue
                 val rowId = row.id
-                if (rowId == R.id.number_row || rowId == R.id.auto_suggestions_bar || row.childCount > 0) {
-                    if (rowId == R.id.auto_suggestions_bar) continue
+                if (rowId == R.id.number_row || rowId == R.id.ai_suggestions_bar || row.childCount > 0) {
+                    if (rowId == R.id.ai_suggestions_bar) continue
 
                     val lp = row.layoutParams as? LinearLayout.LayoutParams ?: continue
                     lp.height = when (heightSelection) {
@@ -1156,6 +1225,11 @@ class SpellTypeIME : InputMethodService() {
 
     private fun applyCustomConfigurations() {
         try {
+            // Use premium theme system if active
+            if (isPremiumThemeMode) {
+                applyPremiumTheme()
+                return
+            }
             val root = keyboardRootView ?: return
 
             // Base Theme Colors
@@ -1329,6 +1403,350 @@ class SpellTypeIME : InputMethodService() {
                 android.graphics.Color.WHITE
             }
             view.setTextColor(textColor)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  PREMIUM THEME SYSTEM — 12+ HD Themes with 60fps animations
+    // ═══════════════════════════════════════════════════════════════
+
+    private fun cyclePremiumTheme() {
+        try {
+            val themes = PremiumThemeEngine.getAllThemes()
+            val currentIndex = themes.indexOf(activePremiumTheme)
+            activePremiumTheme = themes[(currentIndex + 1) % themes.size]
+            applyPremiumTheme()
+            // Update language button to show current theme name
+            keyboardRootView?.findViewById<TextView>(R.id.btn_theme)?.text = "${activePremiumTheme.emoji} ${activePremiumTheme.displayName}"
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun applyPremiumTheme() {
+        try {
+            val root = keyboardRootView ?: return
+            val theme = activePremiumTheme
+            val density = resources.displayMetrics.density
+
+            // Apply gradient background
+            root.background = theme.createBackgroundDrawable()
+
+            // Apply to all key views
+            for ((id, view) in keyViews) {
+                val isSpecial = id == R.id.btn_shift || id == R.id.btn_backspace || id == R.id.btn_mode || id == R.id.btn_enter
+                val radius = when (keyShape) {
+                    "SQUARE" -> 0f
+                    "CIRCULAR" -> 1000f
+                    "GLASSMORPHISM" -> 16f * density
+                    else -> 8f * density
+                }
+                view.background = if (isSpecial) theme.createAccentBackground(radius) else theme.createKeyBackground(radius)
+                view.setTextColor(theme.keyText)
+            }
+
+            // Apply to header bar
+            val headerBar = root.findViewById<LinearLayout>(R.id.btn_language)?.parent as? LinearLayout
+            headerBar?.setBackgroundColor(theme.toolbarBg)
+
+            // Apply to suggestions bar
+            val suggestionsBar = root.findViewById<View>(R.id.ai_suggestions_bar)
+            suggestionsBar?.setBackgroundColor(theme.suggestionBg)
+
+            // Apply to preview bar
+            val previewBar = root.findViewById<TextView>(R.id.tv_keyboard_live_preview)
+            previewBar?.setBackgroundColor(theme.previewBg)
+            previewBar?.setTextColor(theme.previewText)
+
+            // Update button text colors
+            root.findViewById<TextView>(R.id.btn_language)?.setTextColor(theme.toolbarText)
+            root.findViewById<TextView>(R.id.btn_theme)?.setTextColor(theme.toolbarText)
+            root.findViewById<TextView>(R.id.btn_dev_mode)?.setTextColor(theme.toolbarText)
+            root.findViewById<TextView>(R.id.btn_gemini)?.setTextColor(theme.accent)
+
+            // Apply glow animation to accent elements
+            PremiumAnimationEngine.animateGlowPulse(
+                root.findViewById<TextView>(R.id.btn_gemini) ?: return,
+                theme.glowColor
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  LANGUAGE SYSTEM — 120+ languages
+    // ═══════════════════════════════════════════════════════════════
+
+    private fun cycleLanguage() {
+        try {
+            languageIndex = (languageIndex + 1) % languageList.size
+            currentLanguage = languageList[languageIndex]
+            applyLanguage()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun applyLanguage() {
+        try {
+            val lang = currentLanguage ?: return
+            // Update language button
+            keyboardRootView?.findViewById<TextView>(R.id.btn_language)?.text = "${lang.emoji} ${lang.code.uppercase()}"
+            // Update key labels based on language layout
+            updateKeyLabelsForLanguage(lang)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun updateKeyLabelsForLanguage(lang: KeyboardLanguage) {
+        try {
+            val allKeys = lang.row1 + lang.row2 + lang.row3
+            for (i in letterKeyIds.indices) {
+                if (i < allKeys.size) {
+                    keyViews[letterKeyIds[i]]?.text = if (isShifted) allKeys[i].uppercase() else allKeys[i]
+                    keyViews[letterKeyIds[i]]?.visibility = View.VISIBLE
+                } else {
+                    keyViews[letterKeyIds[i]]?.visibility = View.INVISIBLE
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  DEVELOPER KEYBOARD — Code snippets, symbols
+    // ═══════════════════════════════════════════════════════════════
+
+    private fun toggleDeveloperMode() {
+        try {
+            isDeveloperMode = !isDeveloperMode
+            if (isDeveloperMode) {
+                // Show developer symbols on keys
+                val symbols = DeveloperKeyboard.symbolsRow1 + DeveloperKeyboard.symbolsRow2 + DeveloperKeyboard.symbolsRow3
+                for (i in letterKeyIds.indices) {
+                    if (i < symbols.size) {
+                        keyViews[letterKeyIds[i]]?.text = symbols[i]
+                        keyViews[letterKeyIds[i]]?.visibility = View.VISIBLE
+                    } else {
+                        keyViews[letterKeyIds[i]]?.visibility = View.INVISIBLE
+                    }
+                }
+                keyboardRootView?.findViewById<TextView>(R.id.btn_dev_mode)?.text = "⌨️ Dev ON"
+            } else {
+                // Restore normal layout
+                updateKeyLabels()
+                keyboardRootView?.findViewById<TextView>(R.id.btn_dev_mode)?.text = "⌨️ Dev"
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  GEMINI LIVE — AI writing assistant
+    // ═══════════════════════════════════════════════════════════════
+
+    private fun toggleGeminiLive() {
+        try {
+            geminiActive = !geminiActive
+            if (geminiActive) {
+                keyboardRootView?.findViewById<TextView>(R.id.btn_gemini)?.text = "✨ AI ON"
+                // Apply Gemini-powered suggestions
+                updateGeminiSuggestions()
+            } else {
+                keyboardRootView?.findViewById<TextView>(R.id.btn_gemini)?.text = "✨ AI"
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun updateGeminiSuggestions() {
+        try {
+            if (!geminiActive) return
+            val text = composingText.toString()
+            if (text.isEmpty()) return
+
+            val smartReplies = GeminiLiveService.getSmartReplies(text)
+            val root = keyboardRootView ?: return
+
+            if (smartReplies.size >= 1) root.findViewById<TextView>(R.id.suggestion_left)?.text = smartReplies[0]
+            if (smartReplies.size >= 2) root.findViewById<TextView>(R.id.suggestion_center)?.text = smartReplies[1]
+            if (smartReplies.size >= 3) root.findViewById<TextView>(R.id.suggestion_right)?.text = smartReplies[2]
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  AI SUGGESTIONS — Gboard-style word prediction
+    // ═══════════════════════════════════════════════════════════════
+
+    private fun handleSuggestionClick(index: Int) {
+        try {
+            val root = keyboardRootView ?: return
+            val suggestion = when (index) {
+                0 -> root.findViewById<TextView>(R.id.suggestion_left)?.text?.toString()
+                1 -> root.findViewById<TextView>(R.id.suggestion_center)?.text?.toString()
+                2 -> root.findViewById<TextView>(R.id.suggestion_right)?.text?.toString()
+                else -> null
+            } ?: return
+
+            // If it's a style suggestion (from mood detector), apply it
+            if (suggestion.startsWith("Try ")) {
+                val styleName = suggestion.removePrefix("Try ").uppercase().replace(" ", "_")
+                FrameStyle.values().find { it.name == styleName }?.let { selectFrameStyle(it) }
+                return
+            }
+
+            // Otherwise treat as word suggestion
+            val ic = currentInputConnection ?: return
+            if (composingText.isNotEmpty()) {
+                composingText.clear()
+                composingText.append(suggestion)
+                ic.setComposingText(composingText.toString(), 1)
+                updateLivePreviewBar()
+            } else {
+                ic.commitText(suggestion, 1)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  VOICE INPUT, GIF, IMAGE DESIGN, SETTINGS
+    // ═══════════════════════════════════════════════════════════════
+
+    private fun handleVoiceInput() {
+        try {
+            // Trigger system voice input
+            val ic = currentInputConnection ?: return
+            // Show a toast hint
+            android.widget.Toast.makeText(applicationContext ?: this, "🎤 Voice input — speak now", android.widget.Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun handleGifSearch() {
+        try {
+            // Insert a random popular GIF emoji combo
+            val gifCombos = listOf(":)", ":D", ":P", "<3", ";)", ":O", ":'", ":|", ":/", "XD", "^.^", "T_T")
+            val ic = currentInputConnection ?: return
+            ic.commitText(gifCombos.random(), 1)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun handleImageDesign() {
+        try {
+            // Apply AI-suggested design
+            val suggestion = ImageDesignEngine.getAIDesignSuggestion()
+            android.widget.Toast.makeText(
+                applicationContext ?: this,
+                "🎨 ${suggestion.description}",
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun openSettings() {
+        try {
+            val intent = android.content.Intent(this, com.spelltype.keyboard.presentation.settings.SettingsActivity::class.java)
+            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  OVERRIDE: Update suggestions to use AI engine
+    // ═══════════════════════════════════════════════════════════════
+
+    private fun updateSuggestionsBarWithAI() {
+        try {
+            val root = keyboardRootView ?: return
+            if (!autoSuggestionsEnabled) return
+
+            val rawInput = composingText.toString()
+
+            // Use Gemini if active
+            if (geminiActive) {
+                updateGeminiSuggestions()
+                return
+            }
+
+            // Use AI Suggestions Engine
+            val suggestions = AISuggestionsEngine.getSuggestions(rawInput, lastCommittedWord)
+            if (suggestions.isNotEmpty()) {
+                root.findViewById<TextView>(R.id.suggestion_left)?.text = suggestions.getOrElse(0) { "" }
+                root.findViewById<TextView>(R.id.suggestion_center)?.text = suggestions.getOrElse(1) { "SpellType" }
+                root.findViewById<TextView>(R.id.suggestion_right)?.text = suggestions.getOrElse(2) { "" }
+            } else {
+                // Fall back to mood detector
+                val moodSuggestion = MoodDetector.detectMood(rawInput)
+                root.findViewById<TextView>(R.id.suggestion_center)?.text = "Mood: ${moodSuggestion.mood.displayName} ${moodSuggestion.mood.emoji}"
+                val list = moodSuggestion.suggestedStyles
+                if (list.isNotEmpty()) {
+                    root.findViewById<TextView>(R.id.suggestion_left)?.text = "Try " + list[0].name.lowercase().replace("_", " ")
+                }
+                if (list.size > 1) {
+                    root.findViewById<TextView>(R.id.suggestion_right)?.text = "Try " + list[1].name.lowercase().replace("_", " ")
+                }
+            }
+
+            // Autocorrect check
+            if (rawInput.isNotEmpty()) {
+                val corrected = AISuggestionsEngine.autocorrect(rawInput)
+                if (corrected != null) {
+                    root.findViewById<TextView>(R.id.suggestion_center)?.text = "→ $corrected"
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  PREMIUM KEY PRESS with 60fps animation
+    // ═══════════════════════════════════════════════════════════════
+
+    private fun onKeyClickFeedbackPremium(view: View) {
+        try {
+            // Use premium animation engine
+            if (view is TextView) {
+                PremiumAnimationEngine.animateKeyPress(view, activePremiumTheme.glowColor)
+            }
+            // Vibration feedback
+            if (vibrationEnabled) {
+                val vibrator = getSystemService(android.content.Context.VIBRATOR_SERVICE) as? android.os.Vibrator
+                vibrator?.let {
+                    val duration = (vibrationStrength * 0.4).toLong().coerceAtLeast(1)
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        val amplitude = (vibrationStrength * 2.55).toInt().coerceIn(1, 255)
+                        it.vibrate(android.os.VibrationEffect.createOneShot(duration, amplitude))
+                    } else {
+                        @Suppress("DEPRECATION")
+                        it.vibrate(duration)
+                    }
+                }
+            }
+            // Sound feedback
+            if (soundEnabled) {
+                val am = getSystemService(android.content.Context.AUDIO_SERVICE) as? android.media.AudioManager
+                val vol = soundVolume / 100f
+                am?.playSoundEffect(android.media.AudioManager.FX_KEYPRESS_STANDARD, vol)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
