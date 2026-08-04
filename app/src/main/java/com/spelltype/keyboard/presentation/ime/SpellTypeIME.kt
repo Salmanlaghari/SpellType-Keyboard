@@ -23,6 +23,8 @@ import com.spelltype.keyboard.domain.repository.KeyboardRepository
 import com.spelltype.keyboard.domain.usecase.*
 import com.spelltype.keyboard.domain.theme.PremiumTheme
 import com.spelltype.keyboard.domain.theme.PremiumThemeEngine
+import com.spelltype.keyboard.domain.theme.RealTheme
+import com.spelltype.keyboard.domain.theme.RealThemeEngine
 import com.spelltype.keyboard.domain.animation.PremiumAnimationEngine
 import com.spelltype.keyboard.domain.language.LanguageManager
 import com.spelltype.keyboard.domain.language.KeyboardLanguage
@@ -30,6 +32,11 @@ import com.spelltype.keyboard.domain.ai.AISuggestionsEngine
 import com.spelltype.keyboard.domain.ai.GeminiLiveService
 import com.spelltype.keyboard.domain.developer.DeveloperKeyboard
 import com.spelltype.keyboard.domain.design.ImageDesignEngine
+import com.spelltype.keyboard.domain.shapes.ShapeAlphabetEngine
+import com.spelltype.keyboard.domain.backgrounds.KeyboardBackgroundEngine
+import com.spelltype.keyboard.domain.features.VoiceInputManager
+import com.spelltype.keyboard.domain.features.EmojiGifManager
+import com.spelltype.keyboard.domain.features.SettingsManager
 import kotlinx.coroutines.*
 
 class SpellTypeIME : InputMethodService() {
@@ -70,9 +77,9 @@ class SpellTypeIME : InputMethodService() {
     private var keyTextSize = "MEDIUM"
     private var premiumUnlocked = false
 
-    // ═══ Premium Theme System ═══
-    private var activePremiumTheme: PremiumTheme = PremiumTheme.NEON_CYBER
-    private var isPremiumThemeMode = true
+    // ═══ Real Premium Theme System ═══
+    private var activeRealTheme: RealTheme = RealTheme.ALL[0]
+    private var realThemeIndex = 0
 
     // ═══ Language System (120+ languages) ═══
     private var currentLanguage: KeyboardLanguage? = null
@@ -81,14 +88,27 @@ class SpellTypeIME : InputMethodService() {
 
     // ═══ Developer Mode ═══
     private var isDeveloperMode = false
-    private var devMode: DeveloperKeyboard.DevMode = DeveloperKeyboard.DevMode.SYMBOLS
 
     // ═══ Gemini Live ═══
     private var geminiActive = false
-    private var activeTone = GeminiLiveService.Tone.CASUAL
 
     // ═══ AI Suggestions ═══
     private var lastCommittedWord = ""
+
+    // ═══ Shape Alphabet ═══
+    private var activeShapeStyle: ShapeAlphabetEngine.ShapeStyle? = null
+    private var shapeIndex = 0
+
+    // ═══ Keyboard Background ═══
+    private var activeBackground: KeyboardBackgroundEngine.KeyboardBackground? = null
+    private var bgIndex = 0
+
+    // ═══ Voice Input ═══
+    private var voiceInputManager: VoiceInputManager? = null
+
+    // ═══ Emoji Panel ═══
+    private var isEmojiPanelOpen = false
+    private var emojiCategoryIndex = 0
 
     private var isShifted = false
     private var isSymbolMode = false
@@ -538,6 +558,7 @@ class SpellTypeIME : InputMethodService() {
 
     override fun onDestroy() {
         try {
+            voiceInputManager?.destroy()
             serviceJob.cancel()
         } catch (e: Exception) {
             e.printStackTrace()
@@ -1116,11 +1137,17 @@ class SpellTypeIME : InputMethodService() {
 
     private fun commitComposingText(onComplete: (() -> Unit)? = null) {
         try {
-            val textToFormat = composingText.toString()
+            var textToFormat = composingText.toString()
             composingText.clear()
             updateLivePreviewBar()
             updateSuggestionsBar()
             val ic: InputConnection = currentInputConnection ?: return
+
+            // Apply shape alphabet if active
+            activeShapeStyle?.let { shape ->
+                textToFormat = ShapeAlphabetEngine.applyShape(textToFormat, shape)
+            }
+
             val formatUseCase = applyFrameUseCase
             if (formatUseCase != null) {
                 serviceScope.launch {
@@ -1139,6 +1166,9 @@ class SpellTypeIME : InputMethodService() {
                         e.printStackTrace()
                     }
                 }
+            } else {
+                ic.commitText(textToFormat, 1)
+                onComplete?.invoke()
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -1225,12 +1255,13 @@ class SpellTypeIME : InputMethodService() {
 
     private fun applyCustomConfigurations() {
         try {
-            // Use premium theme system if active
-            if (isPremiumThemeMode) {
-                applyPremiumTheme()
-                return
-            }
-            val root = keyboardRootView ?: return
+            // Always use real premium theme system
+            applyPremiumTheme()
+            return
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 
             // Base Theme Colors
             val baseBgColor = when (themeSelection) {
@@ -1414,12 +1445,11 @@ class SpellTypeIME : InputMethodService() {
 
     private fun cyclePremiumTheme() {
         try {
-            val themes = PremiumThemeEngine.getAllThemes()
-            val currentIndex = themes.indexOf(activePremiumTheme)
-            activePremiumTheme = themes[(currentIndex + 1) % themes.size]
+            val themes = RealThemeEngine.getAllThemes()
+            realThemeIndex = (realThemeIndex + 1) % themes.size
+            activeRealTheme = themes[realThemeIndex]
             applyPremiumTheme()
-            // Update language button to show current theme name
-            keyboardRootView?.findViewById<TextView>(R.id.btn_theme)?.text = "${activePremiumTheme.emoji} ${activePremiumTheme.displayName}"
+            keyboardRootView?.findViewById<TextView>(R.id.btn_theme)?.text = "${activeRealTheme.emoji} ${activeRealTheme.name}"
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -1428,45 +1458,29 @@ class SpellTypeIME : InputMethodService() {
     private fun applyPremiumTheme() {
         try {
             val root = keyboardRootView ?: return
-            val theme = activePremiumTheme
+            val theme = activeRealTheme
             val density = resources.displayMetrics.density
 
-            // Apply gradient background
             root.background = theme.createBackgroundDrawable()
 
-            // Apply to all key views
             for ((id, view) in keyViews) {
                 val isSpecial = id == R.id.btn_shift || id == R.id.btn_backspace || id == R.id.btn_mode || id == R.id.btn_enter
-                val radius = when (keyShape) {
-                    "SQUARE" -> 0f
-                    "CIRCULAR" -> 1000f
-                    "GLASSMORPHISM" -> 16f * density
-                    else -> 8f * density
-                }
+                val radius = 8f * density
                 view.background = if (isSpecial) theme.createAccentBackground(radius) else theme.createKeyBackground(radius)
-                view.setTextColor(theme.keyText)
+                view.setTextColor(theme.keyTextColor)
             }
 
-            // Apply to header bar
             val headerBar = root.findViewById<LinearLayout>(R.id.btn_language)?.parent as? LinearLayout
             headerBar?.setBackgroundColor(theme.toolbarBg)
 
-            // Apply to suggestions bar
-            val suggestionsBar = root.findViewById<View>(R.id.ai_suggestions_bar)
-            suggestionsBar?.setBackgroundColor(theme.suggestionBg)
+            root.findViewById<View>(R.id.ai_suggestions_bar)?.setBackgroundColor(theme.suggestionBg)
+            root.findViewById<TextView>(R.id.tv_keyboard_live_preview)?.setBackgroundColor(theme.previewBg)
 
-            // Apply to preview bar
-            val previewBar = root.findViewById<TextView>(R.id.tv_keyboard_live_preview)
-            previewBar?.setBackgroundColor(theme.previewBg)
-            previewBar?.setTextColor(theme.previewText)
-
-            // Update button text colors
             root.findViewById<TextView>(R.id.btn_language)?.setTextColor(theme.toolbarText)
             root.findViewById<TextView>(R.id.btn_theme)?.setTextColor(theme.toolbarText)
             root.findViewById<TextView>(R.id.btn_dev_mode)?.setTextColor(theme.toolbarText)
-            root.findViewById<TextView>(R.id.btn_gemini)?.setTextColor(theme.accent)
+            root.findViewById<TextView>(R.id.btn_gemini)?.setTextColor(theme.accentColor)
 
-            // Apply glow animation to accent elements
             PremiumAnimationEngine.animateGlowPulse(
                 root.findViewById<TextView>(R.id.btn_gemini) ?: return,
                 theme.glowColor
@@ -1526,19 +1540,22 @@ class SpellTypeIME : InputMethodService() {
         try {
             isDeveloperMode = !isDeveloperMode
             if (isDeveloperMode) {
-                // Show developer symbols on keys
-                val symbols = DeveloperKeyboard.symbolsRow1 + DeveloperKeyboard.symbolsRow2 + DeveloperKeyboard.symbolsRow3
-                for (i in letterKeyIds.indices) {
-                    if (i < symbols.size) {
-                        keyViews[letterKeyIds[i]]?.text = symbols[i]
-                        keyViews[letterKeyIds[i]]?.visibility = View.VISIBLE
-                    } else {
-                        keyViews[letterKeyIds[i]]?.visibility = View.INVISIBLE
-                    }
+                // Cycle through 20+ shape alphabets
+                val shapes = ShapeAlphabetEngine.getAllShapes()
+                shapeIndex = (shapeIndex + 1) % shapes.size
+                activeShapeStyle = shapes[shapeIndex]
+                // Apply shape to current composing text
+                if (composingText.isNotEmpty()) {
+                    val shaped = ShapeAlphabetEngine.applyShape(composingText.toString(), activeShapeStyle!!)
+                    composingText.clear()
+                    composingText.append(shaped)
+                    val ic = currentInputConnection
+                    ic?.setComposingText(composingText.toString(), 1)
+                    updateLivePreviewBar()
                 }
-                keyboardRootView?.findViewById<TextView>(R.id.btn_dev_mode)?.text = "⌨️ Dev ON"
+                keyboardRootView?.findViewById<TextView>(R.id.btn_dev_mode)?.text = "${activeShapeStyle!!.emoji} ${activeShapeStyle!!.name}"
             } else {
-                // Restore normal layout
+                activeShapeStyle = null
                 updateKeyLabels()
                 keyboardRootView?.findViewById<TextView>(R.id.btn_dev_mode)?.text = "⌨️ Dev"
             }
@@ -1625,10 +1642,33 @@ class SpellTypeIME : InputMethodService() {
 
     private fun handleVoiceInput() {
         try {
-            // Trigger system voice input
-            val ic = currentInputConnection ?: return
-            // Show a toast hint
-            android.widget.Toast.makeText(applicationContext ?: this, "🎤 Voice input — speak now", android.widget.Toast.LENGTH_SHORT).show()
+            if (voiceInputManager == null) {
+                voiceInputManager = VoiceInputManager(applicationContext ?: this)
+                voiceInputManager?.setCallback(object : VoiceInputManager.VoiceCallback {
+                    override fun onResult(text: String) {
+                        val ic = currentInputConnection ?: return
+                        ic.commitText(text, 1)
+                    }
+                    override fun onPartialResult(text: String) {
+                        val ic = currentInputConnection ?: return
+                        ic.setComposingText(text, 1)
+                    }
+                    override fun onError(error: String) {
+                        android.widget.Toast.makeText(applicationContext ?: this@SpellTypeIME, "🎤 $error", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                    override fun onListeningStarted() {
+                        keyboardRootView?.findViewById<TextView>(R.id.tool_voice)?.text = "🔴"
+                    }
+                    override fun onListeningStopped() {
+                        keyboardRootView?.findViewById<TextView>(R.id.tool_voice)?.text = "🎤"
+                    }
+                })
+            }
+            if (voiceInputManager?.isListening() == true) {
+                voiceInputManager?.stopListening()
+            } else {
+                voiceInputManager?.startListening()
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -1636,10 +1676,9 @@ class SpellTypeIME : InputMethodService() {
 
     private fun handleGifSearch() {
         try {
-            // Insert a random popular GIF emoji combo
-            val gifCombos = listOf(":)", ":D", ":P", "<3", ";)", ":O", ":'", ":|", ":/", "XD", "^.^", "T_T")
             val ic = currentInputConnection ?: return
-            ic.commitText(gifCombos.random(), 1)
+            val emoticons = EmojiGifManager.getEmoticons()
+            ic.commitText(emoticons.random(), 1)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -1647,11 +1686,15 @@ class SpellTypeIME : InputMethodService() {
 
     private fun handleImageDesign() {
         try {
-            // Apply AI-suggested design
-            val suggestion = ImageDesignEngine.getAIDesignSuggestion()
+            // Cycle through keyboard backgrounds
+            val backgrounds = KeyboardBackgroundEngine.getAllBackgrounds()
+            bgIndex = (bgIndex + 1) % backgrounds.size
+            activeBackground = backgrounds[bgIndex]
+            val root = keyboardRootView ?: return
+            root.background = KeyboardBackgroundEngine.createBackground(activeBackground!!)
             android.widget.Toast.makeText(
                 applicationContext ?: this,
-                "🎨 ${suggestion.description}",
+                "🎨 ${activeBackground!!.emoji} ${activeBackground!!.name}",
                 android.widget.Toast.LENGTH_SHORT
             ).show()
         } catch (e: Exception) {
@@ -1661,9 +1704,7 @@ class SpellTypeIME : InputMethodService() {
 
     private fun openSettings() {
         try {
-            val intent = android.content.Intent(this, com.spelltype.keyboard.presentation.settings.SettingsActivity::class.java)
-            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            startActivity(intent)
+            SettingsManager.openKeyboardSettings(applicationContext ?: this)
         } catch (e: Exception) {
             e.printStackTrace()
         }
