@@ -1712,7 +1712,7 @@ class SpellTypeIME : InputMethodService() {
         try {
             // Use premium animation engine
             if (view is TextView) {
-                PremiumAnimationEngine.animateKeyPress(view, activePremiumTheme.glowColor)
+                PremiumAnimationEngine.animateKeyPress(view, activeRealTheme.glowColor)
             }
             // Vibration feedback
             if (vibrationEnabled) {
