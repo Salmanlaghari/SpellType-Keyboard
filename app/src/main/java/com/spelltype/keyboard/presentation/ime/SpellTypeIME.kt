@@ -1623,8 +1623,7 @@ class SpellTypeIME : InputMethodService() {
     private fun handleGifSearch() {
         try {
             val ic = currentInputConnection ?: return
-            val emoticons = EmojiGifManager.getEmoticons()
-            ic.commitText(emoticons.random(), 1)
+            ic.commitText(EmojiGifManager.getRandomEmoticon(), 1)
         } catch (e: Exception) {
             e.printStackTrace()
         }
