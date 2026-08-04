@@ -378,7 +378,7 @@
         android:orientation="horizontal"
         android:paddingHorizontal="3dp">
 
-        <TextView android:id="@+id/btn_mode" style="@style/KeyboardKey.Special" android:layout_weight="1.5" android:text="?123"/>
+        <TextView android:id="@+id/btn_mode" style="@style/KeyboardKey.Special" android:layout_weight="1.5" android:text="\?123"/>
 
         <!-- Emoji Key -->
         <TextView
