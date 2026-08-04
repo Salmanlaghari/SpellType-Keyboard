@@ -1255,61 +1255,7 @@ class SpellTypeIME : InputMethodService() {
 
     private fun applyCustomConfigurations() {
         try {
-            // Always use real premium theme system
             applyPremiumTheme()
-            return
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-            // Base Theme Colors
-            val baseBgColor = when (themeSelection) {
-                "AMOLED" -> android.graphics.Color.BLACK
-                "LIGHT" -> android.graphics.Color.parseColor("#F3F4F6")
-                "BLUE" -> android.graphics.Color.parseColor("#1E3A8A")
-                "PURPLE" -> android.graphics.Color.parseColor("#4C1D95")
-                "GREEN" -> android.graphics.Color.parseColor("#064E3B")
-                else -> android.graphics.Color.parseColor("#0B0F19") // DARK
-            }
-
-            val wallBgColor = when (keyboardWallpaperPath) {
-                "OCEAN" -> android.graphics.Color.parseColor("#0F172A") // Deep ocean slate
-                "SUNSET" -> android.graphics.Color.parseColor("#31102F") // Sunset glow
-                "MIDNIGHT" -> android.graphics.Color.parseColor("#020617") // Midnight magic
-                "GLASS" -> android.graphics.Color.parseColor("#121214") // Glassmorphic translucent dark
-                else -> baseBgColor
-            }
-
-            // Apply Wallpaper/Theme with Opacity / Glassmorphic background
-            if (keyboardWallpaperPath.isNotEmpty()) {
-                val drawable = android.graphics.drawable.GradientDrawable()
-                drawable.shape = android.graphics.drawable.GradientDrawable.RECTANGLE
-
-                val alpha = (keyboardWallpaperOpacity * 2.55).toInt().coerceIn(0, 255)
-                val blendedColor = android.graphics.Color.argb(
-                    alpha,
-                    android.graphics.Color.red(wallBgColor),
-                    android.graphics.Color.green(wallBgColor),
-                    android.graphics.Color.blue(wallBgColor)
-                )
-                drawable.setColor(blendedColor)
-                root.background = drawable
-            } else {
-                root.setBackgroundColor(baseBgColor)
-            }
-
-            // Load theme_rewarded ad dynamically for premium theme selections
-            if (!premiumUnlocked && (themeSelection == "BLUE" || themeSelection == "PURPLE" || themeSelection == "GREEN" || keyboardWallpaperPath.isNotEmpty())) {
-                com.spelltype.keyboard.presentation.ads.AdManager.loadRewarded(
-                    context = this,
-                    onLoaded = { _ ->
-                        // Preloaded successfully
-                    }
-                )
-            }
-
-            styleAllTextViewsUnder(root)
         } catch (e: Exception) {
             e.printStackTrace()
         }
