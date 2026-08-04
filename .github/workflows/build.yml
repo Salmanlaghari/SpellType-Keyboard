@@ -1,0 +1,154 @@
+name: Build & Release SpellType Keyboard
+
+on:
+  push:
+    branches: [ main, develop, 'feature/**' ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: 🔨 Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ☕ Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: 📦 Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: 🔑 Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/release.keystore
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+
+      - name: 🏗️ Build Debug APK
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: 🏗️ Build Release APK
+        run: ./gradlew assembleRelease --stacktrace
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+
+      - name: 🧪 Run Tests
+        run: ./gradlew test --stacktrace
+
+      - name: 📊 Lint Check
+        run: ./gradlew lint --continue
+        if: always()
+
+      - name: 📤 Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 7
+
+      - name: 📤 Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: app/build/outputs/apk/release/*.apk
+          retention-days: 30
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+
+  test:
+    name: 🧪 Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ☕ Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: 📦 Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: 🧪 Run Unit Tests
+        run: ./gradlew testDebugUnitTest --stacktrace
+
+      - name: 📤 Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: app/build/reports/tests/
+          retention-days: 7
+
+  release:
+    name: 🚀 Release
+    needs: [build, test]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ☕ Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: 📦 Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: 🔑 Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/release.keystore
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+
+      - name: 🏗️ Build Release APK
+        run: ./gradlew assembleRelease --stacktrace
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+
+      - name: 🏷️ Get Version
+        id: version
+        run: |
+          VERSION=$(grep 'versionName' app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: 🚀 Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: SpellType Keyboard v${{ steps.version.outputs.version }}
+          body: |
+            ## 🎹 SpellType Keyboard v${{ steps.version.outputs.version }}
+
+            ### ✨ What's New
+            - 🎨 12+ Premium HD Themes (Neon Cyber, Aurora, Galaxy, Sunset...)
+            - ⚡ 60fps Smooth Animations
+            - 🌐 120+ Languages Support
+            - 🤖 AI-Powered Suggestions (Gboard-style)
+            - ✨ Gemini Live Integration
+            - ⌨️ Developer Keyboard Mode
+            - 🖼️ Image Custom Design with AI
+            - 🎬 GIF Support
+            - 🎤 Voice Typing
+            - 📋 Smart Clipboard Manager
+
+            ### 📱 Requirements
+            - Android 8.0+ (API 26)
+            - ~15MB APK size
+
+          files: |
+            app/build/outputs/apk/release/*.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
