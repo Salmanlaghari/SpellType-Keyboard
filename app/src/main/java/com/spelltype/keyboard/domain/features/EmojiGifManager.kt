@@ -92,7 +92,7 @@ object EmojiGifManager {
     fun getAllCategories() = categories
     fun getCategoryByName(name: String) = categories.find { it.name == name }
     fun searchEmojis(query: String): List<String> {
-        return categories.flatMap { it.emojis }.take(50) // Simplified search
+        return categories.flatMap { it.emojis }.take(50)
     }
-    fun getEmoticons() = emoticons
+    fun getRandomEmoticon(): String = emoticons.random()
 }
