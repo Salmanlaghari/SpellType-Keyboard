@@ -1725,6 +1725,98 @@ class SpellTypeIME : InputMethodService() {
     }
 
     // ═══════════════════════════════════════════════════════════════
+    //  PREMIUM ASSIST — Smart Writing Suggestions
+    // ═══════════════════════════════════════════════════════════════
+
+    /** Premium Assist: context-aware smart suggestions */
+    private fun getPremiumAssistSuggestions(input: String): List<String> {
+        val suggestions = mutableListOf<String>()
+        val lower = input.lowercase().trim()
+
+        // Smart completions based on prefix
+        val completions = mapOf
+            "hel" to listOf("hello", "help", "held"),
+            "goo" to listOf("good", "google", "goose"),
+            "tha" to listOf("thank", "that", "than"),
+            "ple" to listOf("please", "pleasure"),
+            "hav" to listOf("have", "haven't"),
+            "wha" to listOf("what", "whats"),
+            "how" to listOf("how", "however"),
+            "hey" to listOf("hey", "hello"),
+            "mee" to listOf("meet", "meek"),
+            "nee" to listOf("need", "needle"),
+            "lov" to listOf("love", "lovely"),
+            "wan" to listOf("want", "wander"),
+            "com" to listOf("come", "common"),
+            "whe" to listOf("when", "where"),
+            "whi" to listOf("which", "while"),
+            "sho" to listOf("should", "show"),
+            "wou" to listOf("would", "wound"),
+            "cou" to listOf("could", "count"),
+            "pro" to listOf("problem", "project"),
+            "thi" to listOf("this", "think"),
+            "wit" to listOf("with", "without"),
+            "abo" to listOf("about", "above"),
+            "fro" to listOf("from", "front"),
+            "jus" to listOf("just", "justice"),
+            "sti" to listOf("still", "stick"),
+            "als" to listOf("also", "always"),
+            "eve" to listOf("everything", "evening"),
+            "som" to listOf("something", "sometimes"),
+            "any" to listOf("anything", "anyway"),
+            "nic" to listOf("nice", "nickel"),
+            "bea" to listOf("beautiful", "beach"),
+            "amaz" to listOf("amazing", "amaze"),
+            "won" to listOf("wonderful", "won"),
+            "gre" to listOf("great", "greet"),
+            "awes" to listOf("awesome", "awe")
+        )
+
+        // Find matching completions
+        for ((prefix, words) in completions) {
+            if (lower.startsWith(prefix) && lower.length >= prefix.length) {
+                val remaining = lower.substring(prefix.length)
+                for (word in words) {
+                    if (word.startsWith(lower) && word != lower) {
+                        suggestions.add(word.replaceFirstChar { it.uppercase() })
+                    }
+                }
+            }
+        }
+
+        // If we have the full word, suggest next words
+        if (suggestions.isEmpty()) {
+            val nextWords = mapOf(
+                "hello" to listOf("how", "there", "everyone"),
+                "thank" to listOf("you", "god", "goodness"),
+                "good" to listOf("morning", "night", "job"),
+                "how" to listOf("are", "is", "do"),
+                "what" to listOf("is", "are", "do"),
+                "i" to listOf("love", "want", "need"),
+                "you" to listOf("are", "have", "need"),
+                "the" to listOf("best", "most", "first"),
+                "this" to listOf("is", "was", "will"),
+                "please" to listOf("help", "check", "send"),
+                "can" to listOf("you", "we", "i"),
+                "have" to listOf("a", "you", "been"),
+                "with" to listOf("you", "love", "care"),
+                "love" to listOf("you", "this", "it"),
+                "great" to listOf("job", "work", "day"),
+                "nice" to listOf("to", "and", "work")
+            )
+            for ((word, nexts) in nextWords) {
+                if (lower.endsWith(word)) {
+                    for (next in nexts) {
+                        suggestions.add("$word $next")
+                    }
+                }
+            }
+        }
+
+        return suggestions.take(3)
+    }
+
+    // ═══════════════════════════════════════════════════════════════
     //  OVERRIDE: Update suggestions to use AI engine
     // ═══════════════════════════════════════════════════════════════
 
@@ -1739,6 +1831,17 @@ class SpellTypeIME : InputMethodService() {
             if (geminiActive) {
                 updateGeminiSuggestions()
                 return
+            }
+
+            // Premium Assist — enhanced AI suggestions
+            if (premiumAssistEnabled && rawInput.length >= 2) {
+                val assistSuggestions = getPremiumAssistSuggestions(rawInput)
+                if (assistSuggestions.isNotEmpty()) {
+                    root.findViewById<TextView>(R.id.suggestion_left)?.text = assistSuggestions.getOrElse(0) { "" }
+                    root.findViewById<TextView>(R.id.suggestion_center)?.text = assistSuggestions.getOrElse(1) { "✨ Assist" }
+                    root.findViewById<TextView>(R.id.suggestion_right)?.text = assistSuggestions.getOrElse(2) { "" }
+                    return
+                }
             }
 
             // Use AI Suggestions Engine
