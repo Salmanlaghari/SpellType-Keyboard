@@ -1794,13 +1794,20 @@ class SpellTypeIME : InputMethodService() {
                 return
             }
             // Encode styled text for sharing
-            val encoded = TransmissionEngine.encodeForSharing(text, activeStyle, activeUnicode)
-            val shareableUrl = TransmissionEngine.generateShareableUrl(encoded)
+            val payload = TransmissionEngine.StyledPayload(
+                text = text,
+                unicodeStyle = activeUnicode.name,
+                frameStyle = activeStyle.name,
+                glitterEnabled = glitterEnabled,
+                signature = customSignature
+            )
+            val encoded = TransmissionEngine.encode(payload)
+            val clipboardData = TransmissionEngine.prepareForClipboard(payload)
             // Copy to clipboard
             val clipboard = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
-            val clip = android.content.ClipData.newPlainText("SpellType Transmission", shareableUrl)
+            val clip = android.content.ClipData.newPlainText("SpellType Transmission", clipboardData)
             clipboard?.setPrimaryClip(clip)
-            android.widget.Toast.makeText(applicationContext ?: this, "📡 Transmission link copied! Share it!", android.widget.Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(applicationContext ?: this, "📡 Transmission copied! Share it!", android.widget.Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             e.printStackTrace()
             android.widget.Toast.makeText(applicationContext ?: this, "📡 Transmission error", android.widget.Toast.LENGTH_SHORT).show()
