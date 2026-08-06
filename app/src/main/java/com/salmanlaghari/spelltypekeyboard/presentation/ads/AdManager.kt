@@ -6,15 +6,22 @@ import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
+import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAd
+import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAdLoadCallback
+import com.google.android.gms.ads.appopen.AppOpenAd
 import com.google.android.gms.ads.nativead.NativeAd
 import com.salmanlaghari.spelltypekeyboard.BuildConfig
 
-enum class BannerType { KEYBOARD_TOP, KEYBOARD_BOTTOM }
-enum class InterstitialType { SETTINGS, PRO_TOOLS }
+enum class BannerType { KEYBOARD_TOP, KEYBOARD_BOTTOM, HOME, SETTINGS }
+enum class InterstitialType { SETTINGS, PRO_TOOLS, APP_OPEN, EXIT }
+enum class RewardedType { VIDEO, COIN, KEYBOARD }
 
 object AdManager {
 
     private var initialized = false
+
+    // ═══ NEW PRODUCTION ADMOB IDS ═══
+    // App ID: ca-app-pub-8178045957849630~2823451917
 
     fun init(context: Context) {
         if (initialized) return
@@ -27,52 +34,92 @@ object AdManager {
         }
     }
 
-    // Resolve dynamic Ad ID based on BuildConfig flag
     private fun getAdUnitId(realId: String, testId: String): String {
         return if (BuildConfig.DEBUG) testId else realId
     }
 
+    // ═══════════════════════════════════════
+    //  BANNER ADS — ca-app-pub-8178045957849630/5258043569
+    // ═══════════════════════════════════════
+
     fun getBannerId(type: BannerType): String {
         return when (type) {
-            BannerType.KEYBOARD_TOP -> getAdUnitId(
-                realId = "ca-app-pub-8178045957849630/7446171329",
-                testId = "ca-app-pub-3940256099942544/6300978111"
-            )
-            BannerType.KEYBOARD_BOTTOM -> getAdUnitId(
-                realId = "ca-app-pub-8178045957849630/7941709351",
+            BannerType.KEYBOARD_TOP, BannerType.KEYBOARD_BOTTOM,
+            BannerType.HOME, BannerType.SETTINGS -> getAdUnitId(
+                realId = "ca-app-pub-8178045957849630/5258043569",
                 testId = "ca-app-pub-3940256099942544/6300978111"
             )
         }
     }
+
+    // ═══════════════════════════════════════
+    //  INTERSTITIAL ADS — ca-app-pub-8178045957849630/7309491830
+    // ═══════════════════════════════════════
 
     fun getInterstitialId(type: InterstitialType): String {
         return when (type) {
-            InterstitialType.SETTINGS -> getAdUnitId(
-                realId = "ca-app-pub-8178045957849630/8996036658",
-                testId = "ca-app-pub-3940256099942544/1033173712"
-            )
-            InterstitialType.PRO_TOOLS -> getAdUnitId(
-                realId = "ca-app-pub-8178045957849630/1117546633",
+            InterstitialType.SETTINGS, InterstitialType.PRO_TOOLS,
+            InterstitialType.APP_OPEN, InterstitialType.EXIT -> getAdUnitId(
+                realId = "ca-app-pub-8178045957849630/7309491830",
                 testId = "ca-app-pub-3940256099942544/1033173712"
             )
         }
     }
 
-    fun getRewardedId(): String {
+    // ═══════════════════════════════════════
+    //  REWARDED ADS
+    // ═══════════════════════════════════════
+
+    fun getRewardedId(type: RewardedType = RewardedType.VIDEO): String {
+        return when (type) {
+            RewardedType.VIDEO, RewardedType.COIN -> getAdUnitId(
+                realId = "ca-app-pub-8178045957849630/1865593464",
+                testId = "ca-app-pub-3940256099942544/5224354917"
+            )
+            RewardedType.KEYBOARD -> getAdUnitId(
+                realId = "ca-app-pub-8178045957849630/3066994497",
+                testId = "ca-app-pub-3940256099942544/5224354917"
+            )
+        }
+    }
+
+    // ═══════════════════════════════════════
+    //  REWARDED INTERSTITIAL — ca-app-pub-8178045957849630/8866116084
+    // ═══════════════════════════════════════
+
+    fun getRewardedInterstitialId(): String {
         return getAdUnitId(
-            realId = "ca-app-pub-8178045957849630/6002061869",
+            realId = "ca-app-pub-8178045957849630/8866116084",
             testId = "ca-app-pub-3940256099942544/5224354917"
         )
     }
 
+    // ═══════════════════════════════════════
+    //  NATIVE ADS — ca-app-pub-8178045957849630/4024852945
+    // ═══════════════════════════════════════
+
     fun getNativeId(): String {
         return getAdUnitId(
-            realId = "ca-app-pub-8178045957849630/3743709978",
+            realId = "ca-app-pub-8178045957849630/4024852945",
             testId = "ca-app-pub-3940256099942544/2247696110"
         )
     }
 
-    // 1. Loading Banner Ads
+    // ═══════════════════════════════════════
+    //  APP OPEN ADS — ca-app-pub-8178045957849630/2081215889
+    // ═══════════════════════════════════════
+
+    fun getAppOpenId(): String {
+        return getAdUnitId(
+            realId = "ca-app-pub-8178045957849630/2081215889",
+            testId = "ca-app-pub-3940256099942544/3419835294"
+        )
+    }
+
+    // ═══════════════════════════════════════
+    //  AD LOADING METHODS
+    // ═══════════════════════════════════════
+
     fun loadBanner(context: Context, type: BannerType, adSize: AdSize, onLoaded: (AdView) -> Unit) {
         try {
             val adView = AdView(context)
@@ -89,7 +136,6 @@ object AdManager {
         }
     }
 
-    // 2. Loading Interstitial Ads
     fun loadInterstitial(
         context: Context,
         type: InterstitialType,
@@ -106,7 +152,6 @@ object AdManager {
                     override fun onAdLoaded(interstitialAd: InterstitialAd) {
                         onLoaded(interstitialAd)
                     }
-
                     override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                         onFailed?.invoke()
                     }
@@ -118,9 +163,9 @@ object AdManager {
         }
     }
 
-    // 3. Loading Rewarded Ads
     fun loadRewarded(
         context: Context,
+        type: RewardedType = RewardedType.VIDEO,
         onLoaded: (RewardedAd) -> Unit,
         onFailed: (() -> Unit)? = null
     ) {
@@ -128,13 +173,12 @@ object AdManager {
             val adRequest = AdRequest.Builder().build()
             RewardedAd.load(
                 context,
-                getRewardedId(),
+                getRewardedId(type),
                 adRequest,
                 object : RewardedAdLoadCallback() {
                     override fun onAdLoaded(rewardedAd: RewardedAd) {
                         onLoaded(rewardedAd)
                     }
-
                     override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                         onFailed?.invoke()
                     }
@@ -146,7 +190,58 @@ object AdManager {
         }
     }
 
-    // 4. Loading Native Ads
+    fun loadRewardedInterstitial(
+        context: Context,
+        onLoaded: (RewardedInterstitialAd) -> Unit,
+        onFailed: (() -> Unit)? = null
+    ) {
+        try {
+            val adRequest = AdRequest.Builder().build()
+            RewardedInterstitialAd.load(
+                context,
+                getRewardedInterstitialId(),
+                adRequest,
+                object : RewardedInterstitialAdLoadCallback() {
+                    override fun onAdLoaded(ad: RewardedInterstitialAd) {
+                        onLoaded(ad)
+                    }
+                    override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                        onFailed?.invoke()
+                    }
+                }
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            onFailed?.invoke()
+        }
+    }
+
+    fun loadAppOpen(
+        context: Context,
+        onLoaded: (AppOpenAd) -> Unit,
+        onFailed: (() -> Unit)? = null
+    ) {
+        try {
+            val adRequest = AdRequest.Builder().build()
+            AppOpenAd.load(
+                context,
+                getAppOpenId(),
+                adRequest,
+                object : AppOpenAd.AppOpenAdLoadCallback() {
+                    override fun onAdLoaded(ad: AppOpenAd) {
+                        onLoaded(ad)
+                    }
+                    override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                        onFailed?.invoke()
+                    }
+                }
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            onFailed?.invoke()
+        }
+    }
+
     fun loadNativeAd(
         context: Context,
         onLoaded: (NativeAd) -> Unit,

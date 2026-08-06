@@ -64,7 +64,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            manifestPlaceholders["admobAppId"] = "ca-app-pub-8178045957849630~9682432362"
+            manifestPlaceholders["admobAppId"] = "ca-app-pub-8178045957849630~2823451917"
         }
         debug {
             manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
