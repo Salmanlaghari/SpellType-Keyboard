@@ -39,6 +39,7 @@ import com.spelltype.keyboard.domain.features.VoiceInputManager
 import com.spelltype.keyboard.domain.features.EmojiGifManager
 import com.spelltype.keyboard.domain.features.SettingsManager
 import com.spelltype.keyboard.domain.transmission.TransmissionEngine
+import com.spelltype.keyboard.domain.effects.ParticleEffectsEngine
 import kotlinx.coroutines.*
 
 class SpellTypeIME : InputMethodService() {
@@ -373,6 +374,12 @@ class SpellTypeIME : InputMethodService() {
                 toggleControlCenter()
             }
 
+            // Transmission Tool — share styled text
+            keyboardView.findViewById<View>(R.id.tool_transmission)?.setOnClickListener {
+                onKeyClickFeedback(it)
+                handleTransmissionTool()
+            }
+
             // Trigger Ad Banner loading
             updateKeyboardAdBanners()
 
@@ -571,6 +578,7 @@ class SpellTypeIME : InputMethodService() {
 
     override fun onDestroy() {
         try {
+            ParticleEffectsEngine.stop()
             voiceInputManager?.destroy()
             serviceJob.cancel()
         } catch (e: Exception) {
@@ -1459,21 +1467,35 @@ class SpellTypeIME : InputMethodService() {
             val density = resources.displayMetrics.density
 
             if (gboardModeEnabled) {
-                // Classic Gboard-type flat styling choice
-                root.setBackgroundColor(Color.parseColor("#1F2023")) // Gboard Dark gray base
+                // ═══ Pure Gboard Style — flat, minimal, clean ═══
+                root.setBackgroundColor(Color.parseColor("#1F2023"))
+
+                // Hide all extra bars for clean Gboard look
+                root.findViewById<View>(R.id.ai_suggestions_bar)?.setBackgroundColor(Color.parseColor("#202124"))
+                root.findViewById<TextView>(R.id.tv_keyboard_live_preview)?.setBackgroundColor(Color.parseColor("#171717"))
+
+                // Header bar — minimal Gboard gray
+                val headerBar = root.findViewById<LinearLayout>(R.id.btn_language)?.parent as? LinearLayout
+                headerBar?.setBackgroundColor(Color.parseColor("#202124"))
+
+                // Flat Gboard keys — no 3D, no shadow, no bevel
                 for ((id, view) in keyViews) {
                     val isSpecial = id == R.id.btn_shift || id == R.id.btn_backspace || id == R.id.btn_mode || id == R.id.btn_enter
-                    val radius = 4f * density // typical Gboard roundness
+                    val isAccent = id == R.id.btn_enter
+                    val radius = 5f * density
                     val keyBg = android.graphics.drawable.GradientDrawable().apply {
                         shape = android.graphics.drawable.GradientDrawable.RECTANGLE
                         cornerRadius = radius
-                        setColor(if (isSpecial) Color.parseColor("#1F2023") else Color.parseColor("#3C4043"))
+                        setColor(when {
+                            isAccent -> Color.parseColor("#8AB4F8") // Gboard blue accent
+                            isSpecial -> Color.parseColor("#3C4043") // Gboard special gray
+                            else -> Color.parseColor("#3C4043") // Gboard key gray
+                        })
                     }
                     view.background = keyBg
-                    view.setTextColor(Color.WHITE)
+                    view.setTextColor(if (isAccent) Color.BLACK else Color.WHITE)
+                    view.elevation = 0f // NO shadow, flat Gboard style
                 }
-                root.findViewById<View>(R.id.ai_suggestions_bar)?.setBackgroundColor(Color.parseColor("#1F2023"))
-                root.findViewById<TextView>(R.id.tv_keyboard_live_preview)?.setBackgroundColor(Color.parseColor("#1A1A1A"))
                 return
             }
 
@@ -1761,6 +1783,27 @@ class SpellTypeIME : InputMethodService() {
             SettingsManager.openKeyboardSettings(applicationContext ?: this)
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    private fun handleTransmissionTool() {
+        try {
+            val text = composingText.toString()
+            if (text.isBlank()) {
+                android.widget.Toast.makeText(applicationContext ?: this, "📡 Type something first to transmit!", android.widget.Toast.LENGTH_SHORT).show()
+                return
+            }
+            // Encode styled text for sharing
+            val encoded = TransmissionEngine.encodeForSharing(text, activeStyle, activeUnicode)
+            val shareableUrl = TransmissionEngine.generateShareableUrl(encoded)
+            // Copy to clipboard
+            val clipboard = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
+            val clip = android.content.ClipData.newPlainText("SpellType Transmission", shareableUrl)
+            clipboard?.setPrimaryClip(clip)
+            android.widget.Toast.makeText(applicationContext ?: this, "📡 Transmission link copied! Share it!", android.widget.Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            android.widget.Toast.makeText(applicationContext ?: this, "📡 Transmission error", android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -2075,8 +2118,8 @@ class SpellTypeIME : InputMethodService() {
                 return
             }
 
-            // Premium Assist — enhanced AI suggestions
-            if (premiumAssistEnabled && rawInput.length >= 2) {
+            // Premium Assist — enhanced AI suggestions (works from 1st character)
+            if (premiumAssistEnabled && rawInput.isNotEmpty()) {
                 val assistSuggestions = getPremiumAssistSuggestions(rawInput)
                 if (assistSuggestions.isNotEmpty()) {
                     root.findViewById<TextView>(R.id.suggestion_left)?.text = assistSuggestions.getOrElse(0) { "" }
@@ -2118,7 +2161,7 @@ class SpellTypeIME : InputMethodService() {
     }
 
     // ═══════════════════════════════════════════════════════════════
-    //  PREMIUM KEY PRESS with 60fps animation
+    //  PREMIUM KEY PRESS with 130fps animation
     // ═══════════════════════════════════════════════════════════════
 
     private fun onKeyClickFeedbackPremium(view: View) {
@@ -2493,9 +2536,9 @@ class SpellTypeIME : InputMethodService() {
             applyLanguage()
         }
 
-        // 25. 60FPS Render Precision
+        // 25. 130FPS Render Precision
         val btn60fps = root.findViewById<TextView>(R.id.btn_opt_60fps)
-        btn60fps?.text = "⚡ 60FPS Soft Render: ${if (highFpsRenderEnabled) "ON" else "OFF"}"
+        btn60fps?.text = "⚡ 130FPS Ultra Render: ${if (highFpsRenderEnabled) "ON" else "OFF"}"
         btn60fps?.setOnClickListener {
             onKeyClickFeedback(it)
             highFpsRenderEnabled = !highFpsRenderEnabled
@@ -2559,6 +2602,65 @@ class SpellTypeIME : InputMethodService() {
             premiumUnlocked = adFreeSandboxEnabled
             btnAdFree.text = "🛡️ Ad-Free Sandbox: ${if (adFreeSandboxEnabled) "ON" else "OFF"}"
             updateKeyboardAdBanners()
+        }
+
+        // ═══ Particle Effects ═══
+        var activeEffect = ParticleEffectsEngine.EffectType.NONE
+
+        val btnRain = root.findViewById<TextView>(R.id.btn_opt_rain)
+        btnRain?.setOnClickListener {
+            onKeyClickFeedback(it)
+            if (ParticleEffectsEngine.isActive() && activeEffect == ParticleEffectsEngine.EffectType.RAIN) {
+                ParticleEffectsEngine.stop()
+                activeEffect = ParticleEffectsEngine.EffectType.NONE
+                btnRain.text = "🌧️ Rain Effect: OFF"
+            } else {
+                ParticleEffectsEngine.startRain(keyboardRootView!!)
+                activeEffect = ParticleEffectsEngine.EffectType.RAIN
+                btnRain.text = "🌧️ Rain Effect: ON"
+            }
+        }
+
+        val btnCherry = root.findViewById<TextView>(R.id.btn_opt_cherry)
+        btnCherry?.setOnClickListener {
+            onKeyClickFeedback(it)
+            if (ParticleEffectsEngine.isActive() && activeEffect == ParticleEffectsEngine.EffectType.CHERRY_BLOSSOM) {
+                ParticleEffectsEngine.stop()
+                activeEffect = ParticleEffectsEngine.EffectType.NONE
+                btnCherry.text = "🌸 Cherry Blossom: OFF"
+            } else {
+                ParticleEffectsEngine.startCherryBlossom(keyboardRootView!!)
+                activeEffect = ParticleEffectsEngine.EffectType.CHERRY_BLOSSOM
+                btnCherry.text = "🌸 Cherry Blossom: ON"
+            }
+        }
+
+        val btnSnow = root.findViewById<TextView>(R.id.btn_opt_snow)
+        btnSnow?.setOnClickListener {
+            onKeyClickFeedback(it)
+            if (ParticleEffectsEngine.isActive() && activeEffect == ParticleEffectsEngine.EffectType.SNOW) {
+                ParticleEffectsEngine.stop()
+                activeEffect = ParticleEffectsEngine.EffectType.NONE
+                btnSnow.text = "❄️ Snow Effect: OFF"
+            } else {
+                ParticleEffectsEngine.startSnow(keyboardRootView!!)
+                activeEffect = ParticleEffectsEngine.EffectType.SNOW
+                btnSnow.text = "❄️ Snow Effect: ON"
+            }
+        }
+
+        val btnSparkle = root.findViewById<TextView>(R.id.btn_opt_sparkle)
+        btnSparkle?.setOnClickListener {
+            onKeyClickFeedback(it)
+            if (ParticleEffectsEngine.isActive() && activeEffect == ParticleEffectsEngine.EffectType.SPARKLE) {
+                ParticleEffectsEngine.stop()
+                activeEffect = ParticleEffectsEngine.EffectType.NONE
+                btnSparkle.text = "✨ Sparkle Effect: OFF"
+            } else {
+                ParticleEffectsEngine.startSparkle(keyboardRootView!!)
+                activeEffect = ParticleEffectsEngine.EffectType.SPARKLE
+                btnSparkle.text = "✨ Sparkle Effect: ON"
+            }
         }
 
         // Simple Keyboard Mode
