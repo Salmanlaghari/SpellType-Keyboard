@@ -23,20 +23,34 @@ android {
 
     signingConfigs {
         create("release") {
-            val keystorePropertiesFile = rootProject.file("keystore.properties")
-            if (keystorePropertiesFile.exists()) {
-                val keystoreProperties = Properties()
-                keystoreProperties.load(FileInputStream(keystorePropertiesFile))
-                storeFile = file(keystoreProperties["storeFile"] as String)
-                storePassword = keystoreProperties["storePassword"] as String
-                keyAlias = keystoreProperties["keyAlias"] as String
-                keyPassword = keystoreProperties["keyPassword"] as String
+            // Priority: Environment variables (CI) > keystore.properties > fallback
+            val envStoreFile = System.getenv("KEYSTORE_FILE")
+            val envStorePass = System.getenv("KEYSTORE_PASSWORD")
+            val envKeyAlias = System.getenv("KEY_ALIAS")
+            val envKeyPass = System.getenv("KEY_PASSWORD")
+
+            if (envStoreFile != null && envStorePass != null) {
+                // CI environment — use env vars
+                storeFile = file(envStoreFile)
+                storePassword = envStorePass
+                keyAlias = envKeyAlias ?: "spelltype"
+                keyPassword = envKeyPass ?: envStorePass
             } else {
-                // Fallback for local/test builds
-                storeFile = file("release.keystore")
-                storePassword = "spelltypepass"
-                keyAlias = "spelltype"
-                keyPassword = "spelltypepass"
+                val keystorePropertiesFile = rootProject.file("keystore.properties")
+                if (keystorePropertiesFile.exists()) {
+                    val keystoreProperties = Properties()
+                    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+                    storeFile = file(keystoreProperties["storeFile"] as String)
+                    storePassword = keystoreProperties["storePassword"] as String
+                    keyAlias = keystoreProperties["keyAlias"] as String
+                    keyPassword = keystoreProperties["keyPassword"] as String
+                } else {
+                    // Fallback for local/test builds
+                    storeFile = file("release.keystore")
+                    storePassword = "spelltypepass"
+                    keyAlias = "spelltype"
+                    keyPassword = "spelltypepass"
+                }
             }
         }
     }
@@ -56,6 +70,14 @@ android {
             manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
         }
     }
+
+    // ═══ Play Store AAB + APK outputs ═══
+    bundle {
+        language.enableSplit = false
+        density.enableSplit = false
+        abi.enableSplit = false
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
