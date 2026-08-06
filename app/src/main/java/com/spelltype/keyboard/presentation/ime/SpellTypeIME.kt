@@ -1836,10 +1836,9 @@ class SpellTypeIME : InputMethodService() {
         val headerBar = root.findViewById<View>(R.id.keyboard_root)?.let {
             (it as? android.widget.LinearLayout)?.getChildAt(1) // Header bar
         }
-        val artBar = root.findViewById<View>(R.id.quick_art_container)?.parent?.parent
+        val artBar = root.findViewById<View>(R.id.quick_art_container)?.parent?.parent as? View
         val suggestionsBar = root.findViewById<View>(R.id.ai_suggestions_bar)
         val proToolsBar = root.findViewById<View>(R.id.pro_tools_bar)
-        val keysContainer = root.findViewById<View>(R.id.keyboard_keys_container)
 
         if (simpleModeActive) {
             // Hide everything except keyboard keys
