@@ -9,7 +9,7 @@ import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.LinearInterpolator
 
 /**
- * Real Premium Theme Engine — 35+ HD 8K Animated & 3D Themes
+ * Real Premium Theme Engine — 44+ HD 8K Animated & 3D Themes
  * Each theme has: animated gradient background, glow keys, particle effects, 3D keycaps
  */
 
@@ -282,7 +282,149 @@ data class RealTheme(
                 Color.parseColor("#3D2000"), Color.parseColor("#6B3800"), Color.parseColor("#FFF8E1"),
                 Color.parseColor("#E65100"), Color.parseColor("#FF9800"), Color.parseColor("#F57C00"),
                 Color.parseColor("#1A0D00"), Color.parseColor("#FF9800"), Color.parseColor("#1A0D00"),
-                Color.parseColor("#120800"), particleColor = Color.parseColor("#FF9800"))
+                Color.parseColor("#120800"), particleColor = Color.parseColor("#FF9800")),
+
+            // ═══ v4.0 — 20 NEW 8K 3D THEMES ═══
+            // 25. Cyber Wave
+            RealTheme("cyber_wave", "Cyber Wave", "🌊",
+                intArrayOf(Color.parseColor("#0A001A"), Color.parseColor("#150033"), Color.parseColor("#050010")),
+                Color.parseColor("#1A0040"), Color.parseColor("#2D0070"), Color.parseColor("#E0F7FA"),
+                Color.parseColor("#00E5FF"), Color.parseColor("#18FFFF"), Color.parseColor("#00B8D4"),
+                Color.parseColor("#0A001A"), Color.parseColor("#00E5FF"), Color.parseColor("#0A001A"),
+                Color.parseColor("#050010"), is3DTheme = true, particleColor = Color.parseColor("#00E5FF")),
+            // 26. Dragon Fire
+            RealTheme("dragon_fire", "Dragon Fire", "🐉",
+                intArrayOf(Color.parseColor("#1A0500"), Color.parseColor("#330A00"), Color.parseColor("#0D0200")),
+                Color.parseColor("#4A1500"), Color.parseColor("#802500"), Color.parseColor("#FFF3E0"),
+                Color.parseColor("#FF6D00"), Color.parseColor("#FF3D00"), Color.parseColor("#DD2C00"),
+                Color.parseColor("#1A0500"), Color.parseColor("#FF6D00"), Color.parseColor("#1A0500"),
+                Color.parseColor("#0D0200"), is3DTheme = true, particleColor = Color.parseColor("#FF3D00")),
+            // 27. Moonlight
+            RealTheme("moonlight", "Moonlight", "🌙",
+                intArrayOf(Color.parseColor("#0A0F1E"), Color.parseColor("#111B33"), Color.parseColor("#060A14")),
+                Color.parseColor("#1A2540"), Color.parseColor("#2A3560"), Color.parseColor("#E8EAF6"),
+                Color.parseColor("#C5CAE9"), Color.parseColor("#9FA8DA"), Color.parseColor("#7986CB"),
+                Color.parseColor("#0A0F1E"), Color.parseColor("#C5CAE9"), Color.parseColor("#0A0F1E"),
+                Color.parseColor("#060A14"), is3DTheme = true, particleColor = Color.parseColor("#9FA8DA")),
+            // 28. Thunder Storm
+            RealTheme("thunder_storm", "Thunder Storm", "⛈️",
+                intArrayOf(Color.parseColor("#0A0A14"), Color.parseColor("#141428"), Color.parseColor("#050510")),
+                Color.parseColor("#1A1A35"), Color.parseColor("#2D2D55"), Color.parseColor("#F5F5FF"),
+                Color.parseColor("#FFEA00"), Color.parseColor("#FFD600"), Color.parseColor("#FFFF00"),
+                Color.parseColor("#0A0A14"), Color.parseColor("#FFEA00"), Color.parseColor("#0A0A14"),
+                Color.parseColor("#050510"), is3DTheme = true, particleColor = Color.parseColor("#FFEA00")),
+            // 29. Crystal Cave
+            RealTheme("crystal_cave", "Crystal Cave", "💎",
+                intArrayOf(Color.parseColor("#0A1A2E"), Color.parseColor("#0F2847"), Color.parseColor("#071220")),
+                Color.parseColor("#153565"), Color.parseColor("#253565"), Color.parseColor("#E0F7FA"),
+                Color.parseColor("#00BCD4"), Color.parseColor("#4DD0E1"), Color.parseColor("#80DEEA"),
+                Color.parseColor("#0A1A2E"), Color.parseColor("#4DD0E1"), Color.parseColor("#0A1A2E"),
+                Color.parseColor("#071220"), is3DTheme = true, particleColor = Color.parseColor("#80DEEA")),
+            // 30. Northern Lights
+            RealTheme("northern_lights", "Northern Lights", "🌌",
+                intArrayOf(Color.parseColor("#050A14"), Color.parseColor("#0A1428"), Color.parseColor("#030510")),
+                Color.parseColor("#0F1A35"), Color.parseColor("#1A3055"), Color.parseColor("#E8F5E9"),
+                Color.parseColor("#00E676"), Color.parseColor("#69F0AE"), Color.parseColor("#B9F6CA"),
+                Color.parseColor("#050A14"), Color.parseColor("#69F0AE"), Color.parseColor("#050A14"),
+                Color.parseColor("#030510"), is3DTheme = true, particleColor = Color.parseColor("#69F0AE")),
+            // 31. Desert Sand
+            RealTheme("desert_sand", "Desert Sand", "🏜️",
+                intArrayOf(Color.parseColor("#1A1000"), Color.parseColor("#332000"), Color.parseColor("#0D0800")),
+                Color.parseColor("#4A3000"), Color.parseColor("#7A5000"), Color.parseColor("#FFF8E1"),
+                Color.parseColor("#FFD54F"), Color.parseColor("#FFCA28"), Color.parseColor("#FFB300"),
+                Color.parseColor("#1A1000"), Color.parseColor("#FFD54F"), Color.parseColor("#1A1000"),
+                Color.parseColor("#0D0800"), is3DTheme = true, particleColor = Color.parseColor("#FFCA28")),
+            // 32. Ocean Sunset
+            RealTheme("ocean_sunset", "Ocean Sunset", "🌅",
+                intArrayOf(Color.parseColor("#1A0A00"), Color.parseColor("#331500"), Color.parseColor("#0D0500")),
+                Color.parseColor("#4A2000"), Color.parseColor("#803500"), Color.parseColor("#FFF3E0"),
+                Color.parseColor("#FF7043"), Color.parseColor("#FF8A65"), Color.parseColor("#FFAB91"),
+                Color.parseColor("#1A0A00"), Color.parseColor("#FF8A65"), Color.parseColor("#1A0A00"),
+                Color.parseColor("#0D0500"), is3DTheme = true, particleColor = Color.parseColor("#FFAB91")),
+            // 33. Midnight Rose
+            RealTheme("midnight_rose", "Midnight Rose", "🌹",
+                intArrayOf(Color.parseColor("#1A0010"), Color.parseColor("#330020"), Color.parseColor("#0D0008")),
+                Color.parseColor("#4A0030"), Color.parseColor("#800050"), Color.parseColor("#FCE4EC"),
+                Color.parseColor("#F06292"), Color.parseColor("#E91E63"), Color.parseColor("#C2185B"),
+                Color.parseColor("#1A0010"), Color.parseColor("#F06292"), Color.parseColor("#1A0010"),
+                Color.parseColor("#0D0008"), is3DTheme = true, particleColor = Color.parseColor("#E91E63")),
+            // 34. Electric Blue
+            RealTheme("electric_blue", "Electric Blue", "⚡",
+                intArrayOf(Color.parseColor("#000A1A"), Color.parseColor("#001533"), Color.parseColor("#000510")),
+                Color.parseColor("#0A1E45"), Color.parseColor("#1A3A70"), Color.parseColor("#E3F2FD"),
+                Color.parseColor("#2979FF"), Color.parseColor("#448AFF"), Color.parseColor("#82B1FF"),
+                Color.parseColor("#000A1A"), Color.parseColor("#448AFF"), Color.parseColor("#000A1A"),
+                Color.parseColor("#000510"), is3DTheme = true, particleColor = Color.parseColor("#82B1FF")),
+            // 35. Jade Emperor
+            RealTheme("jade_emperor", "Jade Emperor", "👑",
+                intArrayOf(Color.parseColor("#001A0A"), Color.parseColor("#003315"), Color.parseColor("#000F05")),
+                Color.parseColor("#0A3D20"), Color.parseColor("#156B35"), Color.parseColor("#E8F5E9"),
+                Color.parseColor("#00C853"), Color.parseColor("#69F0AE"), Color.parseColor("#B9F6CA"),
+                Color.parseColor("#001A0A"), Color.parseColor("#69F0AE"), Color.parseColor("#001A0A"),
+                Color.parseColor("#000F05"), is3DTheme = true, particleColor = Color.parseColor("#00C853")),
+            // 36. Phoenix Flame
+            RealTheme("phoenix_flame", "Phoenix Flame", "🔥",
+                intArrayOf(Color.parseColor("#1A0500"), Color.parseColor("#331000"), Color.parseColor("#0D0200")),
+                Color.parseColor("#4A1800"), Color.parseColor("#803000"), Color.parseColor("#FFF8E1"),
+                Color.parseColor("#FF6F00"), Color.parseColor("#FF8F00"), Color.parseColor("#FFA000"),
+                Color.parseColor("#1A0500"), Color.parseColor("#FF8F00"), Color.parseColor("#1A0500"),
+                Color.parseColor("#0D0200"), is3DTheme = true, particleColor = Color.parseColor("#FF6F00")),
+            // 37. Frozen Lake
+            RealTheme("frozen_lake", "Frozen Lake", "🧊",
+                intArrayOf(Color.parseColor("#E0F4FF"), Color.parseColor("#E8F8FF"), Color.parseColor("#D0EFFF")),
+                Color.parseColor("#FFFFFF"), Color.parseColor("#B3E5FC"), Color.parseColor("#01579B"),
+                Color.parseColor("#0288D1"), Color.parseColor("#03A9F4"), Color.parseColor("#4FC3F7"),
+                Color.parseColor("#E0F4FF"), Color.parseColor("#0288D1"), Color.parseColor("#E0F4FF"),
+                Color.parseColor("#D0EFFF"), isLight = true, is3DTheme = true, particleColor = Color.parseColor("#4FC3F7")),
+            // 38. Rainbow Prism
+            RealTheme("rainbow_prism", "Rainbow Prism", "🌈",
+                intArrayOf(Color.parseColor("#0D001A"), Color.parseColor("#1A0033"), Color.parseColor("#080010")),
+                Color.parseColor("#1F0040"), Color.parseColor("#3D0080"), Color.parseColor("#F5F5F5"),
+                Color.parseColor("#E040FB"), Color.parseColor("#7C4DFF"), Color.parseColor("#536DFE"),
+                Color.parseColor("#0D001A"), Color.parseColor("#E040FB"), Color.parseColor("#0D001A"),
+                Color.parseColor("#080010"), is3DTheme = true, particleColor = Color.parseColor("#7C4DFF")),
+            // 39. Black Hole
+            RealTheme("black_hole", "Black Hole", "🕳️",
+                intArrayOf(Color.parseColor("#000000"), Color.parseColor("#050505"), Color.parseColor("#000000")),
+                Color.parseColor("#0A0A0A"), Color.parseColor("#151515"), Color.parseColor("#E0E0E0"),
+                Color.parseColor("#9E9E9E"), Color.parseColor("#757575"), Color.parseColor("#616161"),
+                Color.parseColor("#000000"), Color.parseColor("#9E9E9E"), Color.parseColor("#000000"),
+                Color.parseColor("#000000"), is3DTheme = true, particleColor = Color.parseColor("#757575")),
+            // 40. Supernova
+            RealTheme("supernova", "Supernova", "💫",
+                intArrayOf(Color.parseColor("#1A0A00"), Color.parseColor("#331500"), Color.parseColor("#0D0500")),
+                Color.parseColor("#4A2000"), Color.parseColor("#803800"), Color.parseColor("#FFFDE7"),
+                Color.parseColor("#FFC107"), Color.parseColor("#FFD54F"), Color.parseColor("#FFECB3"),
+                Color.parseColor("#1A0A00"), Color.parseColor("#FFD54F"), Color.parseColor("#1A0A00"),
+                Color.parseColor("#0D0500"), is3DTheme = true, particleColor = Color.parseColor("#FFC107")),
+            // 41. Mystic Fog
+            RealTheme("mystic_fog", "Mystic Fog", "🌫️",
+                intArrayOf(Color.parseColor("#121620"), Color.parseColor("#1A2030"), Color.parseColor("#0A0E18")),
+                Color.parseColor("#2A3045"), Color.parseColor("#3A4565"), Color.parseColor("#ECEFF1"),
+                Color.parseColor("#90A4AE"), Color.parseColor("#B0BEC5"), Color.parseColor("#CFD8DC"),
+                Color.parseColor("#121620"), Color.parseColor("#B0BEC5"), Color.parseColor("#121620"),
+                Color.parseColor("#0A0E18"), is3DTheme = true, particleColor = Color.parseColor("#90A4AE")),
+            // 42. Tropical Storm
+            RealTheme("tropical_storm", "Tropical Storm", "🌀",
+                intArrayOf(Color.parseColor("#001A1A"), Color.parseColor("#003333"), Color.parseColor("#000F0F")),
+                Color.parseColor("#0A3535"), Color.parseColor("#156060"), Color.parseColor("#E0F7FA"),
+                Color.parseColor("#00ACC1"), Color.parseColor("#26C6DA"), Color.parseColor("#4DD0E1"),
+                Color.parseColor("#001A1A"), Color.parseColor("#26C6DA"), Color.parseColor("#001A1A"),
+                Color.parseColor("#000F0F"), is3DTheme = true, particleColor = Color.parseColor("#00ACC1")),
+            // 43. Silver Bullet
+            RealTheme("silver_bullet", "Silver Bullet", "🔫",
+                intArrayOf(Color.parseColor("#1A1A1A"), Color.parseColor("#2A2A2A"), Color.parseColor("#0F0F0F")),
+                Color.parseColor("#3A3A3A"), Color.parseColor("#555555"), Color.parseColor("#FAFAFA"),
+                Color.parseColor("#BDBDBD"), Color.parseColor("#E0E0E0"), Color.parseColor("#EEEEEE"),
+                Color.parseColor("#1A1A1A"), Color.parseColor("#E0E0E0"), Color.parseColor("#1A1A1A"),
+                Color.parseColor("#0F0F0F"), is3DTheme = true, particleColor = Color.parseColor("#BDBDBD")),
+            // 44. Golden Dragon
+            RealTheme("golden_dragon", "Golden Dragon", "🐲",
+                intArrayOf(Color.parseColor("#1A1000"), Color.parseColor("#332000"), Color.parseColor("#0D0800")),
+                Color.parseColor("#4A3000"), Color.parseColor("#7A5500"), Color.parseColor("#FFF8E1"),
+                Color.parseColor("#FFB300"), Color.parseColor("#FFC107"), Color.parseColor("#FFD54F"),
+                Color.parseColor("#1A1000"), Color.parseColor("#FFC107"), Color.parseColor("#1A1000"),
+                Color.parseColor("#0D0800"), is3DTheme = true, particleColor = Color.parseColor("#FFB300"))
         )
     }
 

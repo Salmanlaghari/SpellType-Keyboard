@@ -5,7 +5,7 @@ import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 
 /**
- * 20+ Keyboard Background Engine
+ * 55+ Keyboard Background Engine
  * Real drawable backgrounds: Flowers, Cherry Blossom, Stars, Nebula, etc.
  */
 object KeyboardBackgroundEngine {
@@ -100,7 +100,49 @@ object KeyboardBackgroundEngine {
         KeyboardBackground("mint_fresh", "Mint Fresh", "🌿", BackgroundType.GRADIENT,
             intArrayOf(Color.parseColor("#001A10"), Color.parseColor("#003320"), Color.parseColor("#001A10")), 20),
         KeyboardBackground("golden_hour", "Golden Hour", "☀️", BackgroundType.GRADIENT,
-            intArrayOf(Color.parseColor("#1A1000"), Color.parseColor("#332000"), Color.parseColor("#1A1000")), 20)
+            intArrayOf(Color.parseColor("#1A1000"), Color.parseColor("#332000"), Color.parseColor("#1A1000")), 20),
+
+        // ═══ v4.0 — 20 NEW 8K WALLPAPER BACKGROUNDS ═══
+        KeyboardBackground("cyber_grid", "Cyber Grid", "🤖", BackgroundType.PATTERN_CIRCUIT,
+            intArrayOf(Color.parseColor("#0A001A"), Color.parseColor("#150033")), 30),
+        KeyboardBackground("quantum_field", "Quantum Field", "⚛️", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#050A14"), Color.parseColor("#0A1428"), Color.parseColor("#030510")), 20),
+        KeyboardBackground("nebula_storm", "Nebula Storm", "🌀", BackgroundType.PATTERN_GALAXY,
+            intArrayOf(Color.parseColor("#0D001A"), Color.parseColor("#1A0033")), 25),
+        KeyboardBackground("crystal_matrix", "Crystal Matrix", "💎", BackgroundType.PATTERN_DIAMONDS,
+            intArrayOf(Color.parseColor("#0A1A2E"), Color.parseColor("#0F2847")), 30),
+        KeyboardBackground("volcanic_ash", "Volcanic Ash", "🌋", BackgroundType.PATTERN_FIRE,
+            intArrayOf(Color.parseColor("#1A0500"), Color.parseColor("#331000")), 30),
+        KeyboardBackground("arctic_aurora", "Arctic Aurora", "🌌", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#0B1A2B"), Color.parseColor("#0F2847"), Color.parseColor("#071220")), 20),
+        KeyboardBackground("digital_rain", "Digital Rain", "🌧️", BackgroundType.PATTERN_LINES,
+            intArrayOf(Color.parseColor("#000A00"), Color.parseColor("#001A00")), 35),
+        KeyboardBackground("holographic", "Holographic", "🦄", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#1E002A"), Color.parseColor("#3D0053"), Color.parseColor("#0F0015")), 20),
+        KeyboardBackground("prismatic", "Prismatic", "🌈", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#0D001A"), Color.parseColor("#1A0033"), Color.parseColor("#080010")), 20),
+        KeyboardBackground("silk_road", "Silk Road", "🛤️", BackgroundType.PATTERN_WAVES,
+            intArrayOf(Color.parseColor("#1A1000"), Color.parseColor("#332000")), 25),
+        KeyboardBackground("thunder_cloud", "Thunder Cloud", "⛈️", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#0A0A14"), Color.parseColor("#141428"), Color.parseColor("#050510")), 20),
+        KeyboardBackground("deep_space", "Deep Space", "🚀", BackgroundType.PATTERN_STARS,
+            intArrayOf(Color.parseColor("#000005"), Color.parseColor("#000010")), 20),
+        KeyboardBackground("coral_reef", "Coral Reef", "🐠", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#001A1A"), Color.parseColor("#003333"), Color.parseColor("#001A1A")), 20),
+        KeyboardBackground("mystic_forest", "Mystic Forest", "🌲", BackgroundType.PATTERN_FOREST,
+            intArrayOf(Color.parseColor("#001A0D"), Color.parseColor("#002E15")), 30),
+        KeyboardBackground("golden_desert", "Golden Desert", "🏜️", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#1A1000"), Color.parseColor("#332000"), Color.parseColor("#0D0800")), 20),
+        KeyboardBackground("silver_moon", "Silver Moon", "🌙", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#0A0F1E"), Color.parseColor("#111B33"), Color.parseColor("#060A14")), 20),
+        KeyboardBackground("ruby_red", "Ruby Red", "🔴", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#1A0005"), Color.parseColor("#2E000A"), Color.parseColor("#100003")), 20),
+        KeyboardBackground("sapphire_blue", "Sapphire Blue", "🔵", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#000A1A"), Color.parseColor("#001035"), Color.parseColor("#000510")), 20),
+        KeyboardBackground("emerald_city", "Emerald City", "💚", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#001A0A"), Color.parseColor("#003315"), Color.parseColor("#001A0D")), 20),
+        KeyboardBackground("diamond_dust", "Diamond Dust", "💠", BackgroundType.PATTERN_SNOW,
+            intArrayOf(Color.parseColor("#E0F0FF"), Color.parseColor("#E8F5FF")), 30)
     )
 
     /**
