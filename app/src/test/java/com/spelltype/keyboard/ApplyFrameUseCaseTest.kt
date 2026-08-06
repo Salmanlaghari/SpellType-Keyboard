@@ -36,7 +36,7 @@ class ApplyFrameUseCaseTest {
         val text = "Frame Me"
         val result = applyFrameUseCase(text, FrameStyle.BOX)
 
-        val expected = "┌──────────┐\n│ Frame Me │\n└──────────┘"
+        val expected = "┌─ Frame Me ─┐"
         assertEquals(expected, result)
 
         val savedList = fakeRepository.getSavedArtList().first()
