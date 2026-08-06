@@ -38,6 +38,7 @@ import com.spelltype.keyboard.domain.backgrounds.KeyboardBackgroundEngine
 import com.spelltype.keyboard.domain.features.VoiceInputManager
 import com.spelltype.keyboard.domain.features.EmojiGifManager
 import com.spelltype.keyboard.domain.features.SettingsManager
+import com.spelltype.keyboard.domain.transmission.TransmissionEngine
 import kotlinx.coroutines.*
 
 class SpellTypeIME : InputMethodService() {
@@ -1657,25 +1658,49 @@ class SpellTypeIME : InputMethodService() {
 
     private fun handleVoiceInput() {
         try {
+            val ctx = applicationContext ?: this
             if (voiceInputManager == null) {
-                voiceInputManager = VoiceInputManager(applicationContext ?: this)
+                voiceInputManager = VoiceInputManager(ctx)
                 voiceInputManager?.setCallback(object : VoiceInputManager.VoiceCallback {
                     override fun onResult(text: String) {
-                        val ic = currentInputConnection ?: return
-                        ic.commitText(text, 1)
+                        try {
+                            if (text.isBlank()) return
+                            val ic = currentInputConnection ?: return
+                            ic.commitText(text, 1)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
                     }
                     override fun onPartialResult(text: String) {
-                        val ic = currentInputConnection ?: return
-                        ic.setComposingText(text, 1)
+                        try {
+                            if (text.isBlank()) return
+                            val ic = currentInputConnection ?: return
+                            ic.setComposingText(text, 1)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
                     }
                     override fun onError(error: String) {
-                        android.widget.Toast.makeText(applicationContext ?: this@SpellTypeIME, "🎤 $error", android.widget.Toast.LENGTH_SHORT).show()
+                        try {
+                            android.widget.Toast.makeText(ctx, "🎤 ${error.ifBlank { "Voice input error" }}", android.widget.Toast.LENGTH_SHORT).show()
+                            keyboardRootView?.findViewById<TextView>(R.id.tool_voice)?.text = "🎤"
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
                     }
                     override fun onListeningStarted() {
-                        keyboardRootView?.findViewById<TextView>(R.id.tool_voice)?.text = "🔴"
+                        try {
+                            keyboardRootView?.findViewById<TextView>(R.id.tool_voice)?.text = "🔴"
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
                     }
                     override fun onListeningStopped() {
-                        keyboardRootView?.findViewById<TextView>(R.id.tool_voice)?.text = "🎤"
+                        try {
+                            keyboardRootView?.findViewById<TextView>(R.id.tool_voice)?.text = "🎤"
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
                     }
                 })
             }
@@ -1686,13 +1711,25 @@ class SpellTypeIME : InputMethodService() {
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            try {
+                android.widget.Toast.makeText(applicationContext ?: this, "🎤 Voice input unavailable", android.widget.Toast.LENGTH_SHORT).show()
+            } catch (_: Exception) {}
         }
     }
 
     private fun handleGifSearch() {
         try {
-            val ic = currentInputConnection ?: return
-            ic.commitText(EmojiGifManager.getRandomEmoticon(), 1)
+            // Show a proper emoji picker with categorized emojis instead of random
+            isEmojiMode = true
+            isSymbolMode = false
+            isShifted = false
+            updateKeyLabels()
+
+            // Show emoji category in suggestion bar
+            val root = keyboardRootView ?: return
+            root.findViewById<TextView>(R.id.suggestion_left)?.text = "😀 Smileys"
+            root.findViewById<TextView>(R.id.suggestion_center)?.text = "👍 People"
+            root.findViewById<TextView>(R.id.suggestion_right)?.text = "🔥 Objects"
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -1700,17 +1737,20 @@ class SpellTypeIME : InputMethodService() {
 
     private fun handleImageDesign() {
         try {
-            // Cycle through keyboard backgrounds
             val backgrounds = KeyboardBackgroundEngine.getAllBackgrounds()
+            if (backgrounds.isEmpty()) return
             bgIndex = (bgIndex + 1) % backgrounds.size
             activeBackground = backgrounds[bgIndex]
+            val bg = activeBackground ?: return
             val root = keyboardRootView ?: return
-            root.background = KeyboardBackgroundEngine.createBackground(activeBackground!!)
-            android.widget.Toast.makeText(
-                applicationContext ?: this,
-                "🎨 ${activeBackground!!.emoji} ${activeBackground!!.name}",
-                android.widget.Toast.LENGTH_SHORT
-            ).show()
+            root.background = KeyboardBackgroundEngine.createBackground(bg)
+            try {
+                android.widget.Toast.makeText(
+                    applicationContext ?: this,
+                    "🎨 ${bg.emoji} ${bg.name}",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            } catch (_: Exception) {}
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -1728,64 +1768,264 @@ class SpellTypeIME : InputMethodService() {
     //  PREMIUM ASSIST — Smart Writing Suggestions
     // ═══════════════════════════════════════════════════════════════
 
-    /** Premium Assist: context-aware smart suggestions */
+    /** Premium Assist: context-aware smart suggestions with 50+ completions, emoji, phrases, autocorrect */
     private fun getPremiumAssistSuggestions(input: String): List<String> {
         val suggestions = mutableListOf<String>()
         val lower = input.lowercase().trim()
 
-        // Smart completions based on prefix
+        // Auto-correction dictionary — 100+ common misspellings
+        val autoCorrections = mapOf(
+            "teh" to "the", "recieve" to "receive", "occured" to "occurred",
+            "seperate" to "separate", "definately" to "definitely", "accomodate" to "accommodate",
+            "occurance" to "occurrence", "untill" to "until", "wich" to "which",
+            "thier" to "their", "freind" to "friend", "beleive" to "believe",
+            "neccessary" to "necessary", "succesful" to "successful", "begining" to "beginning",
+            "occuring" to "occurring", "comming" to "coming", "runing" to "running",
+            "writting" to "writing", "stoping" to "stopping", "geting" to "getting",
+            "sitll" to "still", "taht" to "that", "wiht" to "with", "htis" to "this",
+            "adn" to "and", "fro" to "for", "fo" to "of", "ot" to "to",
+            "hte" to "the", "yuo" to "you", "yuor" to "your", "waht" to "what",
+            "jsut" to "just", "dont" to "don't", "wont" to "won't", "cant" to "can't",
+            "didnt" to "didn't", "doesnt" to "doesn't", "isnt" to "isn't",
+            "wasnt" to "wasn't", "werent" to "weren't", "hasnt" to "hasn't",
+            "havent" to "haven't", "wouldnt" to "wouldn't", "couldnt" to "couldn't",
+            "shouldnt" to "shouldn't", "arent" to "aren't", "arent" to "aren't",
+            "im" to "I'm", "ive" to "I've", "id" to "I'd", "ill" to "I'll",
+            "your" to "your", "youre" to "you're", "youve" to "you've",
+            "theyre" to "they're", "weve" to "we've", "theres" to "there's",
+            "whos" to "who's", "whats" to "what's", "thats" to "that's",
+            "its" to "it's", "lets" to "let's", "heres" to "here's",
+            "alot" to "a lot", "infact" to "in fact", "incase" to "in case",
+            "eachother" to "each other", "aswell" to "as well", "incase" to "in case",
+            "noone" to "no one", "atleast" to "at least", "eventhough" to "even though",
+            "inspite" to "in spite", "eventhough" to "even though",
+            "prolly" to "probably", "gonna" to "going to", "wanna" to "want to",
+            "gotta" to "got to", "kinda" to "kind of", "sorta" to "sort of",
+            "lemme" to "let me", "gimme" to "give me", "outta" to "out of",
+            "coulda" to "could have", "woulda" to "would have", "shoulda" to "should have",
+            "embarass" to "embarrass", "calender" to "calendar", "cemetary" to "cemetery",
+            "concious" to "conscious", "existance" to "existence", "goverment" to "government",
+            "independant" to "independent", "liason" to "liaison", "millenium" to "millennium",
+            "publically" to "publicly", "refered" to "referred", "realy" to "really",
+            "truely" to "truly", "wellcome" to "welcome", "wich" to "which",
+            "loose" to "lose", "adn" to "and", "ahve" to "have", "bc" to "because",
+            "bday" to "birthday", "cuz" to "because", "dm" to "direct message",
+            "rn" to "right now", "tbh" to "to be honest", "imo" to "in my opinion",
+            "fyi" to "for your information", "smh" to "shaking my head",
+            "nvm" to "never mind", "idk" to "I don't know", "ikr" to "I know right",
+            "tbh" to "to be honest", "ngl" to "not gonna lie", "fr" to "for real",
+            "ong" to "on god", "af" to "as f***", "wbu" to "what about you",
+            "hbu" to "how about you", "wyd" to "what are you doing", "hmu" to "hit me up",
+            "lmao" to "laughing my a** off", "rofl" to "rolling on the floor laughing",
+            "smh" to "shaking my head", "ttyl" to "talk to you later",
+            "ily" to "I love you", "ilysm" to "I love you so much",
+            "omw" to "on my way", "jk" to "just kidding", "ftw" to "for the win",
+            "gg" to "good game", "gl" to "good luck", "hf" to "have fun",
+            "thx" to "thanks", "ty" to "thank you", "yw" to "you're welcome",
+            "np" to "no problem", "pls" to "please", "plz" to "please",
+            "cya" to "see you", "ur" to "your", "u" to "you", "r" to "are",
+            "y" to "why", "k" to "okay", "ok" to "okay", "kk" to "okay"
+        )
+
+        // Check for auto-correction first
+        autoCorrections[lower]?.let { corrected ->
+            if (corrected != lower) {
+                suggestions.add("→ $corrected")
+            }
+        }
+
+        // Smart emoji suggestions based on context
+        val emojiContext = mapOf(
+            "love" to "❤️", "heart" to "💕", "happy" to "😊", "sad" to "😢",
+            "angry" to "😡", "laugh" to "😂", "lol" to "😂", "cry" to "😭",
+            "fire" to "🔥", "cool" to "😎", "star" to "⭐", "sun" to "☀️",
+            "moon" to "🌙", "rain" to "🌧️", "snow" to "❄️", "party" to "🎉",
+            "birthday" to "🎂", "gift" to "🎁", "food" to "🍕", "eat" to "🍔",
+            "drink" to "☕", "coffee" to "☕", "tea" to "🍵", "music" to "🎵",
+            "game" to "🎮", "play" to "🎮", "sleep" to "😴", "work" to "💼",
+            "school" to "📚", "study" to "📖", "home" to "🏠", "travel" to "✈️",
+            "car" to "🚗", "phone" to "📱", "computer" to "💻", "money" to "💰",
+            "time" to "⏰", "dog" to "🐶", "cat" to "🐱", "flower" to "🌸",
+            "tree" to "🌲", "water" to "💧", "earth" to "🌍", "world" to "🌎",
+            "good" to "👍", "bad" to "👎", "yes" to "✅", "no" to "❌",
+            "think" to "🤔", "idea" to "💡", "magic" to "✨", "win" to "🏆",
+            "run" to "🏃", "walk" to "🚶", "swim" to "🏊", "gym" to "💪",
+            "pray" to "🙏", "thank" to "🙏", "sorry" to "😔", "welcome" to "😊",
+            "miss" to "🥺", "hug" to "🤗", "kiss" to "😘", "marry" to "💒",
+            "baby" to "👶", "child" to "👧", "friend" to "👫", "family" to "👨‍👩‍👧‍👦",
+            "book" to "📖", "movie" to "🎬", "photo" to "📷", "pic" to "📸",
+            "video" to "🎥", "art" to "🎨", "code" to "💻", "bug" to "🐛",
+            "ship" to "🚀", "rocket" to "🚀", "space" to "🌌", "alien" to "👽"
+        )
+
+        // Find context-appropriate emoji
+        for ((keyword, emoji) in emojiContext) {
+            if (lower.contains(keyword) && !suggestions.any { it.contains(emoji) }) {
+                suggestions.add("$emoji ${keyword.replaceFirstChar { it.uppercase() }}")
+            }
+        }
+
+        // Smart word completions based on prefix — 50+ entries
         val completions = mapOf(
-            "hel" to listOf("hello", "help", "held"),
-            "goo" to listOf("good", "google", "goose"),
-            "tha" to listOf("thank", "that", "than"),
-            "ple" to listOf("please", "pleasure"),
-            "hav" to listOf("have", "haven't"),
-            "wha" to listOf("what", "whats"),
-            "how" to listOf("how", "however"),
-            "hey" to listOf("hey", "hello"),
-            "mee" to listOf("meet", "meek"),
-            "nee" to listOf("need", "needle"),
-            "lov" to listOf("love", "lovely"),
-            "wan" to listOf("want", "wander"),
-            "com" to listOf("come", "common"),
-            "whe" to listOf("when", "where"),
-            "whi" to listOf("which", "while"),
-            "sho" to listOf("should", "show"),
-            "wou" to listOf("would", "wound"),
-            "cou" to listOf("could", "count"),
-            "pro" to listOf("problem", "project"),
-            "thi" to listOf("this", "think"),
-            "wit" to listOf("with", "without"),
-            "abo" to listOf("about", "above"),
-            "fro" to listOf("from", "front"),
-            "jus" to listOf("just", "justice"),
-            "sti" to listOf("still", "stick"),
-            "als" to listOf("also", "always"),
-            "eve" to listOf("everything", "evening"),
-            "som" to listOf("something", "sometimes"),
-            "any" to listOf("anything", "anyway"),
-            "nic" to listOf("nice", "nickel"),
-            "bea" to listOf("beautiful", "beach"),
-            "amaz" to listOf("amazing", "amaze"),
-            "won" to listOf("wonderful", "won"),
-            "gre" to listOf("great", "greet"),
-            "awes" to listOf("awesome", "awe")
+            "hel" to listOf("hello", "help", "held", "hello!", "helpful"),
+            "goo" to listOf("good", "google", "goose", "goodbye", "goodness"),
+            "tha" to listOf("thank", "that", "than", "thanks", "thankful"),
+            "ple" to listOf("please", "pleasure", "pleasant", "pledge"),
+            "hav" to listOf("have", "haven't", "having", "haven"),
+            "wha" to listOf("what", "whats", "whatever", "what's"),
+            "how" to listOf("how", "however", "howdy", "how's"),
+            "hey" to listOf("hey", "hello", "hey!", "hey there"),
+            "mee" to listOf("meet", "meek", "meeting", "meets"),
+            "nee" to listOf("need", "needle", "needs", "needy"),
+            "lov" to listOf("love", "lovely", "lover", "loving"),
+            "wan" to listOf("want", "wander", "wanted", "wanting"),
+            "com" to listOf("come", "common", "coming", "complete"),
+            "whe" to listOf("when", "where", "whenever", "wherever"),
+            "whi" to listOf("which", "while", "whisper", "whistle"),
+            "sho" to listOf("should", "show", "shower", "shopping"),
+            "wou" to listOf("would", "wound", "wouldn't", "would've"),
+            "cou" to listOf("could", "count", "country", "couldn't"),
+            "pro" to listOf("problem", "project", "probably", "program"),
+            "thi" to listOf("this", "think", "things", "thinking"),
+            "wit" to listOf("with", "without", "within", "witness"),
+            "abo" to listOf("about", "above", "abroad", "absolute"),
+            "fro" to listOf("from", "front", "frozen", "fruit"),
+            "jus" to listOf("just", "justice", "justify", "just now"),
+            "sti" to listOf("still", "stick", "stir", "stitch"),
+            "als" to listOf("also", "always", "although", "alright"),
+            "eve" to listOf("everything", "evening", "event", "everyone"),
+            "som" to listOf("something", "sometimes", "someone", "somewhere"),
+            "any" to listOf("anything", "anyway", "anyone", "anywhere"),
+            "nic" to listOf("nice", "nickel", "nicely", "niche"),
+            "bea" to listOf("beautiful", "beach", "beast", "beauty"),
+            "amaz" to listOf("amazing", "amaze", "amazed", "amazement"),
+            "won" to listOf("wonderful", "won", "wonder", "wondering"),
+            "gre" to listOf("great", "greet", "greatest", "greeting"),
+            "awes" to listOf("awesome", "awe", "awesome!", "awesomeness"),
+            "absol" to listOf("absolutely", "absolute", "absolved"),
+            "prob" to listOf("probably", "problem", "probe", "probability"),
+            "def" to listOf("definitely", "defend", "definition", "default"),
+            "imp" to listOf("important", "improve", "impossible", "impact"),
+            "int" to listOf("interesting", "internet", "into", "international"),
+            "dif" to listOf("different", "difficult", "difference", "diff"),
+            "per" to listOf("perfect", "perhaps", "person", "perform"),
+            "sug" to listOf("suggest", "suggestion", "suggesting", "suggests"),
+            "app" to listOf("appreciate", "application", "apparently", "approach"),
+            "con" to listOf("congratulations", "continue", "consider", "connect"),
+            "bel" to listOf("believe", "below", "belong", "beloved"),
+            "acc" to listOf("according", "accept", "account", "accomplish"),
+            "res" to listOf("respect", "response", "result", "remember"),
+            "sor" to listOf("sorry", "sort", "sorrow", "sorting"),
+            "amo" to listOf("among", "amount", "amongst", "amorous"),
+            "per" to listOf("person", "perhaps", "perfect", "perform"),
+            "sur" to listOf("sure", "surprise", "surface", "surrender"),
+            "qui" to listOf("quick", "quite", "quiet", "quit"),
+            "lon" to listOf("long", "look", "love", "lonely"),
+            "wor" to listOf("work", "world", "worry", "wonderful"),
+            "peo" to listOf("people", "person", "peoples"),
+            "cal" to listOf("call", "calendar", "calculate", "calm"),
+            "dra" to listOf("draw", "drama", "dragon", "draft"),
+            "dre" to listOf("dream", "dress", "dread", "dreamy"),
+            "fri" to listOf("friend", "friday", "friendly", "friendship"),
+            "fam" to listOf("family", "famous", "familiar", "famine"),
+            "mem" to listOf("memory", "member", "remember", "membership"),
+            "exp" to listOf("experience", "explain", "express", "expect"),
+            "pos" to listOf("possible", "positive", "post", "position"),
+            "per" to listOf("perfect", "person", "perhaps", "perform"),
+            "rea" to listOf("really", "read", "ready", "reason"),
+            "fin" to listOf("find", "finish", "final", "fine"),
+            "giv" to listOf("give", "given", "giving", "gives"),
+            "tal" to listOf("talk", "talent", "take", "tall"),
+            "kee" to listOf("keep", "keeping", "keeps"),
+            "fee" to listOf("feel", "feedback", "feeling", "feet"),
+            "loo" to listOf("look", "looking", "looked", "looks"),
+            "try" to listOf("trying", "tried", "try", "truly"),
+            "liv" to listOf("live", "living", "lived", "lively"),
+            "bel" to listOf("believe", "below", "belong", "beloved"),
+            "hap" to listOf("happy", "happen", "happened", "happiness"),
+            "tha" to listOf("thank", "that", "thanks", "thankful"),
+            "spe" to listOf("special", "speak", "speed", "spend"),
+            "sto" to listOf("stop", "story", "store", "storm"),
+            "hel" to listOf("help", "hello", "helpful", "held"),
+            "mem" to listOf("memory", "member", "remember", "membership"),
+            "cha" to listOf("change", "chance", "chat", "challenge"),
+            "sup" to listOf("support", "super", "supply", "suppose"),
+            "rec" to listOf("receive", "recently", "record", "recommend"),
+            "org" to listOf("organization", "organize", "original"),
+            "inf" to listOf("information", "influence", "inform"),
+            "per" to listOf("person", "perfect", "perhaps", "perform"),
+            "ind" to listOf("individual", "industry", "indeed", "index"),
+            "nev" to listOf("never", "nevertheless", "never mind"),
+            "sel" to listOf("self", "sell", "select", "seldom"),
+            "min" to listOf("mind", "mine", "minute", "minimum"),
+            "lea" to listOf("learn", "leave", "lead", "least"),
+            "brin" to listOf("bring", "bringing", "brings"),
+            "star" to listOf("start", "star", "staring", "started"),
+            "run" to listOf("running", "run", "runner"),
+            "mak" to listOf("make", "making", "makes"),
+            "tak" to listOf("take", "taking", "takes"),
+            "thin" to listOf("think", "things", "thinking", "thing"),
+            "know" to listOf("know", "knowledge", "knows", "knowing"),
+            "see" to listOf("see", "seeing", "seems", "seen"),
+            "tim" to listOf("time", "timing", "times"),
+            "day" to listOf("day", "days", "daylight", "daydream"),
+            "peop" to listOf("people", "person", "peoples"),
+            "wom" to listOf("woman", "women", "wonderful"),
+            "chi" to listOf("child", "children", "childhood", "china"),
+            "wor" to listOf("world", "work", "worry", "worse"),
+            "lif" to listOf("life", "lifetime", "lifestyle"),
+            "han" to listOf("hand", "hands", "handle", "happen"),
+            "par" to listOf("part", "party", "partner", "particular"),
+            "pla" to listOf("place", "plan", "play", "please")
         )
 
         // Find matching completions
         for ((prefix, words) in completions) {
             if (lower.startsWith(prefix) && lower.length >= prefix.length) {
-                val remaining = lower.substring(prefix.length)
                 for (word in words) {
                     if (word.startsWith(lower) && word != lower) {
-                        suggestions.add(word.replaceFirstChar { it.uppercase() })
+                        if (!suggestions.contains(word.replaceFirstChar { it.uppercase() })) {
+                            suggestions.add(word.replaceFirstChar { it.uppercase() })
+                        }
+                    }
+                }
+            }
+        }
+
+        // Phrase-level predictions — suggest common phrases
+        val phrasePredictions = mapOf(
+            "i " to listOf("I love", "I want", "I need", "I think", "I know"),
+            "you " to listOf("you are", "you have", "you know", "you can", "you should"),
+            "how " to listOf("how are you", "how is it", "how do you", "how much"),
+            "what " to listOf("what is", "what are", "what do you", "what time"),
+            "can " to listOf("can you", "can we", "can I", "can help"),
+            "please " to listOf("please help", "please send", "please check", "please let"),
+            "thank " to listOf("thank you", "thank you so much", "thanks for", "thankful for"),
+            "good " to listOf("good morning", "good night", "good job", "good idea"),
+            "i am " to listOf("I am doing", "I am happy", "I am here", "I am ready"),
+            "do you " to listOf("do you know", "do you have", "do you want", "do you think"),
+            "would you " to listOf("would you like", "would you mind", "would you help"),
+            "let me " to listOf("let me know", "let me see", "let me help", "let me check"),
+            "looking " to listOf("looking for", "looking forward", "looking at", "looking good"),
+            "trying " to listOf("trying to", "trying my best", "trying hard"),
+            "going " to listOf("going to", "going home", "going out", "going well"),
+            "want to " to listOf("want to go", "want to see", "want to know", "want to help"),
+            "need to " to listOf("need to go", "need to know", "need to see", "need help"),
+            "happy " to listOf("happy birthday", "happy to help", "happy for you", "happy day")
+        )
+
+        for ((prefix, phrases) in phrasePredictions) {
+            if (lower.startsWith(prefix) || lower.endsWith(prefix.trim())) {
+                for (phrase in phrases) {
+                    if (!suggestions.contains(phrase)) {
+                        suggestions.add(phrase)
                     }
                 }
             }
         }
 
         // If we have the full word, suggest next words
-        if (suggestions.isEmpty()) {
+        if (suggestions.size < 3) {
             val nextWords = mapOf(
                 "hello" to listOf("how", "there", "everyone"),
                 "thank" to listOf("you", "god", "goodness"),
@@ -1807,7 +2047,9 @@ class SpellTypeIME : InputMethodService() {
             for ((word, nexts) in nextWords) {
                 if (lower.endsWith(word)) {
                     for (next in nexts) {
-                        suggestions.add("$word $next")
+                        if (!suggestions.contains("$word $next")) {
+                            suggestions.add("$word $next")
+                        }
                     }
                 }
             }
@@ -1918,46 +2160,78 @@ class SpellTypeIME : InputMethodService() {
     private var simpleModeActive = false
 
     private fun toggleControlCenter() {
-        val root = keyboardRootView ?: return
-        val keysContainer = root.findViewById<View>(R.id.keyboard_keys_container) ?: return
-        val controlCenter = root.findViewById<View>(R.id.keyboard_control_center) ?: return
+        try {
+            val root = keyboardRootView ?: return
+            val keysContainer = root.findViewById<View>(R.id.keyboard_keys_container) ?: return
+            val controlCenter = root.findViewById<View>(R.id.keyboard_control_center) ?: return
 
-        controlCenterActive = !controlCenterActive
-        if (controlCenterActive) {
-            keysContainer.visibility = View.GONE
-            controlCenter.visibility = View.VISIBLE
-            bindControlCenter(root)
-        } else {
-            keysContainer.visibility = View.VISIBLE
-            controlCenter.visibility = View.GONE
+            controlCenterActive = !controlCenterActive
+            if (controlCenterActive) {
+                keysContainer.visibility = View.GONE
+                controlCenter.visibility = View.VISIBLE
+                bindControlCenter(root)
+            } else {
+                keysContainer.visibility = View.VISIBLE
+                controlCenter.visibility = View.GONE
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
-    /** Toggle Simple Keyboard Mode — hides all toolbars, shows only keys */
+    /** Toggle Simple Keyboard Mode — hides all toolbars, shows only keys, Gboard-style flat look */
     private fun applySimpleMode() {
-        val root = keyboardRootView ?: return
-        val headerBar = root.findViewById<View>(R.id.keyboard_root)?.let {
-            (it as? android.widget.LinearLayout)?.getChildAt(1) // Header bar
-        }
-        val artBar = root.findViewById<View>(R.id.quick_art_container)?.parent?.parent as? View
-        val suggestionsBar = root.findViewById<View>(R.id.ai_suggestions_bar)
-        val proToolsBar = root.findViewById<View>(R.id.pro_tools_bar)
+        try {
+            val root = keyboardRootView ?: return
+            val density = resources.displayMetrics.density
 
-        if (simpleModeActive) {
-            // Hide everything except keyboard keys
-            headerBar?.visibility = View.GONE
-            artBar?.visibility = View.GONE
-            suggestionsBar?.visibility = View.GONE
-            proToolsBar?.visibility = View.GONE
-            // Also hide number row for ultra-simple
-            root.findViewById<View>(R.id.number_row)?.visibility = View.GONE
-        } else {
-            // Restore all bars
-            headerBar?.visibility = View.VISIBLE
-            artBar?.visibility = View.VISIBLE
-            if (autoSuggestionsEnabled) suggestionsBar?.visibility = View.VISIBLE
-            proToolsBar?.visibility = View.VISIBLE
-            if (numberRowEnabled) root.findViewById<View>(R.id.number_row)?.visibility = View.VISIBLE
+            // Find all bars to hide/show
+            val headerBar = root.findViewById<View>(R.id.btn_language)?.parent as? View
+            val artBarContainer = root.findViewById<View>(R.id.quick_art_container)?.parent?.parent as? View
+            val suggestionsBar = root.findViewById<View>(R.id.ai_suggestions_bar)
+            val proToolsBar = root.findViewById<View>(R.id.pro_tools_bar)
+            val livePreview = root.findViewById<View>(R.id.tv_keyboard_live_preview)
+            val numberRow = root.findViewById<View>(R.id.number_row)
+
+            if (simpleModeActive) {
+                // Hide ALL bars — truly minimal like Gboard
+                headerBar?.visibility = View.GONE
+                artBarContainer?.visibility = View.GONE
+                suggestionsBar?.visibility = View.GONE
+                proToolsBar?.visibility = View.GONE
+                livePreview?.visibility = View.GONE
+                numberRow?.visibility = View.GONE
+
+                // Apply Gboard-style flat key look
+                root.setBackgroundColor(Color.parseColor("#1F2023"))
+                for ((id, view) in keyViews) {
+                    val isSpecial = id == R.id.btn_shift || id == R.id.btn_backspace ||
+                        id == R.id.btn_mode || id == R.id.btn_enter || id == R.id.btn_space
+                    // Flat key with minimal roundness, no 3D effects
+                    val flatBg = android.graphics.drawable.GradientDrawable().apply {
+                        shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                        cornerRadius = 4f * density
+                        setColor(if (isSpecial) Color.parseColor("#1F2023") else Color.parseColor("#3C4043"))
+                    }
+                    view.background = flatBg
+                    view.setTextColor(Color.WHITE)
+                    // Remove any elevation/shadow for flat look
+                    view.elevation = 0f
+                    view.translationZ = 0f
+                }
+            } else {
+                // Restore all bars
+                headerBar?.visibility = View.VISIBLE
+                artBarContainer?.visibility = View.VISIBLE
+                if (autoSuggestionsEnabled) suggestionsBar?.visibility = View.VISIBLE
+                proToolsBar?.visibility = View.VISIBLE
+                if (numberRowEnabled) numberRow?.visibility = View.VISIBLE
+
+                // Restore premium theme
+                applyPremiumTheme()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
@@ -2311,11 +2585,27 @@ class SpellTypeIME : InputMethodService() {
     private fun performGoogleAISearch(query: String) {
         if (query.isBlank()) return
         serviceScope.launch(Dispatchers.IO) {
+            var urlConnection: java.net.HttpURLConnection? = null
             try {
-                val encodedQuery = java.net.URLEncoder.encode(query, "UTF-8")
-                val urlConnection = java.net.URL("https://api.duckduckgo.com/?q=$encodedQuery&format=json&no_html=1&skip_disambig=1").openConnection() as java.net.HttpURLConnection
-                urlConnection.connectTimeout = 4000
-                urlConnection.readTimeout = 4000
+                val encodedQuery = java.net.URLEncoder.encode(query.trim(), "UTF-8")
+                if (encodedQuery.isBlank()) return@launch
+                val url = java.net.URL("https://api.duckduckgo.com/?q=$encodedQuery&format=json&no_html=1&skip_disambig=1")
+                urlConnection = url.openConnection() as java.net.HttpURLConnection
+                urlConnection.connectTimeout = 5000
+                urlConnection.readTimeout = 5000
+                urlConnection.requestMethod = "GET"
+                urlConnection.setRequestProperty("User-Agent", "SpellType/4.0")
+                urlConnection.connect()
+
+                val responseCode = urlConnection.responseCode
+                if (responseCode != 200) {
+                    val fallback = generateLocalAISearchResult(query)
+                    withContext(Dispatchers.Main) {
+                        currentInputConnection?.commitText("\n🤖 [AI Search]: $fallback\n", 1)
+                    }
+                    return@launch
+                }
+
                 val text = urlConnection.inputStream.bufferedReader().use { it.readText() }
 
                 // Parse abstract from JSON manually to avoid adding Jackson/Gson overhead
@@ -2325,7 +2615,7 @@ class SpellTypeIME : InputMethodService() {
                 if (index != -1) {
                     val start = index + abstractKey.length
                     val end = text.indexOf("\"", start)
-                    if (end != -1) {
+                    if (end != -1 && end > start) {
                         abstractText = text.substring(start, end).replace("\\n", " ").replace("\\\"", "\"")
                     }
                 }
@@ -2336,19 +2626,30 @@ class SpellTypeIME : InputMethodService() {
                 }
 
                 withContext(Dispatchers.Main) {
-                    // Type response into target field
                     val ic = currentInputConnection
-                    ic?.commitText("\n🤖 [Google AI Search]: $abstractText\n", 1)
-
-                    // Show in suggestion bar
+                    ic?.commitText("\n🤖 [AI Search]: $abstractText\n", 1)
                     keyboardRootView?.findViewById<TextView>(R.id.suggestion_center)?.text = "AI Result Added!"
+                }
+            } catch (e: java.net.SocketTimeoutException) {
+                e.printStackTrace()
+                val fallback = generateLocalAISearchResult(query)
+                withContext(Dispatchers.Main) {
+                    currentInputConnection?.commitText("\n🤖 [AI Search]: $fallback\n", 1)
+                }
+            } catch (e: java.io.IOException) {
+                e.printStackTrace()
+                val fallback = generateLocalAISearchResult(query)
+                withContext(Dispatchers.Main) {
+                    currentInputConnection?.commitText("\n🤖 [AI Search]: $fallback\n", 1)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                 val fallback = generateLocalAISearchResult(query)
                 withContext(Dispatchers.Main) {
-                    currentInputConnection?.commitText("\n🤖 [Google AI Search]: $fallback\n", 1)
+                    currentInputConnection?.commitText("\n🤖 [AI Search]: $fallback\n", 1)
                 }
+            } finally {
+                try { urlConnection?.disconnect() } catch (_: Exception) {}
             }
         }
     }

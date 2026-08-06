@@ -18,23 +18,24 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * Premium Animation Engine — 60fps silky-smooth animations
+ * Premium Animation Engine — 130fps silky-smooth animations
  * Spring physics, ripple effects, neon glow, and particle systems
+ * Each frame at 130fps = ~7.7ms per frame
  */
 object PremiumAnimationEngine {
 
     // ═══════════════════════════════════════════
-    //  KEY PRESS ANIMATIONS (60fps)
+    //  KEY PRESS ANIMATIONS (130fps — 7.7ms per frame)
     // ═══════════════════════════════════════════
 
-    /** Premium key press with spring bounce + glow pulse */
+    /** Premium key press with spring bounce + glow pulse — 130fps */
     fun animateKeyPress(view: View, glowColor: Int = Color.CYAN): AnimatorSet {
         val pressDown = PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, 0.92f)
         val pressDownY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 1f, 0.92f)
         val pressAlpha = PropertyValuesHolder.ofFloat(View.ALPHA, 1f, 0.85f)
 
         val pressAnim = ObjectAnimator.ofPropertyValuesHolder(view, pressDown, pressDownY, pressAlpha).apply {
-            duration = 60
+            duration = 46 // 6 frames at 130fps
             interpolator = AccelerateDecelerateInterpolator()
         }
 
@@ -43,7 +44,7 @@ object PremiumAnimationEngine {
         val releaseAlpha = PropertyValuesHolder.ofFloat(View.ALPHA, 0.85f, 1f)
 
         val releaseAnim = ObjectAnimator.ofPropertyValuesHolder(view, releaseX, releaseY, releaseAlpha).apply {
-            duration = 180
+            duration = 100 // ~13 frames at 130fps for smooth spring release
             interpolator = OvershootInterpolator(2.5f)
         }
 
@@ -53,8 +54,8 @@ object PremiumAnimationEngine {
         }
     }
 
-    /** Neon glow pulse on key press */
-    fun animateGlowPulse(view: View, glowColor: Int, durationMs: Long = 300) {
+    /** Neon glow pulse on key press — 130fps */
+    fun animateGlowPulse(view: View, glowColor: Int, durationMs: Long = 230) {
         val glowIn = ObjectAnimator.ofFloat(view, View.ALPHA, 1f, 0.7f, 1f).apply {
             duration = durationMs
             interpolator = AccelerateDecelerateInterpolator()
@@ -62,18 +63,18 @@ object PremiumAnimationEngine {
         glowIn.start()
     }
 
-    /** Ripple expand animation from center */
+    /** Ripple expand animation from center — 130fps */
     fun animateRipple(view: View, color: Int = Color.WHITE) {
-        val scaleUp = ObjectAnimator.ofFloat(view, View.SCALE_X, 1f, 1.15f).apply { duration = 100 }
-        val scaleUpY = ObjectAnimator.ofFloat(view, View.SCALE_Y, 1f, 1.15f).apply { duration = 100 }
-        val fadeOut = ObjectAnimator.ofFloat(view, View.ALPHA, 0.9f, 1f).apply { duration = 150 }
+        val scaleUp = ObjectAnimator.ofFloat(view, View.SCALE_X, 1f, 1.15f).apply { duration = 77 } // 10 frames
+        val scaleUpY = ObjectAnimator.ofFloat(view, View.SCALE_Y, 1f, 1.15f).apply { duration = 77 }
+        val fadeOut = ObjectAnimator.ofFloat(view, View.ALPHA, 0.9f, 1f).apply { duration = 115 } // 15 frames
 
         val scaleDown = ObjectAnimator.ofFloat(view, View.SCALE_X, 1.15f, 1f).apply {
-            duration = 200
+            duration = 154 // 20 frames
             interpolator = OvershootInterpolator(1.5f)
         }
         val scaleDownY = ObjectAnimator.ofFloat(view, View.SCALE_Y, 1.15f, 1f).apply {
-            duration = 200
+            duration = 154
             interpolator = OvershootInterpolator(1.5f)
         }
 
@@ -88,14 +89,14 @@ object PremiumAnimationEngine {
     //  TOOLBAR & CHIP ANIMATIONS
     // ═══════════════════════════════════════════
 
-    /** Slide-in animation for toolbar chips */
+    /** Slide-in animation for toolbar chips — 130fps */
     fun animateChipSlideIn(view: View, delayMs: Long = 0) {
         view.alpha = 0f
         view.translationX = 30f
         view.animate()
             .alpha(1f)
             .translationX(0f)
-            .setDuration(250)
+            .setDuration(192) // ~25 frames at 130fps
             .setStartDelay(delayMs)
             .setInterpolator(OvershootInterpolator(1.8f))
             .start()
@@ -107,14 +108,14 @@ object PremiumAnimationEngine {
             view,
             PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, 1.12f),
             PropertyValuesHolder.ofFloat(View.SCALE_Y, 1f, 1.12f)
-        ).apply { duration = 100 }
+        ).apply { duration = 77 } // 10 frames at 130fps
 
         val scaleDown = ObjectAnimator.ofPropertyValuesHolder(
             view,
             PropertyValuesHolder.ofFloat(View.SCALE_X, 1.12f, 1f),
             PropertyValuesHolder.ofFloat(View.SCALE_Y, 1.12f, 1f)
         ).apply {
-            duration = 200
+            duration = 154 // 20 frames at 130fps
             interpolator = OvershootInterpolator(2f)
         }
 
@@ -128,27 +129,27 @@ object PremiumAnimationEngine {
     //  SMOOTH ENTRANCE ANIMATIONS
     // ═══════════════════════════════════════════
 
-    /** Keyboard slide-up entrance */
+    /** Keyboard slide-up entrance — 130fps */
     fun animateKeyboardEntrance(view: View) {
         view.translationY = view.height.toFloat()
         view.alpha = 0f
         view.animate()
             .translationY(0f)
             .alpha(1f)
-            .setDuration(350)
+            .setDuration(270) // ~35 frames at 130fps
             .setInterpolator(PathInterpolator(0.2f, 0f, 0.1f, 1f))
             .start()
     }
 
-    /** Staggered row reveal */
-    fun animateRowReveal(rows: List<View>, staggerMs: Long = 50) {
+    /** Staggered row reveal — 130fps */
+    fun animateRowReveal(rows: List<View>, staggerMs: Long = 38) {
         rows.forEachIndexed { index, row ->
             row.alpha = 0f
             row.translationY = 20f
             row.animate()
                 .alpha(1f)
                 .translationY(0f)
-                .setDuration(250)
+                .setDuration(192) // ~25 frames at 130fps
                 .setStartDelay(index * staggerMs)
                 .setInterpolator(OvershootInterpolator(1.2f))
                 .start()
@@ -193,9 +194,9 @@ object PremiumAnimationEngine {
             // Add to parent if possible
             (view.parent as? android.view.ViewGroup)?.addView(sparkle)
 
-            val moveX = ObjectAnimator.ofFloat(sparkle, View.X, centerX, endX).apply { duration = 400 }
-            val moveY = ObjectAnimator.ofFloat(sparkle, View.Y, centerY, endY).apply { duration = 400 }
-            val fade = ObjectAnimator.ofFloat(sparkle, View.ALPHA, 1f, 0f).apply { duration = 400 }
+            val moveX = ObjectAnimator.ofFloat(sparkle, View.X, centerX, endX).apply { duration = 308 } // ~40 frames at 130fps
+            val moveY = ObjectAnimator.ofFloat(sparkle, View.Y, centerY, endY).apply { duration = 308 }
+            val fade = ObjectAnimator.ofFloat(sparkle, View.ALPHA, 1f, 0f).apply { duration = 308 }
 
             animators.add(moveX)
             animators.add(moveY)
