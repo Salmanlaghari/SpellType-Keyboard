@@ -85,7 +85,7 @@ jobs:
             -validity 10000 \
             -storepass spelltypepass \
             -keypass spelltypepass \
-            -dname "CN=SpellType, OU=Keyboard, O=SpellType, L=Karachi, ST=Sindh, PK"
+            -dname "CN=SpellType Keyboard, OU=Dev, O=SpellType, L=Karachi, ST=Sindh, C=PK"
 
       - name: Build Release APK (Signed)
         run: ./gradlew assembleRelease
