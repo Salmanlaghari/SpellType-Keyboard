@@ -771,6 +771,20 @@
 
             </GridLayout>
 
+            <!-- Simple Keyboard Mode Toggle -->
+            <TextView
+                android:id="@+id/btn_opt_simple_mode"
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:text="🔇 Simple Keyboard: OFF"
+                android:textColor="#F1F5F9"
+                android:textSize="11sp"
+                android:gravity="center"
+                android:background="@drawable/chip_inactive_background"
+                android:layout_marginTop="6dp"
+                android:clickable="true"
+                android:focusable="true"/>
+
             <!-- Close Settings Button -->
             <TextView
                 android:id="@+id/btn_close_control_center"
