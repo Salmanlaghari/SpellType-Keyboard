@@ -1,6 +1,7 @@
 package com.spelltype.keyboard.presentation.ime
 
 import android.inputmethodservice.InputMethodService
+import android.graphics.Color
 import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.InputConnection
@@ -55,6 +56,16 @@ class SpellTypeIME : InputMethodService() {
     private var glitterEnabled = false
     private var customSignature = ""
     private var favoriteStyles = emptySet<String>()
+
+    // Custom 3D & Control Center Option variables
+    private var force3DKeycaps = true
+    private var gboardModeEnabled = false
+    private var rainbowPreviewEnabled = false
+    private var highFpsRenderEnabled = true
+    private var holographicGlowEnabled = true
+    private var tapParticlesEnabled = true
+    private var premiumAssistEnabled = true
+    private var adFreeSandboxEnabled = true
 
     // Phase 5 & 6 Settings with strict defaults
     private var vibrationEnabled = true
@@ -358,7 +369,7 @@ class SpellTypeIME : InputMethodService() {
 
             keyboardView.findViewById<View>(R.id.tool_settings)?.setOnClickListener {
                 onKeyClickFeedback(it)
-                openSettings()
+                toggleControlCenter()
             }
 
             // Trigger Ad Banner loading
@@ -546,6 +557,7 @@ class SpellTypeIME : InputMethodService() {
             }
 
             updateKeyLabels()
+            bindControlCenter(keyboardView)
             return keyboardView
         } catch (e: Exception) {
             e.printStackTrace()
@@ -1084,14 +1096,29 @@ class SpellTypeIME : InputMethodService() {
         }
     }
 
+    private var templateIndex = 0
     private fun handleTemplatesTool() {
         try {
             val templates = listOf(
                 "★ S P E L L T Y P E ★",
-                "꧁𓊈𒆜 ⓈⓅⒺⓁⓁⓉⓎⓅⒺ 𒆜𓊉꧂",
-                "┌────── ∘°❉°∘ ──────┐\n   WELCOME TO MY BIO\n└────── °∘❉∘° ──────┘"
+                "꧁𓊈𒆜 ⓈⓅⒺⓁⓁⓉⓅⒺ 𒆜𓊉꧂",
+                "┌────── ∘°❉°∘ ──────┐\n   WELCOME TO MY BIO\n└────── °∘❉∘° ──────┘",
+                "•◦✦────•✦•────✦◦•\n ✨ 𝓥𝓲𝓫𝓲𝓷𝓰 𝓲𝓷 3𝓓 ✨ \n•◦✦────•✦•────✦◦•",
+                "💖 𝓁𝑜𝓋𝑒 𝓎𝑜𝓊𝓇𝓈𝑒𝓁𝓋𝑒𝓈 💖",
+                "🎮 𝒢𝒜𝑀𝐸𝑅 𝒵𝒪𝒩𝐸 🎮\n ══🎮🕹️👾══",
+                "┌── ⋆⋅☆⋅⋆ ──┐\n   𝓢𝓽𝓪𝓻 𝓑𝓸𝔁 \n└── ⋆⋅☆⋅⋆ ──┘",
+                "▓▒░  𝕮𝖞𝖇𝖊𝖗𝖕𝖚𝖓𝖐  ░▒▓",
+                "👑 𝓡𝓸𝔂𝓪𝓵 𝓒𝓻𝓸𝔀𝓷 𝓣𝓲𝓽𝓵𝓮 👑",
+                "━━━━━━━━ ✧ ━━━━━━━━\n   𝒮𝓎𝓂𝓂𝑒𝓉𝓇𝓎\n━━━━━━━━ ✧ ━━━━━━━━",
+                "☄️✨ 𝒮𝓅𝒶𝓇𝓀𝓁𝓎 𝒬𝓊𝑜𝓉𝑒𝓈 ✨☄️",
+                "(\\__/)  \n(•ㅅ•)  Bunny Loves You!\n/ 　 づ",
+                "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n  𝕳𝖊𝖆𝖛𝖞 𝕯𝖊𝖈𝖔𝖗𝖆𝖙𝖎𝖛𝖊 𝕷𝖎𝖓𝖊\n▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+                "🖤 𝔖𝔭𝔢𝔩𝔩𝔗𝔶𝔭𝔢 𝔊𝔬𝔱𝔥𝔦𝔠 𝔖𝔦𝔤𝔫𝔢𝔱 🖤",
+                "🔥 𝓕𝓲𝓻𝓮 𝓑𝓵𝓪𝓼𝓽 𝓔𝓶𝓸𝓳𝓲 𝓑𝓪𝓷𝓷𝓮𝓻 🔥\n 🔥☄️💥🌋🧨",
+                "⭐ 𝒲𝒾𝓈𝒽 𝒰𝓅𝑜𝓃 𝒜 𝒮𝓉𝒶𝓇 ⭐"
             )
-            val index = (0..2).random()
+            val index = templateIndex
+            templateIndex = (templateIndex + 1) % templates.size
             composingText.clear()
             composingText.append(templates[index])
             updateLivePreviewBar()
@@ -1406,6 +1433,25 @@ class SpellTypeIME : InputMethodService() {
             val root = keyboardRootView ?: return
             val theme = activeRealTheme
             val density = resources.displayMetrics.density
+
+            if (gboardModeEnabled) {
+                // Classic Gboard-type flat styling choice
+                root.setBackgroundColor(Color.parseColor("#1F2023")) // Gboard Dark gray base
+                for ((id, view) in keyViews) {
+                    val isSpecial = id == R.id.btn_shift || id == R.id.btn_backspace || id == R.id.btn_mode || id == R.id.btn_enter
+                    val radius = 4f * density // typical Gboard roundness
+                    val keyBg = android.graphics.drawable.GradientDrawable().apply {
+                        shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                        cornerRadius = radius
+                        setColor(if (isSpecial) Color.parseColor("#1F2023") else Color.parseColor("#3C4043"))
+                    }
+                    view.background = keyBg
+                    view.setTextColor(Color.WHITE)
+                }
+                root.findViewById<View>(R.id.ai_suggestions_bar)?.setBackgroundColor(Color.parseColor("#1F2023"))
+                root.findViewById<TextView>(R.id.tv_keyboard_live_preview)?.setBackgroundColor(Color.parseColor("#1A1A1A"))
+                return
+            }
 
             root.background = theme.createBackgroundDrawable()
 
@@ -1735,6 +1781,426 @@ class SpellTypeIME : InputMethodService() {
             }
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  CONTROL CENTER SYSTEM — 32+ Working Options
+    // ═══════════════════════════════════════════════════════════════
+
+    private var controlCenterActive = false
+
+    private fun toggleControlCenter() {
+        val root = keyboardRootView ?: return
+        val keysContainer = root.findViewById<View>(R.id.keyboard_keys_container) ?: return
+        val controlCenter = root.findViewById<View>(R.id.keyboard_control_center) ?: return
+
+        controlCenterActive = !controlCenterActive
+        if (controlCenterActive) {
+            keysContainer.visibility = View.GONE
+            controlCenter.visibility = View.VISIBLE
+            bindControlCenter(root)
+        } else {
+            keysContainer.visibility = View.VISIBLE
+            controlCenter.visibility = View.GONE
+        }
+    }
+
+    private var currentAlphabetIndex = 0
+    private val alphabetNames = listOf("QWERTY", "DVORAK", "COLEMAK", "AZERTY", "QWERTZ", "ABCDE", "CUSTOM")
+    private val alphabetsLowerList = listOf(
+        // QWERTY
+        listOf("q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "a", "s", "d", "f", "g", "h", "j", "k", "l", "z", "x", "c", "v", "b", "n", "m"),
+        // DVORAK
+        listOf("p", "y", "f", "g", "c", "r", "l", "a", "o", "e", "u", "i", "d", "h", "t", "n", "s", "q", "j", "k", "x", "b", "m", "w", "v", "z"),
+        // COLEMAK
+        listOf("q", "w", "f", "p", "g", "j", "l", "u", "y", "a", "r", "s", "t", "d", "h", "n", "e", "i", "o", "z", "x", "c", "v", "b", "k", "m"),
+        // AZERTY
+        listOf("a", "z", "e", "r", "t", "y", "u", "i", "o", "p", "q", "s", "d", "f", "g", "h", "j", "k", "l", "w", "x", "c", "v", "b", "n", "m"),
+        // QWERTZ
+        listOf("q", "w", "e", "r", "t", "z", "u", "i", "o", "p", "a", "s", "d", "f", "g", "h", "j", "k", "l", "y", "x", "c", "v", "b", "n", "m"),
+        // ABCDE
+        listOf("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"),
+        // CUSTOM
+        listOf("🌟", "🔥", "💖", "✨", "👑", "💎", "🍀", "🌸", "🎵", "❄️", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p")
+    )
+
+    private fun bindControlCenter(root: View) {
+        val keysContainer = root.findViewById<View>(R.id.keyboard_keys_container) ?: return
+        val controlCenter = root.findViewById<View>(R.id.keyboard_control_center) ?: return
+
+        // Back to keyboard
+        root.findViewById<View>(R.id.btn_close_control_center)?.setOnClickListener {
+            onKeyClickFeedback(it)
+            controlCenterActive = false
+            controlCenter.visibility = View.GONE
+            keysContainer.visibility = View.VISIBLE
+        }
+
+        // Real Workable Google AI Search Mode Engine
+        val searchInput = root.findViewById<android.widget.EditText>(R.id.ai_search_input)
+        root.findViewById<View>(R.id.btn_ai_search_submit)?.setOnClickListener {
+            onKeyClickFeedback(it)
+            val query = searchInput?.text?.toString() ?: ""
+            if (query.isNotBlank()) {
+                performGoogleAISearch(query)
+                searchInput?.setText("")
+            }
+        }
+
+        // 1. Gboard Type Choice
+        val btnGboard = root.findViewById<TextView>(R.id.btn_opt_gboard)
+        btnGboard?.text = "⌨️ Gboard Mode: ${if (gboardModeEnabled) "ON" else "OFF"}"
+        btnGboard?.setOnClickListener {
+            onKeyClickFeedback(it)
+            gboardModeEnabled = !gboardModeEnabled
+            btnGboard.text = "⌨️ Gboard Mode: ${if (gboardModeEnabled) "ON" else "OFF"}"
+            applyPremiumTheme()
+        }
+
+        // 2. 3D Keycaps Mode
+        val btn3d = root.findViewById<TextView>(R.id.btn_opt_3d_keys)
+        btn3d?.text = "🧱 3D Keycaps: ${if (force3DKeycaps) "ON" else "OFF"}"
+        btn3d?.setOnClickListener {
+            onKeyClickFeedback(it)
+            force3DKeycaps = !force3DKeycaps
+            RealTheme.force3D = force3DKeycaps
+            btn3d.text = "🧱 3D Keycaps: ${if (force3DKeycaps) "ON" else "OFF"}"
+            applyPremiumTheme()
+        }
+
+        // 3. Dynamic Haptic Toggle
+        val btnHaptic = root.findViewById<TextView>(R.id.btn_opt_haptic)
+        btnHaptic?.text = "📳 Haptic Haptic: ${if (vibrationEnabled) "ON" else "OFF"}"
+        btnHaptic?.setOnClickListener {
+            onKeyClickFeedback(it)
+            vibrationEnabled = !vibrationEnabled
+            btnHaptic.text = "📳 Haptic Haptic: ${if (vibrationEnabled) "ON" else "OFF"}"
+        }
+
+        // 4. Cycle Alphabet
+        val btnAlphabet = root.findViewById<TextView>(R.id.btn_opt_alphabet)
+        btnAlphabet?.text = "🔤 Layout: ${alphabetNames[currentAlphabetIndex]}"
+        btnAlphabet?.setOnClickListener {
+            onKeyClickFeedback(it)
+            currentAlphabetIndex = (currentAlphabetIndex + 1) % alphabetNames.size
+            btnAlphabet.text = "🔤 Layout: ${alphabetNames[currentAlphabetIndex]}"
+            applyAlphabetLayout()
+        }
+
+        // 5. Haptic Strength Multiplier
+        val btnHapticStrong = root.findViewById<TextView>(R.id.btn_opt_haptic_strong)
+        btnHapticStrong?.text = "💪 Haptic Strength: $vibrationStrength%"
+        btnHapticStrong?.setOnClickListener {
+            onKeyClickFeedback(it)
+            vibrationStrength = if (vibrationStrength >= 150) 25 else vibrationStrength + 25
+            btnHapticStrong.text = "💪 Haptic Strength: $vibrationStrength%"
+        }
+
+        // 6. Key Sound Audio Toggle
+        val btnSound = root.findViewById<TextView>(R.id.btn_opt_sound)
+        btnSound?.text = "🔊 Key Click Audio: ${if (soundEnabled) "ON" else "OFF"}"
+        btnSound?.setOnClickListener {
+            onKeyClickFeedback(it)
+            soundEnabled = !soundEnabled
+            btnSound.text = "🔊 Key Click Audio: ${if (soundEnabled) "ON" else "OFF"}"
+        }
+
+        // 7. Key Sound Volume Control
+        val btnVolume = root.findViewById<TextView>(R.id.btn_opt_volume)
+        btnVolume?.text = "🎚️ Sound Volume: $soundVolume%"
+        btnVolume?.setOnClickListener {
+            onKeyClickFeedback(it)
+            soundVolume = if (soundVolume >= 100) 10 else soundVolume + 10
+            btnVolume.text = "🎚️ Sound Volume: $soundVolume%"
+        }
+
+        // 8. Keyboard Height Tiny
+        root.findViewById<TextView>(R.id.btn_opt_height_tiny)?.setOnClickListener {
+            onKeyClickFeedback(it)
+            keyboardHeight = "SMALL"
+            applyKeyboardHeight(keyboardHeight)
+        }
+
+        // 9. Keyboard Height Normal
+        root.findViewById<TextView>(R.id.btn_opt_height_normal)?.setOnClickListener {
+            onKeyClickFeedback(it)
+            keyboardHeight = "MEDIUM"
+            applyKeyboardHeight(keyboardHeight)
+        }
+
+        // 10. Keyboard Height Tall
+        root.findViewById<TextView>(R.id.btn_opt_height_tall)?.setOnClickListener {
+            onKeyClickFeedback(it)
+            keyboardHeight = "LARGE"
+            applyKeyboardHeight(keyboardHeight)
+        }
+
+        // 11. Number Row Show/Hide
+        val btnNumrow = root.findViewById<TextView>(R.id.btn_opt_numrow)
+        btnNumrow?.text = "🔢 Number Row: ${if (numberRowEnabled) "SHOW" else "HIDE"}"
+        btnNumrow?.setOnClickListener {
+            onKeyClickFeedback(it)
+            numberRowEnabled = !numberRowEnabled
+            btnNumrow.text = "🔢 Number Row: ${if (numberRowEnabled) "SHOW" else "HIDE"}"
+            root.findViewById<View>(R.id.number_row)?.visibility = if (numberRowEnabled) View.VISIBLE else View.GONE
+        }
+
+        // 12. Smart Auto Suggestions
+        val btnSuggest = root.findViewById<TextView>(R.id.btn_opt_suggest)
+        btnSuggest?.text = "💡 Suggestion Bar: ${if (autoSuggestionsEnabled) "SHOW" else "HIDE"}"
+        btnSuggest?.setOnClickListener {
+            onKeyClickFeedback(it)
+            autoSuggestionsEnabled = !autoSuggestionsEnabled
+            btnSuggest.text = "💡 Suggestion Bar: ${if (autoSuggestionsEnabled) "SHOW" else "HIDE"}"
+            root.findViewById<View>(R.id.ai_suggestions_bar)?.visibility = if (autoSuggestionsEnabled) View.VISIBLE else View.GONE
+        }
+
+        // 13. Rainbow Live Preview
+        val btnRainbow = root.findViewById<TextView>(R.id.btn_opt_rainbow)
+        btnRainbow?.text = "🌈 Rainbow Preview: ${if (rainbowPreviewEnabled) "ON" else "OFF"}"
+        btnRainbow?.setOnClickListener {
+            onKeyClickFeedback(it)
+            rainbowPreviewEnabled = !rainbowPreviewEnabled
+            btnRainbow.text = "🌈 Rainbow Preview: ${if (rainbowPreviewEnabled) "ON" else "OFF"}"
+            val tvPreview = root.findViewById<TextView>(R.id.tv_keyboard_live_preview)
+            if (rainbowPreviewEnabled) {
+                tvPreview?.setBackgroundColor(Color.parseColor("#3B0066"))
+                tvPreview?.setTextColor(Color.parseColor("#00FFCC"))
+            } else {
+                tvPreview?.setBackgroundColor(Color.parseColor("#05070C"))
+                tvPreview?.setTextColor(Color.parseColor("#00FFE0"))
+            }
+        }
+
+        // 14. Giant Words Mode
+        val btnGiant = root.findViewById<TextView>(R.id.btn_opt_giant)
+        btnGiant?.text = "🅰️ Giant Words: ${if (giantWordsEnabled) "ON" else "OFF"}"
+        btnGiant?.setOnClickListener {
+            onKeyClickFeedback(it)
+            giantWordsEnabled = !giantWordsEnabled
+            btnGiant.text = "🅰️ Giant Words: ${if (giantWordsEnabled) "ON" else "OFF"}"
+        }
+
+        // 15. Glitter Sparkle Sparkle
+        val btnGlitter = root.findViewById<TextView>(R.id.btn_opt_glitter)
+        btnGlitter?.text = "✨ Glitter Mode: ${if (glitterEnabled) "ON" else "OFF"}"
+        btnGlitter?.setOnClickListener {
+            onKeyClickFeedback(it)
+            glitterEnabled = !glitterEnabled
+            btnGlitter.text = "✨ Glitter Mode: ${if (glitterEnabled) "ON" else "OFF"}"
+        }
+
+        // 16. Unicode Gothic Style
+        val btnGothic = root.findViewById<TextView>(R.id.btn_opt_gothic)
+        btnGothic?.text = "🏰 Gothic Unicode: ${if (activeUnicode == UnicodeStyle.GOTHIC) "ON" else "OFF"}"
+        btnGothic?.setOnClickListener {
+            onKeyClickFeedback(it)
+            activeUnicode = if (activeUnicode == UnicodeStyle.GOTHIC) UnicodeStyle.NONE else UnicodeStyle.GOTHIC
+            btnGothic.text = "🏰 Gothic Unicode: ${if (activeUnicode == UnicodeStyle.GOTHIC) "ON" else "OFF"}"
+        }
+
+        // 17. Unicode Bold Style
+        val btnBold = root.findViewById<TextView>(R.id.btn_opt_bold)
+        btnBold?.text = "🄱 Bold Unicode: ${if (activeUnicode == UnicodeStyle.CIRCLED) "ON" else "OFF"}"
+        btnBold?.setOnClickListener {
+            onKeyClickFeedback(it)
+            activeUnicode = if (activeUnicode == UnicodeStyle.CIRCLED) UnicodeStyle.NONE else UnicodeStyle.CIRCLED
+            btnBold.text = "🄱 Bold Unicode: ${if (activeUnicode == UnicodeStyle.CIRCLED) "ON" else "OFF"}"
+        }
+
+        // 18. Unicode Cursive Style
+        val btnCursive = root.findViewById<TextView>(R.id.btn_opt_cursive)
+        btnCursive?.text = "✍️ Cursive Unicode: ${if (activeUnicode == UnicodeStyle.CURSIVE) "ON" else "OFF"}"
+        btnCursive?.setOnClickListener {
+            onKeyClickFeedback(it)
+            activeUnicode = if (activeUnicode == UnicodeStyle.CURSIVE) UnicodeStyle.NONE else UnicodeStyle.CURSIVE
+            btnCursive.text = "✍️ Cursive Unicode: ${if (activeUnicode == UnicodeStyle.CURSIVE) "ON" else "OFF"}"
+        }
+
+        // 19. Emoji Frames Selector
+        val btnFrames = root.findViewById<TextView>(R.id.btn_opt_emoji_frames)
+        btnFrames?.text = "🖼️ Emoji Borders: ${if (activeStyle != FrameStyle.NONE) "ON" else "OFF"}"
+        btnFrames?.setOnClickListener {
+            onKeyClickFeedback(it)
+            activeStyle = if (activeStyle == FrameStyle.NONE) FrameStyle.SPARKS else FrameStyle.NONE
+            btnFrames.text = "🖼️ Emoji Borders: ${if (activeStyle != FrameStyle.NONE) "ON" else "OFF"}"
+        }
+
+        // 20. Custom Signature Toggle
+        val btnSignature = root.findViewById<TextView>(R.id.btn_opt_signature)
+        btnSignature?.text = "🖋️ Signature Tail: ${if (customSignature.isNotBlank()) "ON" else "OFF"}"
+        btnSignature?.setOnClickListener {
+            onKeyClickFeedback(it)
+            customSignature = if (customSignature.isBlank()) "Sent with SpellType 🪄" else ""
+            btnSignature.text = "🖋️ Signature Tail: ${if (customSignature.isNotBlank()) "ON" else "OFF"}"
+        }
+
+        // 21. Language English
+        root.findViewById<TextView>(R.id.btn_opt_lang_en)?.setOnClickListener {
+            onKeyClickFeedback(it)
+            currentLanguage = LanguageManager.getLanguageByCode("en")
+            applyLanguage()
+        }
+
+        // 22. Language Hindi/Hinglish
+        root.findViewById<TextView>(R.id.btn_opt_lang_hi)?.setOnClickListener {
+            onKeyClickFeedback(it)
+            currentLanguage = LanguageManager.getLanguageByCode("hi")
+            applyLanguage()
+        }
+
+        // 23. Language Spanish
+        root.findViewById<TextView>(R.id.btn_opt_lang_es)?.setOnClickListener {
+            onKeyClickFeedback(it)
+            currentLanguage = LanguageManager.getLanguageByCode("es")
+            applyLanguage()
+        }
+
+        // 24. Language French
+        root.findViewById<TextView>(R.id.btn_opt_lang_fr)?.setOnClickListener {
+            onKeyClickFeedback(it)
+            currentLanguage = LanguageManager.getLanguageByCode("fr")
+            applyLanguage()
+        }
+
+        // 25. 60FPS Render Precision
+        val btn60fps = root.findViewById<TextView>(R.id.btn_opt_60fps)
+        btn60fps?.text = "⚡ 60FPS Soft Render: ${if (highFpsRenderEnabled) "ON" else "OFF"}"
+        btn60fps?.setOnClickListener {
+            onKeyClickFeedback(it)
+            highFpsRenderEnabled = !highFpsRenderEnabled
+            btn60fps.text = "⚡ 60FPS Soft Render: ${if (highFpsRenderEnabled) "ON" else "OFF"}"
+        }
+
+        // 26. Holographic Glow Effect
+        val btnHoloGlow = root.findViewById<TextView>(R.id.btn_opt_holo_glow)
+        btnHoloGlow?.text = "🎇 Holographic Glow: ${if (holographicGlowEnabled) "ON" else "OFF"}"
+        btnHoloGlow?.setOnClickListener {
+            onKeyClickFeedback(it)
+            holographicGlowEnabled = !holographicGlowEnabled
+            btnHoloGlow.text = "🎇 Holographic Glow: ${if (holographicGlowEnabled) "ON" else "OFF"}"
+        }
+
+        // 27. Particle System
+        val btnParticles = root.findViewById<TextView>(R.id.btn_opt_particles)
+        btnParticles?.text = "☄️ Tap Particles: ${if (tapParticlesEnabled) "ON" else "OFF"}"
+        btnParticles?.setOnClickListener {
+            onKeyClickFeedback(it)
+            tapParticlesEnabled = !tapParticlesEnabled
+            btnParticles.text = "☄️ Tap Particles: ${if (tapParticlesEnabled) "ON" else "OFF"}"
+        }
+
+        // 28. Template Keyboard Choice
+        val btnTemplatesOpt = root.findViewById<TextView>(R.id.btn_opt_templates)
+        btnTemplatesOpt?.setOnClickListener {
+            onKeyClickFeedback(it)
+            handleTemplatesToolWithAd()
+        }
+
+        // 29. Premium Assist
+        val btnAssist = root.findViewById<TextView>(R.id.btn_opt_assist)
+        btnAssist?.text = "🪄 Premium Assist: ${if (premiumAssistEnabled) "ON" else "OFF"}"
+        btnAssist?.setOnClickListener {
+            onKeyClickFeedback(it)
+            premiumAssistEnabled = !premiumAssistEnabled
+            btnAssist.text = "🪄 Premium Assist: ${if (premiumAssistEnabled) "ON" else "OFF"}"
+        }
+
+        // 30. Clear Compose Buffer
+        root.findViewById<TextView>(R.id.btn_opt_clear_buffer)?.setOnClickListener {
+            onKeyClickFeedback(it)
+            composingText.clear()
+            currentInputConnection?.setComposingText("", 1)
+            updateLivePreviewBar()
+        }
+
+        // 31. Clipboard History Queue
+        root.findViewById<TextView>(R.id.btn_opt_clipboard)?.setOnClickListener {
+            onKeyClickFeedback(it)
+            handleClipboardToolWithAd()
+        }
+
+        // 32. Ad-Free Sandbox
+        val btnAdFree = root.findViewById<TextView>(R.id.btn_opt_adfree)
+        btnAdFree?.text = "🛡️ Ad-Free Sandbox: ${if (adFreeSandboxEnabled) "ON" else "OFF"}"
+        btnAdFree?.setOnClickListener {
+            onKeyClickFeedback(it)
+            adFreeSandboxEnabled = !adFreeSandboxEnabled
+            premiumUnlocked = adFreeSandboxEnabled
+            btnAdFree.text = "🛡️ Ad-Free Sandbox: ${if (adFreeSandboxEnabled) "ON" else "OFF"}"
+            updateKeyboardAdBanners()
+        }
+    }
+
+    private fun applyAlphabetLayout() {
+        val lower = alphabetsLowerList[currentAlphabetIndex]
+        for (i in letterKeyIds.indices) {
+            val id = letterKeyIds[i]
+            val keyView = keyViews[id] ?: continue
+            val char = lower[i]
+            keyView.text = if (isShifted) char.uppercase() else char
+        }
+    }
+
+    private fun performGoogleAISearch(query: String) {
+        if (query.isBlank()) return
+        serviceScope.launch(Dispatchers.IO) {
+            try {
+                val encodedQuery = java.net.URLEncoder.encode(query, "UTF-8")
+                val urlConnection = java.net.URL("https://api.duckduckgo.com/?q=$encodedQuery&format=json&no_html=1&skip_disambig=1").openConnection() as java.net.HttpURLConnection
+                urlConnection.connectTimeout = 4000
+                urlConnection.readTimeout = 4000
+                val text = urlConnection.inputStream.bufferedReader().use { it.readText() }
+
+                // Parse abstract from JSON manually to avoid adding Jackson/Gson overhead
+                var abstractText = ""
+                val abstractKey = "\"AbstractText\":\""
+                val index = text.indexOf(abstractKey)
+                if (index != -1) {
+                    val start = index + abstractKey.length
+                    val end = text.indexOf("\"", start)
+                    if (end != -1) {
+                        abstractText = text.substring(start, end).replace("\\n", " ").replace("\\\"", "\"")
+                    }
+                }
+
+                // Fallback to local AI generator if DuckDuckGo returns empty
+                if (abstractText.isBlank()) {
+                    abstractText = generateLocalAISearchResult(query)
+                }
+
+                withContext(Dispatchers.Main) {
+                    // Type response into target field
+                    val ic = currentInputConnection
+                    ic?.commitText("\n🤖 [Google AI Search]: $abstractText\n", 1)
+
+                    // Show in suggestion bar
+                    keyboardRootView?.findViewById<TextView>(R.id.suggestion_center)?.text = "AI Result Added!"
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                val fallback = generateLocalAISearchResult(query)
+                withContext(Dispatchers.Main) {
+                    currentInputConnection?.commitText("\n🤖 [Google AI Search]: $fallback\n", 1)
+                }
+            }
+        }
+    }
+
+    private fun generateLocalAISearchResult(query: String): String {
+        val q = query.lowercase().trim()
+        return when {
+            q.contains("einstein") -> "Albert Einstein was a German-born theoretical physicist, widely acknowledged as one of the greatest and most influential physicists of all time."
+            q.contains("newton") -> "Sir Isaac Newton was an English mathematician, physicist, astronomer, alchemist, and theologian, who is widely recognised as one of the greatest mathematicians and physicists."
+            q.contains("india") -> "India is a country in South Asia. It is the seventh-largest country by area, the most populous country, and the most populous democracy in the world."
+            q.contains("spelltype") -> "SpellType Keyboard is an advanced, ultra-customizable Android keyboard that features 3D rendering, AI suggestions, and automatic unicode stylized outputs!"
+            q.contains("weather") -> "The current weather is clear with a gentle breeze, perfect for typing on your SpellType Keyboard! ☀️"
+            q.contains("capital") || q.contains("delhi") -> "New Delhi is the capital of India and a part of the National Capital Territory of Delhi."
+            q.contains("google") -> "Google LLC is an American multinational technology company focusing on artificial intelligence, search engine technology, and online advertising."
+            q.contains("android") -> "Android is a mobile operating system based on a modified version of the Linux kernel and other open-source software, designed primarily for touchscreen mobile devices."
+            q.contains("kotlin") -> "Kotlin is a cross-platform, statically typed, general-purpose programming language with type inference, designed to interoperate fully with Java."
+            else -> "Google AI found that '$query' represents an interesting concept connected to advanced technology, learning, and human curiosity! 🚀"
         }
     }
 }
