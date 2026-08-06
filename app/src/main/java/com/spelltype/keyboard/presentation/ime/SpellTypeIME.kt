@@ -1256,24 +1256,24 @@ class SpellTypeIME : InputMethodService() {
 
     private fun applyKeyboardHeight(heightSelection: String) {
         try {
-            val container = keyboardRootView as? LinearLayout ?: return
+            val root = keyboardRootView as? LinearLayout ?: return
+            val keysContainer = root.findViewById<LinearLayout>(R.id.keyboard_keys_container) ?: return
             val density = resources.displayMetrics.density
 
-            // Loop and adjust vertical row parameters
-            for (i in 0 until container.childCount) {
-                val row = container.getChildAt(i) as? LinearLayout ?: continue
-                val rowId = row.id
-                if (rowId == R.id.number_row || rowId == R.id.ai_suggestions_bar || row.childCount > 0) {
-                    if (rowId == R.id.ai_suggestions_bar) continue
+            // Only adjust heights of the actual KEY ROWS inside keyboard_keys_container
+            // (number_row, QWERTY row, ASDF row, ZXCV row, space row)
+            // Do NOT touch toolbar bars (header, art bar, suggestions, pro tools)
+            val targetHeight = when (heightSelection) {
+                "SMALL" -> (40 * density).toInt()
+                "LARGE" -> (52 * density).toInt()
+                else -> (46 * density).toInt() // MEDIUM — matches XML default
+            }
 
-                    val lp = row.layoutParams as? LinearLayout.LayoutParams ?: continue
-                    lp.height = when (heightSelection) {
-                        "SMALL" -> (44 * density).toInt()
-                        "LARGE" -> (64 * density).toInt()
-                        else -> (54 * density).toInt() // MEDIUM
-                    }
-                    row.layoutParams = lp
-                }
+            for (i in 0 until keysContainer.childCount) {
+                val row = keysContainer.getChildAt(i) as? LinearLayout ?: continue
+                val lp = row.layoutParams as? LinearLayout.LayoutParams ?: continue
+                lp.height = targetHeight
+                row.layoutParams = lp
             }
         } catch (e: Exception) {
             e.printStackTrace()
