@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.spelltype.keyboard"
+    namespace = "com.salmanlaghari.spelltypekeyboard"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.spelltype.keyboard"
+        applicationId = "com.salmanlaghari.spelltypekeyboard"
         minSdk = 26
         targetSdk = 34
         versionCode = 5
