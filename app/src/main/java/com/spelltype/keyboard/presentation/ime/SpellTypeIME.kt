@@ -1734,7 +1734,7 @@ class SpellTypeIME : InputMethodService() {
         val lower = input.lowercase().trim()
 
         // Smart completions based on prefix
-        val completions = mapOf
+        val completions = mapOf(
             "hel" to listOf("hello", "help", "held"),
             "goo" to listOf("good", "google", "goose"),
             "tha" to listOf("thank", "that", "than"),
