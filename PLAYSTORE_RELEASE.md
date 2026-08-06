@@ -14,7 +14,7 @@ After CI builds, you get:
 ## 🏪 Play Store Upload Steps
 
 1. Go to [Google Play Console](https://play.google.com/console)
-2. Select your app (com.spelltype.keyboard)
+2. Select your app (com.salmanlaghari.spelltypekeyboard)
 3. Go to **Production** → **Create new release**
 4. Upload the `.aab` file from CI artifacts
 5. Fill in release notes
