@@ -9,8 +9,8 @@ import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.LinearInterpolator
 
 /**
- * Real Premium Theme Engine — 20+ HD 8K Animated Themes
- * Each theme has: animated gradient background, glow keys, particle effects
+ * Real Premium Theme Engine — 35+ HD 8K Animated & 3D Themes
+ * Each theme has: animated gradient background, glow keys, particle effects, 3D keycaps
  */
 
 data class RealTheme(
@@ -30,10 +30,91 @@ data class RealTheme(
     val previewBg: Int,
     val isLight: Boolean = false,
     val isAnimated: Boolean = true,
-    val particleColor: Int = Color.WHITE
+    val particleColor: Int = Color.WHITE,
+    val is3DTheme: Boolean = false
 ) {
     companion object {
+        var force3D: Boolean = true
         val ALL = listOf(
+            // --- 11 SPECTACULAR NEW 3D UI THEMES (3D KEYCAPS) ---
+            RealTheme("3d_glass_neon", "3D Glass Neon", "🌃",
+                intArrayOf(Color.parseColor("#060A17"), Color.parseColor("#0C152B"), Color.parseColor("#03050C")),
+                Color.parseColor("#15203D"), Color.parseColor("#22396B"), Color.parseColor("#00FFE0"),
+                Color.parseColor("#00D4FF"), Color.parseColor("#00FFE0"), Color.parseColor("#004C80"),
+                Color.parseColor("#080D1D"), Color.parseColor("#00FFE0"), Color.parseColor("#080D1D"),
+                Color.parseColor("#03050D"), is3DTheme = true, particleColor = Color.parseColor("#00FFE0")),
+
+            RealTheme("3d_glossy_ruby", "3D Glossy Ruby", "🔴",
+                intArrayOf(Color.parseColor("#1E0005"), Color.parseColor("#3B000C"), Color.parseColor("#100003")),
+                Color.parseColor("#660D1E"), Color.parseColor("#991A32"), Color.parseColor("#FFE5EB"),
+                Color.parseColor("#FF1E46"), Color.parseColor("#FF1E46"), Color.parseColor("#4A020F"),
+                Color.parseColor("#1F0106"), Color.parseColor("#FFE5EB"), Color.parseColor("#1F0106"),
+                Color.parseColor("#100003"), is3DTheme = true, particleColor = Color.parseColor("#FF1E46")),
+
+            RealTheme("3d_embossed_gold", "3D Embossed Gold", "🏆",
+                intArrayOf(Color.parseColor("#1A1100"), Color.parseColor("#332200"), Color.parseColor("#0D0800")),
+                Color.parseColor("#5C3E00"), Color.parseColor("#8F6200"), Color.parseColor("#FFE0B2"),
+                Color.parseColor("#FFC107"), Color.parseColor("#FFD54F"), Color.parseColor("#331A00"),
+                Color.parseColor("#1C1300"), Color.parseColor("#FFE0B2"), Color.parseColor("#1C1300"),
+                Color.parseColor("#0D0800"), is3DTheme = true, particleColor = Color.parseColor("#FFC107")),
+
+            RealTheme("3d_stealth_carbon", "3D Stealth Carbon", "⚫",
+                intArrayOf(Color.parseColor("#121212"), Color.parseColor("#1E1E1E"), Color.parseColor("#0A0A0A")),
+                Color.parseColor("#262626"), Color.parseColor("#404040"), Color.parseColor("#F5F5F5"),
+                Color.parseColor("#A3A3A3"), Color.parseColor("#E5E5E5"), Color.parseColor("#171717"),
+                Color.parseColor("#121212"), Color.parseColor("#E5E5E5"), Color.parseColor("#121212"),
+                Color.parseColor("#0A0A0A"), is3DTheme = true, particleColor = Color.parseColor("#A3A3A3")),
+
+            RealTheme("3d_clay_soft", "3D Soft Clay", "🧸",
+                intArrayOf(Color.parseColor("#F1F5F9"), Color.parseColor("#E2E8F0"), Color.parseColor("#CBD5E1")),
+                Color.parseColor("#FFFFFF"), Color.parseColor("#F1F5F9"), Color.parseColor("#334155"),
+                Color.parseColor("#3B82F6"), Color.parseColor("#3B82F6"), Color.parseColor("#94A3B8"),
+                Color.parseColor("#E2E8F0"), Color.parseColor("#334155"), Color.parseColor("#E2E8F0"),
+                Color.parseColor("#CBD5E1"), isLight = true, is3DTheme = true, particleColor = Color.parseColor("#3B82F6")),
+
+            RealTheme("3d_chrome_metal", "3D Chrome Metal", "🥈",
+                intArrayOf(Color.parseColor("#1E293B"), Color.parseColor("#334155"), Color.parseColor("#0F172A")),
+                Color.parseColor("#475569"), Color.parseColor("#64748B"), Color.parseColor("#F8FAFC"),
+                Color.parseColor("#38BDF8"), Color.parseColor("#38BDF8"), Color.parseColor("#1E293B"),
+                Color.parseColor("#0F172A"), Color.parseColor("#F8FAFC"), Color.parseColor("#0F172A"),
+                Color.parseColor("#0F172A"), is3DTheme = true, particleColor = Color.parseColor("#38BDF8")),
+
+            RealTheme("3d_hologram", "3D Hologram", "🦄",
+                intArrayOf(Color.parseColor("#1E002A"), Color.parseColor("#3D0053"), Color.parseColor("#0F0015")),
+                Color.parseColor("#5A0D7A"), Color.parseColor("#8015AD"), Color.parseColor("#FDF2FF"),
+                Color.parseColor("#FF00FF"), Color.parseColor("#00FFFF"), Color.parseColor("#3B0053"),
+                Color.parseColor("#0F0015"), Color.parseColor("#FDF2FF"), Color.parseColor("#0F0015"),
+                Color.parseColor("#0F0015"), is3DTheme = true, particleColor = Color.parseColor("#FF00FF")),
+
+            RealTheme("3d_bubble_gum", "3D Bubble Gum", "🍬",
+                intArrayOf(Color.parseColor("#2E081A"), Color.parseColor("#4C0D2C"), Color.parseColor("#1A0410")),
+                Color.parseColor("#7A1448"), Color.parseColor("#AD1D67"), Color.parseColor("#FFF0F6"),
+                Color.parseColor("#FF4DAD"), Color.parseColor("#FF82C7"), Color.parseColor("#400623"),
+                Color.parseColor("#1A0410"), Color.parseColor("#FFF0F6"), Color.parseColor("#1A0410"),
+                Color.parseColor("#1A0410"), is3DTheme = true, particleColor = Color.parseColor("#FF4DAD")),
+
+            RealTheme("3d_retro_key", "3D Retro Keycap", "⌨️",
+                intArrayOf(Color.parseColor("#2D2B2A"), Color.parseColor("#3E3C3A"), Color.parseColor("#1D1C1B")),
+                Color.parseColor("#E6DED8"), Color.parseColor("#FFFFFF"), Color.parseColor("#1D1C1B"),
+                Color.parseColor("#C43E2B"), Color.parseColor("#C43E2B"), Color.parseColor("#8F8884"),
+                Color.parseColor("#1D1C1B"), Color.parseColor("#1D1C1B"), Color.parseColor("#1D1C1B"),
+                Color.parseColor("#1D1C1B"), is3DTheme = true, particleColor = Color.parseColor("#C43E2B")),
+
+            RealTheme("3d_velvet_purple", "3D Velvet Purple", "🔮",
+                intArrayOf(Color.parseColor("#12002E"), Color.parseColor("#25005E"), Color.parseColor("#0A001A")),
+                Color.parseColor("#410A8F"), Color.parseColor("#5C10C4"), Color.parseColor("#F7F0FF"),
+                Color.parseColor("#D485FF"), Color.parseColor("#CE93D8"), Color.parseColor("#25005E"),
+                Color.parseColor("#0A001A"), Color.parseColor("#F7F0FF"), Color.parseColor("#0A001A"),
+                Color.parseColor("#0A001A"), is3DTheme = true, particleColor = Color.parseColor("#D485FF")),
+
+            RealTheme("3d_cyber_orange", "3D Cyber Orange", "☣️",
+                intArrayOf(Color.parseColor("#1A0F00"), Color.parseColor("#331E00"), Color.parseColor("#0D0800")),
+                Color.parseColor("#663D00"), Color.parseColor("#995C00"), Color.parseColor("#FFF3E0"),
+                Color.parseColor("#FF9100"), Color.parseColor("#FF9100"), Color.parseColor("#4D2E00"),
+                Color.parseColor("#0D0800"), Color.parseColor("#FFF3E0"), Color.parseColor("#0D0800"),
+                Color.parseColor("#0D0800"), is3DTheme = true, particleColor = Color.parseColor("#FF9100")),
+
+            // --- ORIGINAL REAL THEMES ---
             // 1. Neon Cyber
             RealTheme("neon_cyber", "Neon Cyber", "🌃",
                 intArrayOf(Color.parseColor("#0A0E1A"), Color.parseColor("#0D1321"), Color.parseColor("#050810")),
@@ -211,7 +292,26 @@ data class RealTheme(
         }
     }
 
-    fun createKeyBackground(cornerRadiusPx: Float, pressed: Boolean = false): GradientDrawable {
+    fun createKeyBackground(cornerRadiusPx: Float, pressed: Boolean = false): Drawable {
+        if (is3DTheme || force3D) {
+            // Draw a gorgeous skeuomorphic 3D keycap using LayerDrawable!
+            val shadow = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = cornerRadiusPx
+                setColor(borderColor) // Darker shadow color / border color
+            }
+            val front = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = cornerRadiusPx
+                setColor(if (pressed) keyPressedColor else keyColor)
+                setStroke(1, Color.argb(120, 255, 255, 255)) // shiny top bevel
+            }
+            val layers = arrayOf(shadow, front)
+            val ld = LayerDrawable(layers)
+            val shadowHeight = if (pressed) 1 else 6 // Pressed sits flatter, unpressed has a 6px 3D extrusion!
+            ld.setLayerInset(1, 0, 0, 0, shadowHeight)
+            return ld
+        }
         return GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
             cornerRadius = cornerRadiusPx
@@ -220,7 +320,24 @@ data class RealTheme(
         }
     }
 
-    fun createAccentBackground(cornerRadiusPx: Float): GradientDrawable {
+    fun createAccentBackground(cornerRadiusPx: Float): Drawable {
+        if (is3DTheme || force3D) {
+            val shadow = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = cornerRadiusPx
+                setColor(borderColor)
+            }
+            val front = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = cornerRadiusPx
+                setColor(accentColor)
+                setStroke(1, Color.argb(120, 255, 255, 255))
+            }
+            val layers = arrayOf(shadow, front)
+            val ld = LayerDrawable(layers)
+            ld.setLayerInset(1, 0, 0, 0, 6)
+            return ld
+        }
         return GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
             cornerRadius = cornerRadiusPx

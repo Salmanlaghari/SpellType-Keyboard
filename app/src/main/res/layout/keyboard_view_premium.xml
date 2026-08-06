@@ -293,112 +293,618 @@
         android:visibility="gone"
         android:maxLines="2"/>
 
-    <!-- ═══ Permanent Number Row ═══ -->
-    <LinearLayout
-        android:id="@+id/number_row"
+    <!-- ═══ Dynamic Control Center Dashboard (32+ Working Options) ═══ -->
+    <ScrollView
+        android:id="@+id/keyboard_control_center"
         android:layout_width="match_parent"
-        android:layout_height="46dp"
-        android:orientation="horizontal"
-        android:paddingHorizontal="3dp"
-        android:layout_marginTop="2dp"
+        android:layout_height="240dp"
+        android:background="#0A0E1A"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="8dp">
+
+            <!-- Real Workable Google AI Search Mode Engine -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="#0F172A"
+                android:paddingHorizontal="8dp"
+                android:layout_marginBottom="8dp">
+
+                <EditText
+                    android:id="@+id/ai_search_input"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:hint="Ask Google AI Search Engine..."
+                    android:textColor="#F8FAFC"
+                    android:textColorHint="#64748B"
+                    android:textSize="12sp"
+                    android:background="@null"
+                    android:maxLines="1"
+                    android:imeOptions="actionSearch"
+                    android:inputType="text"/>
+
+                <TextView
+                    android:id="@+id/btn_ai_search_submit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🔍 Search AI"
+                    android:textColor="#00D4FF"
+                    android:textStyle="bold"
+                    android:textSize="12sp"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="4dp"
+                    android:background="@drawable/chip_inactive_background"
+                    android:clickable="true"
+                    android:focusable="true"/>
+            </LinearLayout>
+
+            <!-- 32+ Workable Options Grid Layout -->
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="2"
+                android:alignmentMode="alignBounds">
+
+                <!-- 1. Gboard Type Choice -->
+                <TextView
+                    android:id="@+id/btn_opt_gboard"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="⌨️ Gboard Mode: OFF"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 2. 3D Keycaps Mode -->
+                <TextView
+                    android:id="@+id/btn_opt_3d_keys"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="🧱 3D Keycaps: ON"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 3. Dynamic Haptic Toggle -->
+                <TextView
+                    android:id="@+id/btn_opt_haptic"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="📳 Haptic Haptic: ON"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 4. Cycle Alphabets -->
+                <TextView
+                    android:id="@+id/btn_opt_alphabet"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="🔤 Layout: QWERTY"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 5. Haptic Strength Multiplier -->
+                <TextView
+                    android:id="@+id/btn_opt_haptic_strong"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="💪 Haptic Strength: 100%"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 6. Key Sound Audio Toggle -->
+                <TextView
+                    android:id="@+id/btn_opt_sound"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="🔊 Key Click Audio: OFF"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 7. Key Sound Volume Control -->
+                <TextView
+                    android:id="@+id/btn_opt_volume"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="🎚️ Sound Volume: 50%"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 8. Keyboard Height Tiny -->
+                <TextView
+                    android:id="@+id/btn_opt_height_tiny"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="📏 Height: Tiny"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 9. Keyboard Height Normal -->
+                <TextView
+                    android:id="@+id/btn_opt_height_normal"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="📏 Height: Normal"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 10. Keyboard Height Tall -->
+                <TextView
+                    android:id="@+id/btn_opt_height_tall"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="📏 Height: Tall"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 11. Number Row Show/Hide -->
+                <TextView
+                    android:id="@+id/btn_opt_numrow"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="🔢 Number Row: SHOW"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 12. Smart Auto Suggestions -->
+                <TextView
+                    android:id="@+id/btn_opt_suggest"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="💡 Suggestion Bar: SHOW"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 13. Rainbow Live Preview -->
+                <TextView
+                    android:id="@+id/btn_opt_rainbow"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="🌈 Rainbow Preview: OFF"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 14. Giant Words Mode -->
+                <TextView
+                    android:id="@+id/btn_opt_giant"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="🅰️ Giant Words: OFF"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 15. Glitter Sparkle Sparkle -->
+                <TextView
+                    android:id="@+id/btn_opt_glitter"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="✨ Glitter Mode: OFF"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 16. Unicode Gothic Style -->
+                <TextView
+                    android:id="@+id/btn_opt_gothic"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="🏰 Gothic Unicode: OFF"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 17. Unicode Bold Style -->
+                <TextView
+                    android:id="@+id/btn_opt_bold"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="🄱 Bold Unicode: OFF"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 18. Unicode Cursive Style -->
+                <TextView
+                    android:id="@+id/btn_opt_cursive"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="✍️ Cursive Unicode: OFF"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 19. Emoji Frames Selector -->
+                <TextView
+                    android:id="@+id/btn_opt_emoji_frames"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="🖼️ Emoji Borders: OFF"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 20. Custom Signature Toggle -->
+                <TextView
+                    android:id="@+id/btn_opt_signature"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="🖋️ Signature Tail: OFF"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 21. Language English -->
+                <TextView
+                    android:id="@+id/btn_opt_lang_en"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="🌐 English (EN)"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 22. Language Hindi/Hinglish -->
+                <TextView
+                    android:id="@+id/btn_opt_lang_hi"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="🇮🇳 Hindi/Hinglish (HI)"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 23. Language Spanish -->
+                <TextView
+                    android:id="@+id/btn_opt_lang_es"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="🇪🇸 Spanish (ES)"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 24. Language French -->
+                <TextView
+                    android:id="@+id/btn_opt_lang_fr"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="🇫🇷 French (FR)"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 25. 60FPS Render Precision -->
+                <TextView
+                    android:id="@+id/btn_opt_60fps"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="⚡ 60FPS Soft Render: ON"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 26. Holographic Glow Effect -->
+                <TextView
+                    android:id="@+id/btn_opt_holo_glow"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="🎇 Holographic Glow: ON"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 27. Particle System -->
+                <TextView
+                    android:id="@+id/btn_opt_particles"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="☄️ Tap Particles: ON"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 28. Template Keyboard Choice -->
+                <TextView
+                    android:id="@+id/btn_opt_templates"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="📝 Template Keyboard"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 29. Premium Assist smart writing -->
+                <TextView
+                    android:id="@+id/btn_opt_assist"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="🪄 Premium Assist: ON"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 30. Clear Compose Buffer -->
+                <TextView
+                    android:id="@+id/btn_opt_clear_buffer"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="🧹 Clear Buffer"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 31. Clipboard History Queue -->
+                <TextView
+                    android:id="@+id/btn_opt_clipboard"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="📋 Clipboard History"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+                <!-- 32. Ad-free Simulation -->
+                <TextView
+                    android:id="@+id/btn_opt_adfree"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="36dp"
+                    android:text="🛡️ Ad-Free Sandbox: ON"
+                    android:textColor="#F1F5F9"
+                    android:textSize="10sp"
+                    android:gravity="center"
+                    android:background="@drawable/chip_inactive_background"
+                    android:layout_margin="3dp"/>
+
+            </GridLayout>
+
+            <!-- Close Settings Button -->
+            <TextView
+                android:id="@+id/btn_close_control_center"
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:text="◀ Back to Keyboard Keys"
+                android:textColor="#00D4FF"
+                android:textStyle="bold"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:background="@drawable/chip_inactive_background"
+                android:layout_marginTop="8dp"
+                android:clickable="true"
+                android:focusable="true"/>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- ═══ Standard Keyboard Typing Keys Container ═══ -->
+    <LinearLayout
+        android:id="@+id/keyboard_keys_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
         android:visibility="visible">
 
-        <TextView android:id="@+id/num_1" style="@style/KeyboardKey" android:text="1" android:textSize="15sp"/>
-        <TextView android:id="@+id/num_2" style="@style/KeyboardKey" android:text="2" android:textSize="15sp"/>
-        <TextView android:id="@+id/num_3" style="@style/KeyboardKey" android:text="3" android:textSize="15sp"/>
-        <TextView android:id="@+id/num_4" style="@style/KeyboardKey" android:text="4" android:textSize="15sp"/>
-        <TextView android:id="@+id/num_5" style="@style/KeyboardKey" android:text="5" android:textSize="15sp"/>
-        <TextView android:id="@+id/num_6" style="@style/KeyboardKey" android:text="6" android:textSize="15sp"/>
-        <TextView android:id="@+id/num_7" style="@style/KeyboardKey" android:text="7" android:textSize="15sp"/>
-        <TextView android:id="@+id/num_8" style="@style/KeyboardKey" android:text="8" android:textSize="15sp"/>
-        <TextView android:id="@+id/num_9" style="@style/KeyboardKey" android:text="9" android:textSize="15sp"/>
-        <TextView android:id="@+id/num_0" style="@style/KeyboardKey" android:text="0" android:textSize="15sp"/>
-    </LinearLayout>
+        <!-- ═══ Permanent Number Row ═══ -->
+        <LinearLayout
+            android:id="@+id/number_row"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:orientation="horizontal"
+            android:paddingHorizontal="3dp"
+            android:layout_marginTop="2dp"
+            android:visibility="visible">
 
-    <!-- ═══ Row 1: QWERTY ═══ -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:orientation="horizontal"
-        android:paddingHorizontal="3dp"
-        android:layout_marginTop="2dp">
+            <TextView android:id="@+id/num_1" style="@style/KeyboardKey" android:text="1" android:textSize="15sp"/>
+            <TextView android:id="@+id/num_2" style="@style/KeyboardKey" android:text="2" android:textSize="15sp"/>
+            <TextView android:id="@+id/num_3" style="@style/KeyboardKey" android:text="3" android:textSize="15sp"/>
+            <TextView android:id="@+id/num_4" style="@style/KeyboardKey" android:text="4" android:textSize="15sp"/>
+            <TextView android:id="@+id/num_5" style="@style/KeyboardKey" android:text="5" android:textSize="15sp"/>
+            <TextView android:id="@+id/num_6" style="@style/KeyboardKey" android:text="6" android:textSize="15sp"/>
+            <TextView android:id="@+id/num_7" style="@style/KeyboardKey" android:text="7" android:textSize="15sp"/>
+            <TextView android:id="@+id/num_8" style="@style/KeyboardKey" android:text="8" android:textSize="15sp"/>
+            <TextView android:id="@+id/num_9" style="@style/KeyboardKey" android:text="9" android:textSize="15sp"/>
+            <TextView android:id="@+id/num_0" style="@style/KeyboardKey" android:text="0" android:textSize="15sp"/>
+        </LinearLayout>
 
-        <TextView android:id="@+id/btn_q" style="@style/KeyboardKey" android:text="q"/>
-        <TextView android:id="@+id/btn_w" style="@style/KeyboardKey" android:text="w"/>
-        <TextView android:id="@+id/btn_e" style="@style/KeyboardKey" android:text="e"/>
-        <TextView android:id="@+id/btn_r" style="@style/KeyboardKey" android:text="r"/>
-        <TextView android:id="@+id/btn_t" style="@style/KeyboardKey" android:text="t"/>
-        <TextView android:id="@+id/btn_y" style="@style/KeyboardKey" android:text="y"/>
-        <TextView android:id="@+id/btn_u" style="@style/KeyboardKey" android:text="u"/>
-        <TextView android:id="@+id/btn_i" style="@style/KeyboardKey" android:text="i"/>
-        <TextView android:id="@+id/btn_o" style="@style/KeyboardKey" android:text="o"/>
-        <TextView android:id="@+id/btn_p" style="@style/KeyboardKey" android:text="p"/>
-    </LinearLayout>
+        <!-- ═══ Row 1: QWERTY ═══ -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:orientation="horizontal"
+            android:paddingHorizontal="3dp"
+            android:layout_marginTop="2dp">
 
-    <!-- ═══ Row 2: ASDF ═══ -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:orientation="horizontal"
-        android:paddingHorizontal="14dp">
+            <TextView android:id="@+id/btn_q" style="@style/KeyboardKey" android:text="q"/>
+            <TextView android:id="@+id/btn_w" style="@style/KeyboardKey" android:text="w"/>
+            <TextView android:id="@+id/btn_e" style="@style/KeyboardKey" android:text="e"/>
+            <TextView android:id="@+id/btn_r" style="@style/KeyboardKey" android:text="r"/>
+            <TextView android:id="@+id/btn_t" style="@style/KeyboardKey" android:text="t"/>
+            <TextView android:id="@+id/btn_y" style="@style/KeyboardKey" android:text="y"/>
+            <TextView android:id="@+id/btn_u" style="@style/KeyboardKey" android:text="u"/>
+            <TextView android:id="@+id/btn_i" style="@style/KeyboardKey" android:text="i"/>
+            <TextView android:id="@+id/btn_o" style="@style/KeyboardKey" android:text="o"/>
+            <TextView android:id="@+id/btn_p" style="@style/KeyboardKey" android:text="p"/>
+        </LinearLayout>
 
-        <TextView android:id="@+id/btn_a" style="@style/KeyboardKey" android:text="a"/>
-        <TextView android:id="@+id/btn_s" style="@style/KeyboardKey" android:text="s"/>
-        <TextView android:id="@+id/btn_d" style="@style/KeyboardKey" android:text="d"/>
-        <TextView android:id="@+id/btn_f" style="@style/KeyboardKey" android:text="f"/>
-        <TextView android:id="@+id/btn_g" style="@style/KeyboardKey" android:text="g"/>
-        <TextView android:id="@+id/btn_h" style="@style/KeyboardKey" android:text="h"/>
-        <TextView android:id="@+id/btn_j" style="@style/KeyboardKey" android:text="j"/>
-        <TextView android:id="@+id/btn_k" style="@style/KeyboardKey" android:text="k"/>
-        <TextView android:id="@+id/btn_l" style="@style/KeyboardKey" android:text="l"/>
-    </LinearLayout>
+        <!-- ═══ Row 2: ASDF ═══ -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:orientation="horizontal"
+            android:paddingHorizontal="14dp">
 
-    <!-- ═══ Row 3: Shift + ZXCV + Backspace ═══ -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:orientation="horizontal"
-        android:paddingHorizontal="3dp">
+            <TextView android:id="@+id/btn_a" style="@style/KeyboardKey" android:text="a"/>
+            <TextView android:id="@+id/btn_s" style="@style/KeyboardKey" android:text="s"/>
+            <TextView android:id="@+id/btn_d" style="@style/KeyboardKey" android:text="d"/>
+            <TextView android:id="@+id/btn_f" style="@style/KeyboardKey" android:text="f"/>
+            <TextView android:id="@+id/btn_g" style="@style/KeyboardKey" android:text="g"/>
+            <TextView android:id="@+id/btn_h" style="@style/KeyboardKey" android:text="h"/>
+            <TextView android:id="@+id/btn_j" style="@style/KeyboardKey" android:text="j"/>
+            <TextView android:id="@+id/btn_k" style="@style/KeyboardKey" android:text="k"/>
+            <TextView android:id="@+id/btn_l" style="@style/KeyboardKey" android:text="l"/>
+        </LinearLayout>
 
-        <TextView android:id="@+id/btn_shift" style="@style/KeyboardKey.Special" android:layout_weight="1.5" android:text="⇧"/>
-        <TextView android:id="@+id/btn_z" style="@style/KeyboardKey" android:text="z"/>
-        <TextView android:id="@+id/btn_x" style="@style/KeyboardKey" android:text="x"/>
-        <TextView android:id="@+id/btn_c" style="@style/KeyboardKey" android:text="c"/>
-        <TextView android:id="@+id/btn_v" style="@style/KeyboardKey" android:text="v"/>
-        <TextView android:id="@+id/btn_b" style="@style/KeyboardKey" android:text="b"/>
-        <TextView android:id="@+id/btn_n" style="@style/KeyboardKey" android:text="n"/>
-        <TextView android:id="@+id/btn_m" style="@style/KeyboardKey" android:text="m"/>
-        <TextView android:id="@+id/btn_backspace" style="@style/KeyboardKey.Special" android:layout_weight="1.5" android:text="⌫"/>
-    </LinearLayout>
+        <!-- ═══ Row 3: Shift + ZXCV + Backspace ═══ -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:orientation="horizontal"
+            android:paddingHorizontal="3dp">
 
-    <!-- ═══ Row 4: Mode + Space + Enter ═══ -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:orientation="horizontal"
-        android:paddingHorizontal="3dp">
+            <TextView android:id="@+id/btn_shift" style="@style/KeyboardKey.Special" android:layout_weight="1.5" android:text="⇧"/>
+            <TextView android:id="@+id/btn_z" style="@style/KeyboardKey" android:text="z"/>
+            <TextView android:id="@+id/btn_x" style="@style/KeyboardKey" android:text="x"/>
+            <TextView android:id="@+id/btn_c" style="@style/KeyboardKey" android:text="c"/>
+            <TextView android:id="@+id/btn_v" style="@style/KeyboardKey" android:text="v"/>
+            <TextView android:id="@+id/btn_b" style="@style/KeyboardKey" android:text="b"/>
+            <TextView android:id="@+id/btn_n" style="@style/KeyboardKey" android:text="n"/>
+            <TextView android:id="@+id/btn_m" style="@style/KeyboardKey" android:text="m"/>
+            <TextView android:id="@+id/btn_backspace" style="@style/KeyboardKey.Special" android:layout_weight="1.5" android:text="⌫"/>
+        </LinearLayout>
 
-        <TextView android:id="@+id/btn_mode" style="@style/KeyboardKey.Special" android:layout_weight="1.5" android:text="\?123"/>
+        <!-- ═══ Row 4: Mode + Space + Enter ═══ -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:orientation="horizontal"
+            android:paddingHorizontal="3dp">
 
-        <!-- Emoji Key -->
-        <TextView
-            android:id="@+id/btn_emoji"
-            style="@style/KeyboardKey.Special"
-            android:layout_weight="1"
-            android:text="😊"
-            android:textSize="18sp"/>
+            <TextView android:id="@+id/btn_mode" style="@style/KeyboardKey.Special" android:layout_weight="1.5" android:text="\?123"/>
 
-        <TextView android:id="@+id/btn_space" style="@style/KeyboardKey" android:layout_weight="4" android:text=""/>
+            <!-- Emoji Key -->
+            <TextView
+                android:id="@+id/btn_emoji"
+                style="@style/KeyboardKey.Special"
+                android:layout_weight="1"
+                android:text="😊"
+                android:textSize="18sp"/>
 
-        <!-- Comma -->
-        <TextView
-            android:id="@+id/btn_comma"
-            style="@style/KeyboardKey.Special"
-            android:layout_weight="0.8"
-            android:text=","
-            android:textSize="16sp"/>
+            <TextView android:id="@+id/btn_space" style="@style/KeyboardKey" android:layout_weight="4" android:text=""/>
 
-        <TextView android:id="@+id/btn_enter" style="@style/KeyboardKey.Accent" android:layout_weight="1.8" android:text="⏎"/>
+            <!-- Comma -->
+            <TextView
+                android:id="@+id/btn_comma"
+                style="@style/KeyboardKey.Special"
+                android:layout_weight="0.8"
+                android:text=","
+                android:textSize="16sp"/>
+
+            <TextView android:id="@+id/btn_enter" style="@style/KeyboardKey.Accent" android:layout_weight="1.8" android:text="⏎"/>
+        </LinearLayout>
+
     </LinearLayout>
 
     <!-- ═══ Bottom Gesture Bar ═══ -->
