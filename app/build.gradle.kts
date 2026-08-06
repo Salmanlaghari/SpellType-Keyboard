@@ -8,15 +8,15 @@ plugins {
 }
 
 android {
-    namespace = "com.spelltype.keyboard"
+    namespace = "com.salmanlaghari.spelltypekeyboard"
     compileSdk = 34
 
     defaultConfig {
         applicationId = "com.salmanlaghari.spelltypekeyboard"
         minSdk = 26
         targetSdk = 34
-        versionCode = 3
-        versionName = "3.00.0"
+        versionCode = 5
+        versionName = "5.00.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -50,12 +50,20 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            manifestPlaceholders["admobAppId"] = "ca-app-pub-8178045957849630~9682432362"
+            manifestPlaceholders["admobAppId"] = "ca-app-pub-8178045957849630~2823451917"
         }
         debug {
             manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
         }
     }
+
+    // ═══ Play Store AAB + APK outputs ═══
+    bundle {
+        language.enableSplit = false
+        density.enableSplit = false
+        abi.enableSplit = false
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
