@@ -858,6 +858,26 @@ class SpellTypeIME : InputMethodService() {
                 glitterEnabled
     }
 
+    /** Apply all active styles to composing text for live preview in input field */
+    private fun applyComposingStyle(text: String): String {
+        var processed = UnicodeStylingEngine.applyStyle(text, activeUnicode)
+        if (glitterEnabled) {
+            val glitterSymbols = listOf("✨", "🌟", "⭐", "💫")
+            val words = processed.split(" ")
+            val sb = StringBuilder()
+            for (i in words.indices) {
+                sb.append(words[i])
+                if (i < words.size - 1) {
+                    sb.append(" ${glitterSymbols[i % glitterSymbols.size]} ")
+                }
+            }
+            processed = if (words.size == 1) "✨ $processed ✨" else sb.toString()
+        }
+        processed = ShapeEngine.applyShape(processed, activeShape)
+        processed = ArtEngine.applyFrame(processed, activeStyle)
+        return processed
+    }
+
     private fun handleKeyClick(text: String) {
         try {
             val ic: InputConnection = currentInputConnection ?: return
@@ -865,7 +885,9 @@ class SpellTypeIME : InputMethodService() {
                 ic.commitText(text, 1)
             } else {
                 composingText.append(text)
-                ic.setComposingText(composingText.toString(), 1)
+                // Apply styling live so user sees styled text in the input field
+                val styled = applyComposingStyle(composingText.toString())
+                ic.setComposingText(styled, 1)
                 updateLivePreviewBar()
                 updateSuggestionsBar()
             }
@@ -970,7 +992,8 @@ class SpellTypeIME : InputMethodService() {
                 if (composingText.isEmpty()) {
                     ic.commitText("", 1)
                 } else {
-                    ic.setComposingText(composingText.toString(), 1)
+                    val styled = applyComposingStyle(composingText.toString())
+                    ic.setComposingText(styled, 1)
                 }
                 updateLivePreviewBar()
                 updateSuggestionsBar()
@@ -1789,6 +1812,7 @@ class SpellTypeIME : InputMethodService() {
     // ═══════════════════════════════════════════════════════════════
 
     private var controlCenterActive = false
+    private var simpleModeActive = false
 
     private fun toggleControlCenter() {
         val root = keyboardRootView ?: return
@@ -1803,6 +1827,35 @@ class SpellTypeIME : InputMethodService() {
         } else {
             keysContainer.visibility = View.VISIBLE
             controlCenter.visibility = View.GONE
+        }
+    }
+
+    /** Toggle Simple Keyboard Mode — hides all toolbars, shows only keys */
+    private fun applySimpleMode() {
+        val root = keyboardRootView ?: return
+        val headerBar = root.findViewById<View>(R.id.keyboard_root)?.let {
+            (it as? android.widget.LinearLayout)?.getChildAt(1) // Header bar
+        }
+        val artBar = root.findViewById<View>(R.id.quick_art_container)?.parent?.parent
+        val suggestionsBar = root.findViewById<View>(R.id.ai_suggestions_bar)
+        val proToolsBar = root.findViewById<View>(R.id.pro_tools_bar)
+        val keysContainer = root.findViewById<View>(R.id.keyboard_keys_container)
+
+        if (simpleModeActive) {
+            // Hide everything except keyboard keys
+            headerBar?.visibility = View.GONE
+            artBar?.visibility = View.GONE
+            suggestionsBar?.visibility = View.GONE
+            proToolsBar?.visibility = View.GONE
+            // Also hide number row for ultra-simple
+            root.findViewById<View>(R.id.number_row)?.visibility = View.GONE
+        } else {
+            // Restore all bars
+            headerBar?.visibility = View.VISIBLE
+            artBar?.visibility = View.VISIBLE
+            if (autoSuggestionsEnabled) suggestionsBar?.visibility = View.VISIBLE
+            proToolsBar?.visibility = View.VISIBLE
+            if (numberRowEnabled) root.findViewById<View>(R.id.number_row)?.visibility = View.VISIBLE
         }
     }
 
@@ -2130,6 +2183,16 @@ class SpellTypeIME : InputMethodService() {
             premiumUnlocked = adFreeSandboxEnabled
             btnAdFree.text = "🛡️ Ad-Free Sandbox: ${if (adFreeSandboxEnabled) "ON" else "OFF"}"
             updateKeyboardAdBanners()
+        }
+
+        // Simple Keyboard Mode
+        val btnSimpleMode = root.findViewById<TextView>(R.id.btn_opt_simple_mode)
+        btnSimpleMode?.text = "🔇 Simple Keyboard: ${if (simpleModeActive) "ON" else "OFF"}"
+        btnSimpleMode?.setOnClickListener {
+            onKeyClickFeedback(it)
+            simpleModeActive = !simpleModeActive
+            btnSimpleMode.text = "🔇 Simple Keyboard: ${if (simpleModeActive) "ON" else "OFF"}"
+            applySimpleMode()
         }
     }
 

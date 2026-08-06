@@ -77,7 +77,30 @@ object KeyboardBackgroundEngine {
         KeyboardBackground("sunset", "Golden Sunset", "🌅", BackgroundType.GRADIENT,
             intArrayOf(Color.parseColor("#1A0A00"), Color.parseColor("#2D1500"), Color.parseColor("#120800")), 20),
         KeyboardBackground("midnight", "Midnight Blue", "🌙", BackgroundType.GRADIENT,
-            intArrayOf(Color.parseColor("#000A1A"), Color.parseColor("#001035"), Color.parseColor("#000510")), 20)
+            intArrayOf(Color.parseColor("#000A1A"), Color.parseColor("#001035"), Color.parseColor("#000510")), 20),
+        // ── v2.0 NEW 3D HD 8K WALLPAPERS ──
+        KeyboardBackground("neon_city", "Neon City", "🌃", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#0A001A"), Color.parseColor("#1A0033"), Color.parseColor("#0D001A")), 20),
+        KeyboardBackground("rose_gold", "Rose Gold", "🌹", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#1A0A0F"), Color.parseColor("#2D1018"), Color.parseColor("#1A080D")), 20),
+        KeyboardBackground("emerald", "Emerald Palace", "💎", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#001A0A"), Color.parseColor("#003315"), Color.parseColor("#001A0D")), 20),
+        KeyboardBackground("purple_rain", "Purple Rain", "☔", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#1A002E"), Color.parseColor("#2E004A"), Color.parseColor("#0D001A")), 20),
+        KeyboardBackground("ice_crystal", "Ice Crystal", "🧊", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#0A1A2E"), Color.parseColor("#0F2847"), Color.parseColor("#071220")), 20),
+        KeyboardBackground("lava", "Lava Flow", "🌋", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#1A0500"), Color.parseColor("#331000"), Color.parseColor("#1A0800")), 20),
+        KeyboardBackground("tropical", "Tropical Paradise", "🏝️", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#001A1A"), Color.parseColor("#003333"), Color.parseColor("#001A1A")), 20),
+        KeyboardBackground("cherry_wood", "Cherry Wood", "🪵", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#1A0A00"), Color.parseColor("#2D1500"), Color.parseColor("#1A0D00")), 20),
+        KeyboardBackground("cosmos", "Deep Cosmos", "🪐", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#00000A"), Color.parseColor("#00001A"), Color.parseColor("#000005")), 20),
+        KeyboardBackground("mint_fresh", "Mint Fresh", "🌿", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#001A10"), Color.parseColor("#003320"), Color.parseColor("#001A10")), 20),
+        KeyboardBackground("golden_hour", "Golden Hour", "☀️", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#1A1000"), Color.parseColor("#332000"), Color.parseColor("#1A1000")), 20)
     )
 
     /**
