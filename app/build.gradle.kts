@@ -15,8 +15,8 @@ android {
         applicationId = "com.spelltype.keyboard"
         minSdk = 26
         targetSdk = 34
-        versionCode = 4
-        versionName = "4.00.0"
+        versionCode = 5
+        versionName = "5.00.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

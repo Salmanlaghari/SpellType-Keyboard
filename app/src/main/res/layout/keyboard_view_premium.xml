@@ -276,6 +276,19 @@
             android:layout_marginHorizontal="3dp"
             android:clickable="true"
             android:focusable="true"/>
+
+        <TextView
+            android:id="@+id/tool_transmission"
+            android:layout_width="0dp"
+            android:layout_height="26dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="📡"
+            android:textSize="14sp"
+            android:background="@drawable/chip_inactive_background"
+            android:layout_marginHorizontal="3dp"
+            android:clickable="true"
+            android:focusable="true"/>
     </LinearLayout>
 
     <!-- ═══ Live Preview Bar ═══ -->
@@ -770,6 +783,55 @@
                     android:layout_margin="3dp"/>
 
             </GridLayout>
+
+            <!-- ═══ NEW: Particle Effects Row ═══ -->
+            <TextView
+                android:id="@+id/btn_opt_rain"
+                android:layout_width="0dp"
+                android:layout_columnWeight="1"
+                android:layout_height="36dp"
+                android:text="🌧️ Rain Effect: OFF"
+                android:textColor="#F1F5F9"
+                android:textSize="10sp"
+                android:gravity="center"
+                android:background="@drawable/chip_inactive_background"
+                android:layout_margin="3dp"/>
+
+            <TextView
+                android:id="@+id/btn_opt_cherry"
+                android:layout_width="0dp"
+                android:layout_columnWeight="1"
+                android:layout_height="36dp"
+                android:text="🌸 Cherry Blossom: OFF"
+                android:textColor="#F1F5F9"
+                android:textSize="10sp"
+                android:gravity="center"
+                android:background="@drawable/chip_inactive_background"
+                android:layout_margin="3dp"/>
+
+            <TextView
+                android:id="@+id/btn_opt_snow"
+                android:layout_width="0dp"
+                android:layout_columnWeight="1"
+                android:layout_height="36dp"
+                android:text="❄️ Snow Effect: OFF"
+                android:textColor="#F1F5F9"
+                android:textSize="10sp"
+                android:gravity="center"
+                android:background="@drawable/chip_inactive_background"
+                android:layout_margin="3dp"/>
+
+            <TextView
+                android:id="@+id/btn_opt_sparkle"
+                android:layout_width="0dp"
+                android:layout_columnWeight="1"
+                android:layout_height="36dp"
+                android:text="✨ Sparkle Effect: OFF"
+                android:textColor="#F1F5F9"
+                android:textSize="10sp"
+                android:gravity="center"
+                android:background="@drawable/chip_inactive_background"
+                android:layout_margin="3dp"/>
 
             <!-- Simple Keyboard Mode Toggle -->
             <TextView
