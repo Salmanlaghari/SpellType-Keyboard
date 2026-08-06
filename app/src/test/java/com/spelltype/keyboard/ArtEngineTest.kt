@@ -27,24 +27,21 @@ class ArtEngineTest {
     fun testBoxStyleSingleLine() {
         val input = "Hi"
         val result = ArtEngine.applyFrame(input, FrameStyle.BOX)
-        val expected = "┌────┐\n│ Hi │\n└────┘"
-        assertEquals(expected, result)
+        assertEquals("┌─ Hi ─┐", result)
     }
 
     @Test
-    fun testBoxStyleMultiLine() {
-        val input = "Go\nTeam"
-        val result = ArtEngine.applyFrame(input, FrameStyle.BOX)
-        val expected = "┌──────┐\n│ Go   │\n│ Team │\n└──────┘"
-        assertEquals(expected, result)
+    fun testBoxDoubleStyle() {
+        val input = "Hello"
+        val result = ArtEngine.applyFrame(input, FrameStyle.BOX_DOUBLE)
+        assertEquals("╔═ Hello ═╗", result)
     }
 
     @Test
     fun testStarStyle() {
         val input = "Ok"
         val result = ArtEngine.applyFrame(input, FrameStyle.STAR)
-        val expected = "★★★★★★\n★ Ok ★\n★★★★★★"
-        assertEquals(expected, result)
+        assertEquals("★★★ Ok ★★★", result)
     }
 
     @Test
@@ -58,28 +55,44 @@ class ArtEngineTest {
     fun testDiamondStyle() {
         val input = "Yay"
         val result = ArtEngine.applyFrame(input, FrameStyle.DIAMOND)
-        val expected = "◆◆◆◆◆◆◆\n◆ Yay ◆\n◆◆◆◆◆◆◆"
-        assertEquals(expected, result)
+        assertEquals("◆◆◆ Yay ◆◆◆", result)
     }
 
     @Test
     fun testFloralStyle() {
-        val input = "✿"
+        val input = "Hello"
         val result = ArtEngine.applyFrame(input, FrameStyle.FLORAL)
         assertTrue(result.contains("✿"))
+        assertTrue(result.contains("Hello"))
     }
 
     @Test
     fun testGemStyle() {
-        val input = "💎"
+        val input = "Hi"
         val result = ArtEngine.applyFrame(input, FrameStyle.GEM)
         assertTrue(result.contains("💎"))
+        assertTrue(result.contains("Hi"))
     }
 
     @Test
     fun testCloverStyle() {
-        val input = "🍀"
+        val input = "Test"
         val result = ArtEngine.applyFrame(input, FrameStyle.CLOVER)
         assertTrue(result.contains("🍀"))
+        assertTrue(result.contains("Test"))
+    }
+
+    @Test
+    fun testArrowStyle() {
+        val input = "Go"
+        val result = ArtEngine.applyFrame(input, FrameStyle.ARROW)
+        assertEquals("◀══ Go ══▶", result)
+    }
+
+    @Test
+    fun testHeartsStyle() {
+        val input = "Love"
+        val result = ArtEngine.applyFrame(input, FrameStyle.HEARTS)
+        assertEquals("♥♥♥ Love ♥♥♥", result)
     }
 }
