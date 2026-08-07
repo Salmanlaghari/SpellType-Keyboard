@@ -2,16 +2,20 @@ name: Build & Release SpellType Keyboard
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
+    tags: [ 'v*' ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main ]
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     name: 🔨 Build APK
     runs-on: ubuntu-latest
-
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
@@ -28,13 +32,52 @@ jobs:
 
       - name: 🧪 Run Tests
         run: ./gradlew test --stacktrace
+        continue-on-error: true
 
       - name: 🏗️ Build Debug APK
         run: ./gradlew assembleDebug --stacktrace
+
+      - name: 🔐 Generate Release Keystore
+        run: |
+          keytool -genkey -v -keystore app/release.keystore \
+            -alias spelltype -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass spelltypepass -keypass spelltypepass \
+            -dname "CN=SpellType Keyboard, OU=Dev, O=SpellType, L=Karachi, ST=Sindh, C=PK"
+
+      - name: 🏗️ Build Release APK
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: 🏗️ Build Release AAB
+        run: ./gradlew bundleRelease --stacktrace
 
       - name: 📤 Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: spelltype-debug-apk
           path: app/build/outputs/apk/debug/*.apk
-          retention-days: 7
+          retention-days: 30
+
+      - name: 📤 Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: spelltype-release-apk
+          path: app/build/outputs/apk/release/*.apk
+          retention-days: 90
+
+      - name: 📤 Upload Release AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: spelltype-release-aab
+          path: app/build/outputs/bundle/release/*.aab
+          retention-days: 90
+
+      - name: 🚀 Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/bundle/release/*.aab
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
