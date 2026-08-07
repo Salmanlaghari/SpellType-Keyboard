@@ -29,28 +29,29 @@ android {
             val envKeyAlias = System.getenv("KEY_ALIAS")
             val envKeyPass = System.getenv("KEY_PASSWORD")
 
+            val keystorePropertiesFile = rootProject.file("keystore.properties")
             if (envStoreFile != null && envStorePass != null) {
                 // CI environment — use env vars
                 storeFile = file(envStoreFile)
                 storePassword = envStorePass
                 keyAlias = envKeyAlias ?: "spelltype"
                 keyPassword = envKeyPass ?: envStorePass
+            } else if (keystorePropertiesFile.exists()) {
+                val keystoreProperties = Properties()
+                keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
             } else {
-                val keystorePropertiesFile = rootProject.file("keystore.properties")
-                if (keystorePropertiesFile.exists()) {
-                    val keystoreProperties = Properties()
-                    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
-                    storeFile = file(keystoreProperties["storeFile"] as String)
-                    storePassword = keystoreProperties["storePassword"] as String
-                    keyAlias = keystoreProperties["keyAlias"] as String
-                    keyPassword = keystoreProperties["keyPassword"] as String
-                } else {
-                    // Fallback for local/test builds
-                    storeFile = file("release.keystore")
-                    storePassword = "spelltypepass"
-                    keyAlias = "spelltype"
-                    keyPassword = "spelltypepass"
-                }
+                // No signing material available. Do NOT fall back to hardcoded
+                // credentials — configure the KEYSTORE_* env vars (see CI) or a
+                // local keystore.properties (see keystore.properties.example).
+                logger.warn(
+                    "No release signing config found: set KEYSTORE_FILE/KEYSTORE_PASSWORD/" +
+                        "KEY_ALIAS/KEY_PASSWORD env vars or create keystore.properties. " +
+                        "The release build will be unsigned."
+                )
             }
         }
     }
