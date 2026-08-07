@@ -17,14 +17,13 @@ import com.salmanlaghari.spelltypekeyboard.databinding.ActivitySettingsBinding
 import com.salmanlaghari.spelltypekeyboard.data.db.SpellTypeDatabase
 import com.salmanlaghari.spelltypekeyboard.data.datastore.KeyboardPreferences
 import com.salmanlaghari.spelltypekeyboard.data.repository.KeyboardRepositoryImpl
-import com.salmanlaghari.spelltypekeyboard.domain.ArtEngine
-import com.salmanlaghari.spelltypekeyboard.domain.ShapeEngine
-import com.salmanlaghari.spelltypekeyboard.domain.UnicodeStylingEngine
 import com.salmanlaghari.spelltypekeyboard.domain.features.SettingsManager
 import com.salmanlaghari.spelltypekeyboard.domain.PreviewStyler
+import com.salmanlaghari.spelltypekeyboard.domain.TextArtFormatter
 import com.salmanlaghari.spelltypekeyboard.domain.model.FrameStyle
 import com.salmanlaghari.spelltypekeyboard.domain.model.ShapeLayout
 import com.salmanlaghari.spelltypekeyboard.domain.model.UnicodeStyle
+import com.salmanlaghari.spelltypekeyboard.presentation.common.setChipSelected
 import kotlinx.coroutines.launch
 
 class SettingsActivity : AppCompatActivity() {
@@ -551,79 +550,79 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun updateFrameHighlighting(active: FrameStyle) {
-        binding.settChipNone.setBackgroundResource(if (active == FrameStyle.NONE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settChipBox.setBackgroundResource(if (active == FrameStyle.BOX) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settChipBoxDouble.setBackgroundResource(if (active == FrameStyle.BOX_DOUBLE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settChipBoxRounded.setBackgroundResource(if (active == FrameStyle.BOX_ROUNDED) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settChipStar.setBackgroundResource(if (active == FrameStyle.STAR) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settChipDiamond.setBackgroundResource(if (active == FrameStyle.DIAMOND) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settChipFire.setBackgroundResource(if (active == FrameStyle.FIRE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settChipHearts.setBackgroundResource(if (active == FrameStyle.HEARTS) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settChipSparks.setBackgroundResource(if (active == FrameStyle.SPARKS) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settChipParty.setBackgroundResource(if (active == FrameStyle.PARTY) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settChipNone.setChipSelected(active == FrameStyle.NONE)
+        binding.settChipBox.setChipSelected(active == FrameStyle.BOX)
+        binding.settChipBoxDouble.setChipSelected(active == FrameStyle.BOX_DOUBLE)
+        binding.settChipBoxRounded.setChipSelected(active == FrameStyle.BOX_ROUNDED)
+        binding.settChipStar.setChipSelected(active == FrameStyle.STAR)
+        binding.settChipDiamond.setChipSelected(active == FrameStyle.DIAMOND)
+        binding.settChipFire.setChipSelected(active == FrameStyle.FIRE)
+        binding.settChipHearts.setChipSelected(active == FrameStyle.HEARTS)
+        binding.settChipSparks.setChipSelected(active == FrameStyle.SPARKS)
+        binding.settChipParty.setChipSelected(active == FrameStyle.PARTY)
     }
 
     private fun updateShapeHighlighting(active: ShapeLayout) {
-        binding.settShapeNone.setBackgroundResource(if (active == ShapeLayout.NONE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settShapePyramid.setBackgroundResource(if (active == ShapeLayout.PYRAMID) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settShapeHeart.setBackgroundResource(if (active == ShapeLayout.HEART) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settShapeDiamond.setBackgroundResource(if (active == ShapeLayout.DIAMOND) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settShapeZigzag.setBackgroundResource(if (active == ShapeLayout.ZIGZAG) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settShapeWave.setBackgroundResource(if (active == ShapeLayout.WAVE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settShapeCircle.setBackgroundResource(if (active == ShapeLayout.CIRCLE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settShapeLove.setBackgroundResource(if (active == ShapeLayout.LOVE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settShapeRevenge.setBackgroundResource(if (active == ShapeLayout.REVENGE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settShapePubg.setBackgroundResource(if (active == ShapeLayout.PUBG) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settShapeSocial.setBackgroundResource(if (active == ShapeLayout.SOCIAL_MEDIA) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settShapeNone.setChipSelected(active == ShapeLayout.NONE)
+        binding.settShapePyramid.setChipSelected(active == ShapeLayout.PYRAMID)
+        binding.settShapeHeart.setChipSelected(active == ShapeLayout.HEART)
+        binding.settShapeDiamond.setChipSelected(active == ShapeLayout.DIAMOND)
+        binding.settShapeZigzag.setChipSelected(active == ShapeLayout.ZIGZAG)
+        binding.settShapeWave.setChipSelected(active == ShapeLayout.WAVE)
+        binding.settShapeCircle.setChipSelected(active == ShapeLayout.CIRCLE)
+        binding.settShapeLove.setChipSelected(active == ShapeLayout.LOVE)
+        binding.settShapeRevenge.setChipSelected(active == ShapeLayout.REVENGE)
+        binding.settShapePubg.setChipSelected(active == ShapeLayout.PUBG)
+        binding.settShapeSocial.setChipSelected(active == ShapeLayout.SOCIAL_MEDIA)
     }
 
     private fun updateUnicodeHighlighting(active: UnicodeStyle) {
-        binding.settUnicodeNone.setBackgroundResource(if (active == UnicodeStyle.NONE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settUnicodeBold.setBackgroundResource(if (active == UnicodeStyle.BOLD) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settUnicodeItalic.setBackgroundResource(if (active == UnicodeStyle.ITALIC) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settUnicodeGothic.setBackgroundResource(if (active == UnicodeStyle.GOTHIC) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settUnicodeCursive.setBackgroundResource(if (active == UnicodeStyle.CURSIVE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settUnicodeCircled.setBackgroundResource(if (active == UnicodeStyle.CIRCLED) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settUnicodeSquared.setBackgroundResource(if (active == UnicodeStyle.SQUARED) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settUnicodeSquaredSolid.setBackgroundResource(if (active == UnicodeStyle.SQUARED_SOLID) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.settUnicodeBubble.setBackgroundResource(if (active == UnicodeStyle.BUBBLE) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.settUnicodeNone.setChipSelected(active == UnicodeStyle.NONE)
+        binding.settUnicodeBold.setChipSelected(active == UnicodeStyle.BOLD)
+        binding.settUnicodeItalic.setChipSelected(active == UnicodeStyle.ITALIC)
+        binding.settUnicodeGothic.setChipSelected(active == UnicodeStyle.GOTHIC)
+        binding.settUnicodeCursive.setChipSelected(active == UnicodeStyle.CURSIVE)
+        binding.settUnicodeCircled.setChipSelected(active == UnicodeStyle.CIRCLED)
+        binding.settUnicodeSquared.setChipSelected(active == UnicodeStyle.SQUARED)
+        binding.settUnicodeSquaredSolid.setChipSelected(active == UnicodeStyle.SQUARED_SOLID)
+        binding.settUnicodeBubble.setChipSelected(active == UnicodeStyle.BUBBLE)
     }
 
     private fun updateHeightHighlighting(active: String) {
-        binding.heightSmall.setBackgroundResource(if (active == "SMALL") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.heightMedium.setBackgroundResource(if (active == "MEDIUM") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.heightLarge.setBackgroundResource(if (active == "LARGE") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.heightSmall.setChipSelected(active == "SMALL")
+        binding.heightMedium.setChipSelected(active == "MEDIUM")
+        binding.heightLarge.setChipSelected(active == "LARGE")
     }
 
     private fun updateThemeHighlighting(theme: String) {
-        binding.themeDark.setBackgroundResource(if (theme == "DARK") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.themeAmoled.setBackgroundResource(if (theme == "AMOLED") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.themeLight.setBackgroundResource(if (theme == "LIGHT") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.themeBlue.setBackgroundResource(if (theme == "BLUE") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.themePurple.setBackgroundResource(if (theme == "PURPLE") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.themeGreen.setBackgroundResource(if (theme == "GREEN") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.themeDark.setChipSelected(theme == "DARK")
+        binding.themeAmoled.setChipSelected(theme == "AMOLED")
+        binding.themeLight.setChipSelected(theme == "LIGHT")
+        binding.themeBlue.setChipSelected(theme == "BLUE")
+        binding.themePurple.setChipSelected(theme == "PURPLE")
+        binding.themeGreen.setChipSelected(theme == "GREEN")
     }
 
     private fun updateWallpaperHighlighting(path: String) {
-        binding.wallNone.setBackgroundResource(if (path.isEmpty()) R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.wallOcean.setBackgroundResource(if (path == "OCEAN") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.wallSunset.setBackgroundResource(if (path == "SUNSET") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.wallMidnight.setBackgroundResource(if (path == "MIDNIGHT") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.wallGlass.setBackgroundResource(if (path == "GLASS") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.wallNone.setChipSelected(path.isEmpty())
+        binding.wallOcean.setChipSelected(path == "OCEAN")
+        binding.wallSunset.setChipSelected(path == "SUNSET")
+        binding.wallMidnight.setChipSelected(path == "MIDNIGHT")
+        binding.wallGlass.setChipSelected(path == "GLASS")
     }
 
     private fun updateKeyShapeHighlighting(shape: String) {
-        binding.shapeRounded.setBackgroundResource(if (shape == "ROUNDED") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.shapeSquare.setBackgroundResource(if (shape == "SQUARE") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.shapeCircular.setBackgroundResource(if (shape == "CIRCULAR") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.shapeGlassmorphic.setBackgroundResource(if (shape == "GLASSMORPHISM") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.shapeRounded.setChipSelected(shape == "ROUNDED")
+        binding.shapeSquare.setChipSelected(shape == "SQUARE")
+        binding.shapeCircular.setChipSelected(shape == "CIRCULAR")
+        binding.shapeGlassmorphic.setChipSelected(shape == "GLASSMORPHISM")
     }
 
     private fun updateKeyTextSizeHighlighting(size: String) {
-        binding.txtSizeSmall.setBackgroundResource(if (size == "SMALL") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.txtSizeMedium.setBackgroundResource(if (size == "MEDIUM") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.txtSizeLarge.setBackgroundResource(if (size == "LARGE") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.txtSizeHuge.setBackgroundResource(if (size == "HUGE") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.txtSizeSmall.setChipSelected(size == "SMALL")
+        binding.txtSizeMedium.setChipSelected(size == "MEDIUM")
+        binding.txtSizeLarge.setChipSelected(size == "LARGE")
+        binding.txtSizeHuge.setChipSelected(size == "HUGE")
     }
 
     private fun updateLivePreview() {
@@ -633,33 +632,14 @@ class SettingsActivity : AppCompatActivity() {
             return
         }
 
-        val unicode = viewModel.selectedUnicodeStyle.value
-        val shape = viewModel.selectedShapeLayout.value
-        val frame = viewModel.selectedFrameStyle.value
-        val glitter = viewModel.glitterEnabled.value
-        val signature = viewModel.customSignature.value
-
-        var processed = UnicodeStylingEngine.applyStyle(text, unicode)
-
-        if (glitter) {
-            val glitterSymbols = listOf("✨", "🌟", "⭐", "💫")
-            val words = processed.split(" ")
-            val sb = StringBuilder()
-            for (i in words.indices) {
-                sb.append(words[i])
-                if (i < words.size - 1) {
-                    val symbol = glitterSymbols[i % glitterSymbols.size]
-                    sb.append(" $symbol ")
-                }
-            }
-            processed = if (words.size == 1) "✨ $processed ✨" else sb.toString()
-        }
-
-        processed = ShapeEngine.applyShape(processed, shape)
-        processed = ArtEngine.applyFrame(processed, frame)
-        if (signature.isNotEmpty()) {
-            processed = "$processed\n$signature"
-        }
+        val processed = TextArtFormatter.format(
+            text = text,
+            style = viewModel.selectedFrameStyle.value,
+            shape = viewModel.selectedShapeLayout.value,
+            unicode = viewModel.selectedUnicodeStyle.value,
+            glitterEnabled = viewModel.glitterEnabled.value,
+            signature = viewModel.customSignature.value
+        )
 
         // Apply Rainbow Coloring and Giant Sizing preview style dynamically
         binding.tvRealtimePreview.text = PreviewStyler.stylePreview(

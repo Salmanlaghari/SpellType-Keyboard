@@ -15,7 +15,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.salmanlaghari.spelltypekeyboard.R
 import com.salmanlaghari.spelltypekeyboard.core.AppLog
 import com.salmanlaghari.spelltypekeyboard.databinding.ActivityArtGalleryBinding
 import com.salmanlaghari.spelltypekeyboard.data.db.SpellTypeDatabase
@@ -23,6 +22,7 @@ import com.salmanlaghari.spelltypekeyboard.data.datastore.KeyboardPreferences
 import com.salmanlaghari.spelltypekeyboard.data.repository.KeyboardRepositoryImpl
 import com.salmanlaghari.spelltypekeyboard.domain.StyleCategorizer
 import com.salmanlaghari.spelltypekeyboard.domain.model.FrameStyle
+import com.salmanlaghari.spelltypekeyboard.presentation.common.setChipSelected
 import kotlinx.coroutines.launch
 
 class ArtGalleryActivity : AppCompatActivity() {
@@ -85,11 +85,11 @@ class ArtGalleryActivity : AppCompatActivity() {
     }
 
     private fun updateTabsHighlighting() {
-        binding.tabAll.setBackgroundResource(if (activeCategory == "All") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.tabClassic.setBackgroundResource(if (activeCategory == "Classic") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.tabSymbol.setBackgroundResource(if (activeCategory == "Symbol") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.tabEmoji.setBackgroundResource(if (activeCategory == "Emoji") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
-        binding.tabFavorites.setBackgroundResource(if (activeCategory == "Favorites") R.drawable.chip_active_background else R.drawable.chip_inactive_background)
+        binding.tabAll.setChipSelected(activeCategory == "All")
+        binding.tabClassic.setChipSelected(activeCategory == "Classic")
+        binding.tabSymbol.setChipSelected(activeCategory == "Symbol")
+        binding.tabEmoji.setChipSelected(activeCategory == "Emoji")
+        binding.tabFavorites.setChipSelected(activeCategory == "Favorites")
     }
 
     private fun observeState() {
