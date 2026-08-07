@@ -37,19 +37,6 @@ jobs:
       - name: 🏗️ Build Debug APK
         run: ./gradlew assembleDebug --stacktrace
 
-      - name: 🔐 Generate ephemeral signing key
-        run: |
-          KS_PASS="$(openssl rand -base64 24)"
-          keytool -genkey -v -keystore app/release.keystore \
-            -alias spelltype -keyalg RSA -keysize 2048 -validity 10000 \
-            -storepass "$KS_PASS" -keypass "$KS_PASS" \
-            -dname "CN=SpellType Keyboard, OU=Dev, O=SpellType, L=Karachi, ST=Sindh, C=PK"
-          echo "KEYSTORE_FILE=release.keystore" >> "$GITHUB_ENV"
-          echo "KEY_ALIAS=spelltype" >> "$GITHUB_ENV"
-          echo "::add-mask::$KS_PASS"
-          echo "KEYSTORE_PASSWORD=$KS_PASS" >> "$GITHUB_ENV"
-          echo "KEY_PASSWORD=$KS_PASS" >> "$GITHUB_ENV"
-
       - name: 🏗️ Build Release APK
         run: ./gradlew assembleRelease --stacktrace
 
