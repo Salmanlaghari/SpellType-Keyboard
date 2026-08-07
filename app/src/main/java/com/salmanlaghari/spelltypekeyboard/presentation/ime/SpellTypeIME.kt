@@ -166,7 +166,13 @@ class SpellTypeIME : InputMethodService() {
         "👽", "🧸", "🍭", "🎁", "🚀", "🛸", "🎮", "🍕", "🥑", "🦁",
         "🦄", "🌈", "🌍", "⚡", "🔮", "🧬", "🧸", "🦾", "🧿", "🎨",
         "🎸", "🛹", "🍿", "🍩", "🍦", "🧁", "🍹", "🍷", "🔔", "📿",
-        "🥺", "🥰", "🥶", "🥳", "🤠", "🤖"
+        "🥺", "🥰", "🥶", "🥳", "🤠", "🤖", "💪", "🏆", "🎯", "💡",
+        "📱", "💻", "🎧", "📸", "🎬", "🏋️", "🧘", "✈️", "🏕️", "🏔️",
+        "🌊", "🌅", "🌌", "🦋", "🐝", "🌺", "🌻", "🌹", "🍀", "🌴",
+        "🐶", "🐱", "🐼", "🐨", "🦊", "🐰", "🐻", "🦁", "🐯", "🐸",
+        "❤️", "💕", "💞", "💓", "💗", "💖", "💘", "💝", "💟", "🫶",
+        "😊", "😂", "🤣", "😍", "🤩", "😎", "🥳", "😇", "🤗", "😋",
+        "👍", "👎", "👏", "🙌", "🤝", "✌️", "🤞", "🫰", "👋", "🤙"
     )
 
     private var isEmojiMode = false
@@ -1147,7 +1153,17 @@ class SpellTypeIME : InputMethodService() {
                 "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n  𝕳𝖊𝖆𝖛𝖞 𝕯𝖊𝖈𝖔𝖗𝖆𝖙𝖎𝖛𝖊 𝕷𝖎𝖓𝖊\n▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
                 "🖤 𝔖𝔭𝔢𝔩𝔩𝔗𝔶𝔭𝔢 𝔊𝔬𝔱𝔥𝔦𝔠 𝔖𝔦𝔤𝔫𝔢𝔱 🖤",
                 "🔥 𝓕𝓲𝓻𝓮 𝓑𝓵𝓪𝓼𝓽 𝓔𝓶𝓸𝓳𝓲 𝓑𝓪𝓷𝓷𝓮𝓻 🔥\n 🔥☄️💥🌋🧨",
-                "⭐ 𝒲𝒾𝓈𝒽 𝒰𝓅𝑜𝓃 𝒜 𝒮𝓉𝒶𝓇 ⭐"
+                "⭐ 𝒲𝒾𝓈𝒽 𝒰𝓅𝑜𝓃 𝒜 𝒮𝓉𝒶𝓇 ⭐",
+                "🎮 𝓖𝓪𝓶𝓮𝓻𝓼 𝓤𝓷𝓲𝓽𝓮𝓭 🎮\n 🕹️👾🎯🏆💪",
+                "💻 𝓒𝓸𝓭𝓮𝓻𝓼 𝓛𝓲𝓯𝓮 💻\n { } = Life; 🐛 = Enemy",
+                "🎵 𝓜𝓾𝓼𝓲𝓬 𝓛𝓸𝓿𝓮𝓻 🎵\n 🎸🎹🥁🎤🎧",
+                "📚 𝓑𝓸𝓸𝓴 𝓦𝓸𝓻𝓶 📚\n Reading is dreaming\n with open eyes ✨",
+                "🏋️ 𝓕𝓲𝓽𝓷𝓮𝓼𝓼 𝓖𝓸𝓪𝓵𝓼 🏋️\n 💪 No Pain, No Gain 💪",
+                "✈️ 𝓣𝓻𝓪𝓿𝓮𝓵 𝓓𝓲𝓪𝓻𝔂 ✈️\n 🌍🗺️🧳📸✨",
+                "🍕 𝓕𝓸𝓸𝓭𝓲𝓮 𝓛𝓲𝓯𝓮 🍕\n 🍔🌮🍣🧁🍩",
+                "🎬 𝓜𝓸𝓿𝓲𝓮 𝓑𝓾𝓯𝓯 🎬\n 🍿🎥🎭📽️🎞️",
+                "🌅 𝓟𝓮𝓪𝓬𝓮𝓯𝓾𝓵 𝓢𝓸𝓾𝓵 🌅\n 🧘‍♀️☮️🕊️🌿💚",
+                "⚡ 𝓢𝓹𝓮𝓵𝓵𝓣𝔂𝓹𝓮 𝓟𝓸𝔀𝓮𝓻 ⚡\n ✨🔥💫🌟⭐"
             )
             val index = templateIndex
             templateIndex = (templateIndex + 1) % templates.size
@@ -2775,7 +2791,28 @@ class SpellTypeIME : InputMethodService() {
             q.contains("google") -> "Google LLC is an American multinational technology company focusing on artificial intelligence, search engine technology, and online advertising."
             q.contains("android") -> "Android is a mobile operating system based on a modified version of the Linux kernel and other open-source software, designed primarily for touchscreen mobile devices."
             q.contains("kotlin") -> "Kotlin is a cross-platform, statically typed, general-purpose programming language with type inference, designed to interoperate fully with Java."
-            else -> "Google AI found that '$query' represents an interesting concept connected to advanced technology, learning, and human curiosity! 🚀"
+            q.contains("python") -> "Python is a high-level, general-purpose programming language. Its design philosophy emphasizes code readability with the use of significant indentation."
+            q.contains("javascript") -> "JavaScript, often abbreviated as JS, is a programming language that is one of the core technologies of the World Wide Web, alongside HTML and CSS."
+            q.contains("machine learning") || q.contains("ml") -> "Machine learning is a subset of artificial intelligence that focuses on building systems that learn from data. It includes supervised, unsupervised, and reinforcement learning."
+            q.contains("blockchain") -> "Blockchain is a distributed ledger technology that records transactions across many computers so that the records cannot be altered retroactively."
+            q.contains("climate") || q.contains("global warming") -> "Climate change refers to long-term shifts in temperatures and weather patterns. Human activities have been the main driver of climate change since the 1800s."
+            q.contains("pakistan") -> "Pakistan is a country in South Asia. It is the fifth-most populous country with a population exceeding 230 million. Capital: Islamabad."
+            q.contains("islam") || q.contains("quran") -> "Islam is a monotheistic Abrahamic religion founded in the 7th century CE. The Quran is its holy book, believed to be the word of God as revealed to Prophet Muhammad."
+            q.contains("cricket") -> "Cricket is a bat-and-ball game played between two teams of eleven players on a field. It originated in England and is now popular worldwide, especially in South Asia."
+            q.contains("football") || q.contains("soccer") -> "Football (soccer) is the world's most popular sport, played by over 250 million players in over 200 countries. The FIFA World Cup is its premier tournament."
+            q.contains("music") -> "Music is the art of arranging sound in time through melody, harmony, rhythm, and timbre. It is a universal cultural phenomenon present in all human societies."
+            q.contains("ai") || q.contains("artificial intelligence") -> "Artificial Intelligence (AI) is the simulation of human intelligence processes by computer systems, including learning, reasoning, and self-correction."
+            q.contains("space") || q.contains("nasa") -> "Space exploration is the use of astronomy and space technology to explore outer space. NASA, SpaceX, and other organizations are leading the way to Mars and beyond."
+            q.contains("health") || q.contains("fitness") -> "Health and fitness encompass physical, mental, and social well-being. Regular exercise, balanced nutrition, and adequate sleep are key pillars of good health."
+            q.contains("recipe") || q.contains("cook") -> "Cooking is the art and science of preparing food for consumption. It involves combining ingredients using various techniques to create nutritious and delicious meals."
+            q.contains("game") || q.contains("gaming") -> "Gaming is a multi-billion dollar industry encompassing video games, mobile games, and esports. Popular genres include action, RPG, strategy, and simulation."
+            q.contains("photography") -> "Photography is the art of capturing light with a camera. It involves composition, lighting, exposure, and post-processing to create compelling visual stories."
+            q.contains("travel") -> "Travel is the movement of people between distant geographical locations. It can be for leisure, business, or exploration, broadening perspectives and creating memories."
+            q.contains("education") -> "Education is the process of facilitating learning and acquiring knowledge, skills, values, and habits. It is a fundamental human right and key to development."
+            q.contains("startup") || q.contains("business") -> "A startup is a young company founded to develop a unique product or service. Key elements include innovation, scalability, and solving real-world problems."
+            q.contains("bitcoin") || q.contains("crypto") -> "Bitcoin is a decentralized digital currency created in 2009. Cryptocurrency uses cryptography for security and operates on blockchain technology."
+            q.contains("spelltype") -> "SpellType Keyboard is an advanced, ultra-customizable Android keyboard that features 3D rendering, AI suggestions, 130+ languages, and automatic unicode stylized outputs! 🚀"
+            else -> "SpellType AI found that '$query' is an interesting topic! For detailed results, try searching on your favorite search engine. 🚀"
         }
     }
 }
