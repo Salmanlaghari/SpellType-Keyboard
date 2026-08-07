@@ -4,11 +4,14 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
+import com.salmanlaghari.spelltypekeyboard.core.AppLog
 import com.salmanlaghari.spelltypekeyboard.domain.model.FrameStyle
 import com.salmanlaghari.spelltypekeyboard.domain.model.ShapeLayout
 import com.salmanlaghari.spelltypekeyboard.domain.model.UnicodeStyle
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import java.io.IOException
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "spelltype_settings")
 
@@ -45,127 +48,150 @@ class KeyboardPreferences(private val context: Context) {
         val KEY_TEXT_SIZE = stringPreferencesKey("key_text_size")
     }
 
-    val selectedFrameStyleFlow: Flow<FrameStyle> = context.dataStore.data
+    /**
+     * Reads of an unreadable preferences file fall back to defaults instead of cancelling every
+     * collector (which would take the keyboard service down with it). Anything else propagates.
+     */
+    private val preferencesFlow: Flow<Preferences> = context.dataStore.data
+        .catch { error ->
+            if (error is IOException) {
+                AppLog.e("KeyboardPreferences.read", error)
+                emit(emptyPreferences())
+            } else {
+                throw error
+            }
+        }
+
+    private inline fun <reified T : Enum<T>> parseEnum(name: String, default: T): T {
+        return try {
+            enumValueOf<T>(name)
+        } catch (e: IllegalArgumentException) {
+            AppLog.e("KeyboardPreferences.parseEnum(${T::class.java.simpleName})", e)
+            default
+        }
+    }
+
+    val selectedFrameStyleFlow: Flow<FrameStyle> = preferencesFlow
         .map { preferences ->
             val name = preferences[SELECTED_FRAME_STYLE] ?: FrameStyle.NONE.name
-            try { FrameStyle.valueOf(name) } catch (e: Exception) { FrameStyle.NONE }
+            parseEnum(name, FrameStyle.NONE)
         }
 
-    val selectedShapeLayoutFlow: Flow<ShapeLayout> = context.dataStore.data
+    val selectedShapeLayoutFlow: Flow<ShapeLayout> = preferencesFlow
         .map { preferences ->
             val name = preferences[SELECTED_SHAPE_LAYOUT] ?: ShapeLayout.NONE.name
-            try { ShapeLayout.valueOf(name) } catch (e: Exception) { ShapeLayout.NONE }
+            parseEnum(name, ShapeLayout.NONE)
         }
 
-    val selectedUnicodeStyleFlow: Flow<UnicodeStyle> = context.dataStore.data
+    val selectedUnicodeStyleFlow: Flow<UnicodeStyle> = preferencesFlow
         .map { preferences ->
             val name = preferences[SELECTED_UNICODE_STYLE] ?: UnicodeStyle.NONE.name
-            try { UnicodeStyle.valueOf(name) } catch (e: Exception) { UnicodeStyle.NONE }
+            parseEnum(name, UnicodeStyle.NONE)
         }
 
-    val glitterEnabledFlow: Flow<Boolean> = context.dataStore.data
+    val glitterEnabledFlow: Flow<Boolean> = preferencesFlow
         .map { preferences ->
             preferences[GLITTER_ENABLED] ?: false
         }
 
-    val customSignatureFlow: Flow<String> = context.dataStore.data
+    val customSignatureFlow: Flow<String> = preferencesFlow
         .map { preferences ->
             preferences[CUSTOM_SIGNATURE] ?: ""
         }
 
-    val favoriteStylesFlow: Flow<Set<String>> = context.dataStore.data
+    val favoriteStylesFlow: Flow<Set<String>> = preferencesFlow
         .map { preferences ->
             preferences[FAVORITE_STYLES] ?: emptySet()
         }
 
-    val vibrationEnabledFlow: Flow<Boolean> = context.dataStore.data
+    val vibrationEnabledFlow: Flow<Boolean> = preferencesFlow
         .map { preferences ->
             preferences[VIBRATION_ENABLED] ?: true
         }
 
-    val soundEnabledFlow: Flow<Boolean> = context.dataStore.data
+    val soundEnabledFlow: Flow<Boolean> = preferencesFlow
         .map { preferences ->
             preferences[SOUND_ENABLED] ?: true
         }
 
-    val themeSelectionFlow: Flow<String> = context.dataStore.data
+    val themeSelectionFlow: Flow<String> = preferencesFlow
         .map { preferences ->
             preferences[THEME_SELECTION] ?: "DARK"
         }
 
-    val premiumUnlockedFlow: Flow<Boolean> = context.dataStore.data
+    val premiumUnlockedFlow: Flow<Boolean> = preferencesFlow
         .map { preferences ->
             preferences[PREMIUM_UNLOCKED] ?: false
         }
 
     // Phase 6 Flows
-    val colorfulPreviewEnabledFlow: Flow<Boolean> = context.dataStore.data
+    val colorfulPreviewEnabledFlow: Flow<Boolean> = preferencesFlow
         .map { preferences ->
             preferences[COLORFUL_PREVIEW_ENABLED] ?: true
         }
 
-    val giantWordsEnabledFlow: Flow<Boolean> = context.dataStore.data
+    val giantWordsEnabledFlow: Flow<Boolean> = preferencesFlow
         .map { preferences ->
             preferences[GIANT_WORDS_ENABLED] ?: false
         }
 
-    val keyboardHeightFlow: Flow<String> = context.dataStore.data
+    val keyboardHeightFlow: Flow<String> = preferencesFlow
         .map { preferences ->
             preferences[KEYBOARD_HEIGHT] ?: "MEDIUM"
         }
 
-    val vibrationStrengthFlow: Flow<Int> = context.dataStore.data
+    val vibrationStrengthFlow: Flow<Int> = preferencesFlow
         .map { preferences ->
             preferences[VIBRATION_STRENGTH] ?: 50
         }
 
-    val keySoundVolumeFlow: Flow<Int> = context.dataStore.data
+    val keySoundVolumeFlow: Flow<Int> = preferencesFlow
         .map { preferences ->
             preferences[KEY_SOUND_VOLUME] ?: 50
         }
 
-    val numberRowEnabledFlow: Flow<Boolean> = context.dataStore.data
+    val numberRowEnabledFlow: Flow<Boolean> = preferencesFlow
         .map { preferences ->
             preferences[NUMBER_ROW_ENABLED] ?: true
         }
 
-    val autoSuggestionsEnabledFlow: Flow<Boolean> = context.dataStore.data
+    val autoSuggestionsEnabledFlow: Flow<Boolean> = preferencesFlow
         .map { preferences ->
             preferences[AUTO_SUGGESTIONS_ENABLED] ?: true
         }
 
-    val swipeTypingEnabledFlow: Flow<Boolean> = context.dataStore.data
+    val swipeTypingEnabledFlow: Flow<Boolean> = preferencesFlow
         .map { preferences ->
             preferences[SWIPE_TYPING_ENABLED] ?: false
         }
 
     // Premium UI & Upgrades Flow Getters
-    val keyboardWallpaperPathFlow: Flow<String> = context.dataStore.data
+    val keyboardWallpaperPathFlow: Flow<String> = preferencesFlow
         .map { preferences ->
             preferences[KEYBOARD_WALLPAPER_PATH] ?: ""
         }
 
-    val keyboardWallpaperOpacityFlow: Flow<Int> = context.dataStore.data
+    val keyboardWallpaperOpacityFlow: Flow<Int> = preferencesFlow
         .map { preferences ->
             preferences[KEYBOARD_WALLPAPER_OPACITY] ?: 50
         }
 
-    val keyShapeFlow: Flow<String> = context.dataStore.data
+    val keyShapeFlow: Flow<String> = preferencesFlow
         .map { preferences ->
             preferences[KEY_SHAPE] ?: "ROUNDED"
         }
 
-    val keyBorderEnabledFlow: Flow<Boolean> = context.dataStore.data
+    val keyBorderEnabledFlow: Flow<Boolean> = preferencesFlow
         .map { preferences ->
             preferences[KEY_BORDER_ENABLED] ?: true
         }
 
-    val keyBorderThicknessFlow: Flow<Int> = context.dataStore.data
+    val keyBorderThicknessFlow: Flow<Int> = preferencesFlow
         .map { preferences ->
             preferences[KEY_BORDER_THICKNESS] ?: 1
         }
 
-    val keyTextSizeFlow: Flow<String> = context.dataStore.data
+    val keyTextSizeFlow: Flow<String> = preferencesFlow
         .map { preferences ->
             preferences[KEY_TEXT_SIZE] ?: "MEDIUM"
         }
