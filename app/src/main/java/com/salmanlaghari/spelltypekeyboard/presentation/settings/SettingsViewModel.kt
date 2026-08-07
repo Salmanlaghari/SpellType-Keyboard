@@ -9,6 +9,8 @@ import com.salmanlaghari.spelltypekeyboard.domain.model.UnicodeStyle
 import com.salmanlaghari.spelltypekeyboard.domain.model.SavedArt
 import com.salmanlaghari.spelltypekeyboard.domain.repository.KeyboardRepository
 import com.salmanlaghari.spelltypekeyboard.domain.usecase.*
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -22,246 +24,124 @@ class SettingsViewModel(
     private val saveSelectedFrameStyleUseCase: SaveSelectedFrameStyleUseCase
 ) : ViewModel() {
 
-    val savedArtList: StateFlow<List<SavedArt>> = getSavedArtListUseCase()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    private fun <T> Flow<T>.asState(initial: T): StateFlow<T> =
+        stateIn(viewModelScope, SharingStarted.Eagerly, initial)
 
-    val selectedFrameStyle: StateFlow<FrameStyle> = getSelectedFrameStyleUseCase()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, FrameStyle.NONE)
+    private fun launchSave(block: suspend () -> Unit): Job = viewModelScope.launch { block() }
 
-    val selectedShapeLayout: StateFlow<ShapeLayout> = repository.getSelectedShapeLayout()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, ShapeLayout.NONE)
+    val savedArtList: StateFlow<List<SavedArt>> = getSavedArtListUseCase().asState(emptyList())
 
-    val selectedUnicodeStyle: StateFlow<UnicodeStyle> = repository.getSelectedUnicodeStyle()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, UnicodeStyle.NONE)
+    val selectedFrameStyle: StateFlow<FrameStyle> = getSelectedFrameStyleUseCase().asState(FrameStyle.NONE)
 
-    val glitterEnabled: StateFlow<Boolean> = repository.getGlitterEnabled()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+    val selectedShapeLayout: StateFlow<ShapeLayout> = repository.getSelectedShapeLayout().asState(ShapeLayout.NONE)
 
-    val customSignature: StateFlow<String> = repository.getCustomSignature()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, "")
+    val selectedUnicodeStyle: StateFlow<UnicodeStyle> = repository.getSelectedUnicodeStyle().asState(UnicodeStyle.NONE)
 
-    val favoriteStyles: StateFlow<Set<String>> = repository.getFavoriteStyles()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
+    val glitterEnabled: StateFlow<Boolean> = repository.getGlitterEnabled().asState(false)
 
-    val vibrationEnabled: StateFlow<Boolean> = repository.getVibrationEnabled()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+    val customSignature: StateFlow<String> = repository.getCustomSignature().asState("")
 
-    val soundEnabled: StateFlow<Boolean> = repository.getSoundEnabled()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+    val favoriteStyles: StateFlow<Set<String>> = repository.getFavoriteStyles().asState(emptySet())
 
-    val themeSelection: StateFlow<String> = repository.getThemeSelection()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, "DARK")
+    val vibrationEnabled: StateFlow<Boolean> = repository.getVibrationEnabled().asState(true)
 
-    val premiumUnlocked: StateFlow<Boolean> = repository.getPremiumUnlocked()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+    val soundEnabled: StateFlow<Boolean> = repository.getSoundEnabled().asState(true)
+
+    val themeSelection: StateFlow<String> = repository.getThemeSelection().asState("DARK")
+
+    val premiumUnlocked: StateFlow<Boolean> = repository.getPremiumUnlocked().asState(false)
 
     // Phase 6 Flow Exposes
-    val colorfulPreviewEnabled: StateFlow<Boolean> = repository.getColorfulPreviewEnabled()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+    val colorfulPreviewEnabled: StateFlow<Boolean> = repository.getColorfulPreviewEnabled().asState(true)
 
-    val giantWordsEnabled: StateFlow<Boolean> = repository.getGiantWordsEnabled()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+    val giantWordsEnabled: StateFlow<Boolean> = repository.getGiantWordsEnabled().asState(false)
 
-    val keyboardHeight: StateFlow<String> = repository.getKeyboardHeight()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, "MEDIUM")
+    val keyboardHeight: StateFlow<String> = repository.getKeyboardHeight().asState("MEDIUM")
 
-    val vibrationStrength: StateFlow<Int> = repository.getVibrationStrength()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, 50)
+    val vibrationStrength: StateFlow<Int> = repository.getVibrationStrength().asState(50)
 
-    val keySoundVolume: StateFlow<Int> = repository.getKeySoundVolume()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, 50)
+    val keySoundVolume: StateFlow<Int> = repository.getKeySoundVolume().asState(50)
 
-    val numberRowEnabled: StateFlow<Boolean> = repository.getNumberRowEnabled()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+    val numberRowEnabled: StateFlow<Boolean> = repository.getNumberRowEnabled().asState(true)
 
-    val autoSuggestionsEnabled: StateFlow<Boolean> = repository.getAutoSuggestionsEnabled()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+    val autoSuggestionsEnabled: StateFlow<Boolean> = repository.getAutoSuggestionsEnabled().asState(true)
 
-    val swipeTypingEnabled: StateFlow<Boolean> = repository.getSwipeTypingEnabled()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+    val swipeTypingEnabled: StateFlow<Boolean> = repository.getSwipeTypingEnabled().asState(false)
 
     // Premium Configurations StateFlows
-    val keyboardWallpaperPath: StateFlow<String> = repository.getKeyboardWallpaperPath()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, "")
+    val keyboardWallpaperPath: StateFlow<String> = repository.getKeyboardWallpaperPath().asState("")
 
-    val keyboardWallpaperOpacity: StateFlow<Int> = repository.getKeyboardWallpaperOpacity()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, 50)
+    val keyboardWallpaperOpacity: StateFlow<Int> = repository.getKeyboardWallpaperOpacity().asState(50)
 
-    val keyShape: StateFlow<String> = repository.getKeyShape()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, "ROUNDED")
+    val keyShape: StateFlow<String> = repository.getKeyShape().asState("ROUNDED")
 
-    val keyBorderEnabled: StateFlow<Boolean> = repository.getKeyBorderEnabled()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+    val keyBorderEnabled: StateFlow<Boolean> = repository.getKeyBorderEnabled().asState(true)
 
-    val keyBorderThickness: StateFlow<Int> = repository.getKeyBorderThickness()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, 1)
+    val keyBorderThickness: StateFlow<Int> = repository.getKeyBorderThickness().asState(1)
 
-    val keyTextSize: StateFlow<String> = repository.getKeyTextSize()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, "MEDIUM")
+    val keyTextSize: StateFlow<String> = repository.getKeyTextSize().asState("MEDIUM")
 
-    fun selectFrameStyle(style: FrameStyle) {
-        viewModelScope.launch {
-            saveSelectedFrameStyleUseCase(style)
+    fun selectFrameStyle(style: FrameStyle) = launchSave { saveSelectedFrameStyleUseCase(style) }
+
+    fun selectShapeLayout(shape: ShapeLayout) = launchSave { repository.saveSelectedShapeLayout(shape) }
+
+    fun selectUnicodeStyle(style: UnicodeStyle) = launchSave { repository.saveSelectedUnicodeStyle(style) }
+
+    fun setGlitterEnabled(enabled: Boolean) = launchSave { repository.saveGlitterEnabled(enabled) }
+
+    fun setCustomSignature(signature: String) = launchSave { repository.saveCustomSignature(signature) }
+
+    fun toggleFavoriteStyle(style: FrameStyle) = launchSave {
+        val current = favoriteStyles.value.toMutableSet()
+        if (current.contains(style.name)) {
+            current.remove(style.name)
+        } else {
+            current.add(style.name)
         }
-    }
-
-    fun selectShapeLayout(shape: ShapeLayout) {
-        viewModelScope.launch {
-            repository.saveSelectedShapeLayout(shape)
-        }
-    }
-
-    fun selectUnicodeStyle(style: UnicodeStyle) {
-        viewModelScope.launch {
-            repository.saveSelectedUnicodeStyle(style)
-        }
-    }
-
-    fun setGlitterEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            repository.saveGlitterEnabled(enabled)
-        }
-    }
-
-    fun setCustomSignature(signature: String) {
-        viewModelScope.launch {
-            repository.saveCustomSignature(signature)
-        }
-    }
-
-    fun toggleFavoriteStyle(style: FrameStyle) {
-        viewModelScope.launch {
-            val current = favoriteStyles.value.toMutableSet()
-            if (current.contains(style.name)) {
-                current.remove(style.name)
-            } else {
-                current.add(style.name)
-            }
-            repository.saveFavoriteStyles(current)
-        }
+        repository.saveFavoriteStyles(current)
     }
 
     // Alignment setters matching SettingsActivity.kt exactly
-    fun saveVibrationEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            repository.saveVibrationEnabled(enabled)
-        }
-    }
+    fun saveVibrationEnabled(enabled: Boolean) = launchSave { repository.saveVibrationEnabled(enabled) }
 
-    fun saveSoundEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            repository.saveSoundEnabled(enabled)
-        }
-    }
+    fun saveSoundEnabled(enabled: Boolean) = launchSave { repository.saveSoundEnabled(enabled) }
 
-    fun setThemeSelection(theme: String) {
-        viewModelScope.launch {
-            repository.saveThemeSelection(theme)
-        }
-    }
+    fun setThemeSelection(theme: String) = launchSave { repository.saveThemeSelection(theme) }
 
-    fun setPremiumUnlocked(unlocked: Boolean) {
-        viewModelScope.launch {
-            repository.savePremiumUnlocked(unlocked)
-        }
-    }
+    fun setPremiumUnlocked(unlocked: Boolean) = launchSave { repository.savePremiumUnlocked(unlocked) }
 
     // Phase 6 Mappings
-    fun saveColorfulPreviewEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            repository.saveColorfulPreviewEnabled(enabled)
-        }
-    }
+    fun saveColorfulPreviewEnabled(enabled: Boolean) = launchSave { repository.saveColorfulPreviewEnabled(enabled) }
 
-    fun saveGiantWordsEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            repository.saveGiantWordsEnabled(enabled)
-        }
-    }
+    fun saveGiantWordsEnabled(enabled: Boolean) = launchSave { repository.saveGiantWordsEnabled(enabled) }
 
-    fun saveKeyboardHeight(height: String) {
-        viewModelScope.launch {
-            repository.saveKeyboardHeight(height)
-        }
-    }
+    fun saveKeyboardHeight(height: String) = launchSave { repository.saveKeyboardHeight(height) }
 
-    fun saveVibrationStrength(strength: Int) {
-        viewModelScope.launch {
-            repository.saveVibrationStrength(strength)
-        }
-    }
+    fun saveVibrationStrength(strength: Int) = launchSave { repository.saveVibrationStrength(strength) }
 
-    fun saveKeySoundVolume(volume: Int) {
-        viewModelScope.launch {
-            repository.saveKeySoundVolume(volume)
-        }
-    }
+    fun saveKeySoundVolume(volume: Int) = launchSave { repository.saveKeySoundVolume(volume) }
 
-    fun saveNumberRowEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            repository.saveNumberRowEnabled(enabled)
-        }
-    }
+    fun saveNumberRowEnabled(enabled: Boolean) = launchSave { repository.saveNumberRowEnabled(enabled) }
 
-    fun saveAutoSuggestionsEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            repository.saveAutoSuggestionsEnabled(enabled)
-        }
-    }
+    fun saveAutoSuggestionsEnabled(enabled: Boolean) = launchSave { repository.saveAutoSuggestionsEnabled(enabled) }
 
-    fun saveSwipeTypingEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            repository.saveSwipeTypingEnabled(enabled)
-        }
-    }
+    fun saveSwipeTypingEnabled(enabled: Boolean) = launchSave { repository.saveSwipeTypingEnabled(enabled) }
 
-    fun saveKeyboardWallpaperPath(path: String) {
-        viewModelScope.launch {
-            repository.saveKeyboardWallpaperPath(path)
-        }
-    }
+    fun saveKeyboardWallpaperPath(path: String) = launchSave { repository.saveKeyboardWallpaperPath(path) }
 
-    fun saveKeyboardWallpaperOpacity(opacity: Int) {
-        viewModelScope.launch {
-            repository.saveKeyboardWallpaperOpacity(opacity)
-        }
-    }
+    fun saveKeyboardWallpaperOpacity(opacity: Int) = launchSave { repository.saveKeyboardWallpaperOpacity(opacity) }
 
-    fun saveKeyShape(shape: String) {
-        viewModelScope.launch {
-            repository.saveKeyShape(shape)
-        }
-    }
+    fun saveKeyShape(shape: String) = launchSave { repository.saveKeyShape(shape) }
 
-    fun saveKeyBorderEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            repository.saveKeyBorderEnabled(enabled)
-        }
-    }
+    fun saveKeyBorderEnabled(enabled: Boolean) = launchSave { repository.saveKeyBorderEnabled(enabled) }
 
-    fun saveKeyBorderThickness(thickness: Int) {
-        viewModelScope.launch {
-            repository.saveKeyBorderThickness(thickness)
-        }
-    }
+    fun saveKeyBorderThickness(thickness: Int) = launchSave { repository.saveKeyBorderThickness(thickness) }
 
-    fun saveKeyTextSize(size: String) {
-        viewModelScope.launch {
-            repository.saveKeyTextSize(size)
-        }
-    }
+    fun saveKeyTextSize(size: String) = launchSave { repository.saveKeyTextSize(size) }
 
-    fun deleteArt(art: SavedArt) {
-        viewModelScope.launch {
-            deleteArtUseCase(art)
-        }
-    }
+    fun deleteArt(art: SavedArt) = launchSave { deleteArtUseCase(art) }
 
-    fun clearAllArt() {
-        viewModelScope.launch {
-            repository.clearAllArt()
-        }
-    }
+    fun clearAllArt() = launchSave { repository.clearAllArt() }
 }
 
 class SettingsViewModelFactory(
