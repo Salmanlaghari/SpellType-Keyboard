@@ -3,6 +3,8 @@ package com.salmanlaghari.spelltypekeyboard.presentation.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.salmanlaghari.spelltypekeyboard.core.AppLog
+import com.salmanlaghari.spelltypekeyboard.core.rethrowIfCancellation
 import com.salmanlaghari.spelltypekeyboard.domain.model.FrameStyle
 import com.salmanlaghari.spelltypekeyboard.domain.model.ShapeLayout
 import com.salmanlaghari.spelltypekeyboard.domain.model.UnicodeStyle
@@ -11,8 +13,12 @@ import com.salmanlaghari.spelltypekeyboard.domain.repository.KeyboardRepository
 import com.salmanlaghari.spelltypekeyboard.domain.usecase.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -27,9 +33,33 @@ class SettingsViewModel(
     private fun <T> Flow<T>.asState(initial: T): StateFlow<T> =
         stateIn(viewModelScope, SharingStarted.Eagerly, initial)
 
-    private fun launchSave(block: suspend () -> Unit): Job = viewModelScope.launch { block() }
+    private val _errors = MutableSharedFlow<String>(extraBufferCapacity = 1)
 
-    val savedArtList: StateFlow<List<SavedArt>> = getSavedArtListUseCase().asState(emptyList())
+    /** Messages for writes that failed, so the UI can tell the user instead of silently ignoring it. */
+    val errors: SharedFlow<String> = _errors.asSharedFlow()
+
+    /**
+     * Runs a persistence call, reporting failures on [errors] rather than letting them escape the
+     * scope (which crashes the process) or disappear unnoticed.
+     */
+    private fun launchSaving(operation: String, description: String, block: suspend () -> Unit): Job {
+        return viewModelScope.launch {
+            try {
+                block()
+            } catch (e: Exception) {
+                e.rethrowIfCancellation()
+                AppLog.e("SettingsViewModel.$operation", e)
+                _errors.tryEmit("Couldn't save $description")
+            }
+        }
+    }
+
+    val savedArtList: StateFlow<List<SavedArt>> = getSavedArtListUseCase()
+        .catch { error ->
+            AppLog.e("SettingsViewModel.savedArtList", error)
+            _errors.tryEmit("Couldn't load your saved art")
+            emit(emptyList())
+        }.asState(emptyList())
 
     val selectedFrameStyle: StateFlow<FrameStyle> = getSelectedFrameStyleUseCase().asState(FrameStyle.NONE)
 
@@ -81,17 +111,17 @@ class SettingsViewModel(
 
     val keyTextSize: StateFlow<String> = repository.getKeyTextSize().asState("MEDIUM")
 
-    fun selectFrameStyle(style: FrameStyle) = launchSave { saveSelectedFrameStyleUseCase(style) }
+    fun selectFrameStyle(style: FrameStyle) = launchSaving("selectFrameStyle", "frame style") { saveSelectedFrameStyleUseCase(style) }
 
-    fun selectShapeLayout(shape: ShapeLayout) = launchSave { repository.saveSelectedShapeLayout(shape) }
+    fun selectShapeLayout(shape: ShapeLayout) = launchSaving("selectShapeLayout", "shape layout") { repository.saveSelectedShapeLayout(shape) }
 
-    fun selectUnicodeStyle(style: UnicodeStyle) = launchSave { repository.saveSelectedUnicodeStyle(style) }
+    fun selectUnicodeStyle(style: UnicodeStyle) = launchSaving("selectUnicodeStyle", "text style") { repository.saveSelectedUnicodeStyle(style) }
 
-    fun setGlitterEnabled(enabled: Boolean) = launchSave { repository.saveGlitterEnabled(enabled) }
+    fun setGlitterEnabled(enabled: Boolean) = launchSaving("setGlitterEnabled", "glitter setting") { repository.saveGlitterEnabled(enabled) }
 
-    fun setCustomSignature(signature: String) = launchSave { repository.saveCustomSignature(signature) }
+    fun setCustomSignature(signature: String) = launchSaving("setCustomSignature", "signature") { repository.saveCustomSignature(signature) }
 
-    fun toggleFavoriteStyle(style: FrameStyle) = launchSave {
+    fun toggleFavoriteStyle(style: FrameStyle) = launchSaving("toggleFavoriteStyle", "favourites") {
         val current = favoriteStyles.value.toMutableSet()
         if (current.contains(style.name)) {
             current.remove(style.name)
@@ -102,46 +132,46 @@ class SettingsViewModel(
     }
 
     // Alignment setters matching SettingsActivity.kt exactly
-    fun saveVibrationEnabled(enabled: Boolean) = launchSave { repository.saveVibrationEnabled(enabled) }
+    fun saveVibrationEnabled(enabled: Boolean) = launchSaving("saveVibrationEnabled", "vibration setting") { repository.saveVibrationEnabled(enabled) }
 
-    fun saveSoundEnabled(enabled: Boolean) = launchSave { repository.saveSoundEnabled(enabled) }
+    fun saveSoundEnabled(enabled: Boolean) = launchSaving("saveSoundEnabled", "sound setting") { repository.saveSoundEnabled(enabled) }
 
-    fun setThemeSelection(theme: String) = launchSave { repository.saveThemeSelection(theme) }
+    fun setThemeSelection(theme: String) = launchSaving("setThemeSelection", "theme") { repository.saveThemeSelection(theme) }
 
-    fun setPremiumUnlocked(unlocked: Boolean) = launchSave { repository.savePremiumUnlocked(unlocked) }
+    fun setPremiumUnlocked(unlocked: Boolean) = launchSaving("setPremiumUnlocked", "premium status") { repository.savePremiumUnlocked(unlocked) }
 
     // Phase 6 Mappings
-    fun saveColorfulPreviewEnabled(enabled: Boolean) = launchSave { repository.saveColorfulPreviewEnabled(enabled) }
+    fun saveColorfulPreviewEnabled(enabled: Boolean) = launchSaving("saveColorfulPreviewEnabled", "colorful preview setting") { repository.saveColorfulPreviewEnabled(enabled) }
 
-    fun saveGiantWordsEnabled(enabled: Boolean) = launchSave { repository.saveGiantWordsEnabled(enabled) }
+    fun saveGiantWordsEnabled(enabled: Boolean) = launchSaving("saveGiantWordsEnabled", "giant words setting") { repository.saveGiantWordsEnabled(enabled) }
 
-    fun saveKeyboardHeight(height: String) = launchSave { repository.saveKeyboardHeight(height) }
+    fun saveKeyboardHeight(height: String) = launchSaving("saveKeyboardHeight", "keyboard height") { repository.saveKeyboardHeight(height) }
 
-    fun saveVibrationStrength(strength: Int) = launchSave { repository.saveVibrationStrength(strength) }
+    fun saveVibrationStrength(strength: Int) = launchSaving("saveVibrationStrength", "vibration strength") { repository.saveVibrationStrength(strength) }
 
-    fun saveKeySoundVolume(volume: Int) = launchSave { repository.saveKeySoundVolume(volume) }
+    fun saveKeySoundVolume(volume: Int) = launchSaving("saveKeySoundVolume", "key sound volume") { repository.saveKeySoundVolume(volume) }
 
-    fun saveNumberRowEnabled(enabled: Boolean) = launchSave { repository.saveNumberRowEnabled(enabled) }
+    fun saveNumberRowEnabled(enabled: Boolean) = launchSaving("saveNumberRowEnabled", "number row setting") { repository.saveNumberRowEnabled(enabled) }
 
-    fun saveAutoSuggestionsEnabled(enabled: Boolean) = launchSave { repository.saveAutoSuggestionsEnabled(enabled) }
+    fun saveAutoSuggestionsEnabled(enabled: Boolean) = launchSaving("saveAutoSuggestionsEnabled", "suggestions setting") { repository.saveAutoSuggestionsEnabled(enabled) }
 
-    fun saveSwipeTypingEnabled(enabled: Boolean) = launchSave { repository.saveSwipeTypingEnabled(enabled) }
+    fun saveSwipeTypingEnabled(enabled: Boolean) = launchSaving("saveSwipeTypingEnabled", "swipe typing setting") { repository.saveSwipeTypingEnabled(enabled) }
 
-    fun saveKeyboardWallpaperPath(path: String) = launchSave { repository.saveKeyboardWallpaperPath(path) }
+    fun saveKeyboardWallpaperPath(path: String) = launchSaving("saveKeyboardWallpaperPath", "wallpaper") { repository.saveKeyboardWallpaperPath(path) }
 
-    fun saveKeyboardWallpaperOpacity(opacity: Int) = launchSave { repository.saveKeyboardWallpaperOpacity(opacity) }
+    fun saveKeyboardWallpaperOpacity(opacity: Int) = launchSaving("saveKeyboardWallpaperOpacity", "wallpaper opacity") { repository.saveKeyboardWallpaperOpacity(opacity) }
 
-    fun saveKeyShape(shape: String) = launchSave { repository.saveKeyShape(shape) }
+    fun saveKeyShape(shape: String) = launchSaving("saveKeyShape", "key shape") { repository.saveKeyShape(shape) }
 
-    fun saveKeyBorderEnabled(enabled: Boolean) = launchSave { repository.saveKeyBorderEnabled(enabled) }
+    fun saveKeyBorderEnabled(enabled: Boolean) = launchSaving("saveKeyBorderEnabled", "key border setting") { repository.saveKeyBorderEnabled(enabled) }
 
-    fun saveKeyBorderThickness(thickness: Int) = launchSave { repository.saveKeyBorderThickness(thickness) }
+    fun saveKeyBorderThickness(thickness: Int) = launchSaving("saveKeyBorderThickness", "key border thickness") { repository.saveKeyBorderThickness(thickness) }
 
-    fun saveKeyTextSize(size: String) = launchSave { repository.saveKeyTextSize(size) }
+    fun saveKeyTextSize(size: String) = launchSaving("saveKeyTextSize", "key text size") { repository.saveKeyTextSize(size) }
 
-    fun deleteArt(art: SavedArt) = launchSave { deleteArtUseCase(art) }
+    fun deleteArt(art: SavedArt) = launchSaving("deleteArt", "changes to your saved art") { deleteArtUseCase(art) }
 
-    fun clearAllArt() = launchSave { repository.clearAllArt() }
+    fun clearAllArt() = launchSaving("clearAllArt", "changes to your saved art") { repository.clearAllArt() }
 }
 
 class SettingsViewModelFactory(

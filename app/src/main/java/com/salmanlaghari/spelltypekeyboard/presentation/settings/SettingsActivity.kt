@@ -1,11 +1,8 @@
 package com.salmanlaghari.spelltypekeyboard.presentation.settings
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.provider.Settings
 import android.view.View
-import android.view.inputmethod.InputMethodManager
 import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
@@ -15,10 +12,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.salmanlaghari.spelltypekeyboard.R
+import com.salmanlaghari.spelltypekeyboard.core.AppLog
 import com.salmanlaghari.spelltypekeyboard.databinding.ActivitySettingsBinding
 import com.salmanlaghari.spelltypekeyboard.data.db.SpellTypeDatabase
 import com.salmanlaghari.spelltypekeyboard.data.datastore.KeyboardPreferences
 import com.salmanlaghari.spelltypekeyboard.data.repository.KeyboardRepositoryImpl
+import com.salmanlaghari.spelltypekeyboard.domain.features.SettingsManager
 import com.salmanlaghari.spelltypekeyboard.domain.PreviewStyler
 import com.salmanlaghari.spelltypekeyboard.domain.TextArtFormatter
 import com.salmanlaghari.spelltypekeyboard.domain.model.FrameStyle
@@ -94,15 +93,16 @@ class SettingsActivity : AppCompatActivity() {
 
         // Guide Button 1: Enable settings
         binding.btnEnableSettings.setOnClickListener {
-            val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
+            if (!SettingsManager.openKeyboardSettings(this)) {
+                android.widget.Toast.makeText(this, "Couldn't open keyboard settings", android.widget.Toast.LENGTH_SHORT).show()
+            }
         }
 
         // Guide Button 2: Select active IME
         binding.btnSelectIme.setOnClickListener {
-            val im = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            im.showInputMethodPicker()
+            if (!SettingsManager.openInputMethodPicker(this)) {
+                android.widget.Toast.makeText(this, "Couldn't open the keyboard picker", android.widget.Toast.LENGTH_SHORT).show()
+            }
         }
 
         // Frame selection chips
@@ -320,13 +320,19 @@ class SettingsActivity : AppCompatActivity() {
                 }
             )
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SettingsActivity.loadSettingsNativeAd", e)
         }
     }
 
     private fun observeState() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.errors.collect { message ->
+                        android.widget.Toast.makeText(this@SettingsActivity, message, android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
+
                 // Collect and highlight selected frame style
                 launch {
                     viewModel.selectedFrameStyle.collect { style ->

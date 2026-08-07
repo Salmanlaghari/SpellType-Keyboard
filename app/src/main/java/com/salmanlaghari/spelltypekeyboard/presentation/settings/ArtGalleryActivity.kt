@@ -1,5 +1,6 @@
 package com.salmanlaghari.spelltypekeyboard.presentation.settings
 
+import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -14,6 +15,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.salmanlaghari.spelltypekeyboard.core.AppLog
 import com.salmanlaghari.spelltypekeyboard.databinding.ActivityArtGalleryBinding
 import com.salmanlaghari.spelltypekeyboard.data.db.SpellTypeDatabase
 import com.salmanlaghari.spelltypekeyboard.data.datastore.KeyboardPreferences
@@ -93,6 +95,12 @@ class ArtGalleryActivity : AppCompatActivity() {
     private fun observeState() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.errors.collect { message ->
+                        Toast.makeText(this@ArtGalleryActivity, message, Toast.LENGTH_SHORT).show()
+                    }
+                }
+
                 // Collect Favorites Set
                 launch {
                     viewModel.favoriteStyles.collect { favorites ->
@@ -144,9 +152,13 @@ class ArtGalleryActivity : AppCompatActivity() {
     }
 
     private fun copyToClipboard(text: String) {
-        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        val clip = ClipData.newPlainText("SpellType Art", text)
-        clipboard.setPrimaryClip(clip)
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+        if (clipboard == null) {
+            AppLog.e("ArtGalleryActivity.copyToClipboard", "clipboard service unavailable")
+            Toast.makeText(this, "Clipboard unavailable", Toast.LENGTH_SHORT).show()
+            return
+        }
+        clipboard.setPrimaryClip(ClipData.newPlainText("SpellType Art", text))
         Toast.makeText(this, "Copied to Clipboard!", Toast.LENGTH_SHORT).show()
     }
 
@@ -157,6 +169,11 @@ class ArtGalleryActivity : AppCompatActivity() {
             type = "text/plain"
         }
         val shareIntent = Intent.createChooser(sendIntent, "Share Styled Art via")
-        startActivity(shareIntent)
+        try {
+            startActivity(shareIntent)
+        } catch (e: ActivityNotFoundException) {
+            AppLog.e("ArtGalleryActivity.shareText", e)
+            Toast.makeText(this, "No app available to share with", Toast.LENGTH_SHORT).show()
+        }
     }
 }

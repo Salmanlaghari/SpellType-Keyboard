@@ -8,6 +8,8 @@ import android.view.inputmethod.InputConnection
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.salmanlaghari.spelltypekeyboard.R
+import com.salmanlaghari.spelltypekeyboard.core.AppLog
+import com.salmanlaghari.spelltypekeyboard.core.rethrowIfCancellation
 import com.salmanlaghari.spelltypekeyboard.data.datastore.KeyboardPreferences
 import com.salmanlaghari.spelltypekeyboard.data.db.SpellTypeDatabase
 import com.salmanlaghari.spelltypekeyboard.data.repository.KeyboardRepositoryImpl
@@ -197,7 +199,17 @@ class SpellTypeIME : InputMethodService() {
             saveSelectedFrameStyleUseCase = SaveSelectedFrameStyleUseCase(repo)
             getSelectedFrameStyleUseCase = GetSelectedFrameStyleUseCase(repo)
         } catch (e: Exception) {
-            e.printStackTrace()
+            // Without a repository the keyboard still types, but every saved setting is lost.
+            AppLog.e("SpellTypeIME.onCreate", e)
+            showToast("⚠️ SpellType settings unavailable — using defaults")
+        }
+    }
+
+    private fun showToast(message: String) {
+        try {
+            android.widget.Toast.makeText(applicationContext ?: this, message, android.widget.Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            AppLog.e("SpellTypeIME.showToast", e)
         }
     }
 
@@ -218,7 +230,7 @@ class SpellTypeIME : InputMethodService() {
                 showBannerIn(bottomContainer, com.salmanlaghari.spelltypekeyboard.presentation.ads.BannerType.KEYBOARD_BOTTOM)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.updateKeyboardAdBanners", e)
         }
     }
 
@@ -231,7 +243,8 @@ class SpellTypeIME : InputMethodService() {
         com.salmanlaghari.spelltypekeyboard.presentation.ads.AdManager.loadBanner(
             context = this,
             type = type,
-            adSize = com.google.android.gms.ads.AdSize.BANNER
+            adSize = com.google.android.gms.ads.AdSize.BANNER,
+            onFailed = { container.visibility = View.GONE }
         ) { adView ->
             container.removeAllViews()
             container.addView(adView)
@@ -245,7 +258,7 @@ class SpellTypeIME : InputMethodService() {
             updateLivePreviewBar()
             updateSuggestionsBar()
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.onStartInputView", e)
         }
     }
 
@@ -566,7 +579,7 @@ class SpellTypeIME : InputMethodService() {
             bindControlCenter(keyboardView)
             return keyboardView
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.onCreateInputView", e)
             // Never let the keyboard crash. Always return a dummy/fallback view to maintain system stability!
             val fallback = View(applicationContext ?: this)
             fallback.minimumHeight = 1
@@ -580,7 +593,7 @@ class SpellTypeIME : InputMethodService() {
             voiceInputManager?.destroy()
             serviceJob.cancel()
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.onDestroy", e)
         }
         super.onDestroy()
     }
@@ -676,7 +689,7 @@ class SpellTypeIME : InputMethodService() {
                 )
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.populateQuickArtBar", e)
         }
     }
 
@@ -709,13 +722,13 @@ class SpellTypeIME : InputMethodService() {
         try {
             playVibrationFeedback()
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.onKeyClickFeedback", e)
         }
 
         try {
             playSoundFeedback()
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.onKeyClickFeedback", e)
         }
 
         try {
@@ -734,7 +747,7 @@ class SpellTypeIME : InputMethodService() {
                 }
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.onKeyClickFeedback", e)
         }
 
         try {
@@ -751,7 +764,7 @@ class SpellTypeIME : InputMethodService() {
                         .start()
                 }.start()
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.onKeyClickFeedback", e)
         }
     }
 
@@ -765,7 +778,9 @@ class SpellTypeIME : InputMethodService() {
                     refreshQuickArtBar()
                     updateLivePreviewBar()
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    e.rethrowIfCancellation()
+                    AppLog.e("SpellTypeIME.selectFrameStyle", e)
+                    showToast("⚠️ Couldn't save frame style")
                 }
             }
         }
@@ -781,7 +796,9 @@ class SpellTypeIME : InputMethodService() {
                     refreshQuickArtBar()
                     updateLivePreviewBar()
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    e.rethrowIfCancellation()
+                    AppLog.e("SpellTypeIME.selectUnicodeStyle", e)
+                    showToast("⚠️ Couldn't save text style")
                 }
             }
         }
@@ -797,7 +814,9 @@ class SpellTypeIME : InputMethodService() {
                     refreshQuickArtBar()
                     updateLivePreviewBar()
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    e.rethrowIfCancellation()
+                    AppLog.e("SpellTypeIME.toggleGlitter", e)
+                    showToast("⚠️ Couldn't save glitter setting")
                 }
             }
         }
@@ -808,7 +827,7 @@ class SpellTypeIME : InputMethodService() {
             val container = keyboardRootView?.findViewById<LinearLayout>(R.id.quick_art_container) ?: return
             populateQuickArtBar(container)
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.refreshQuickArtBar", e)
         }
     }
 
@@ -854,7 +873,7 @@ class SpellTypeIME : InputMethodService() {
                 updateSuggestionsBar()
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.handleKeyClick", e)
         }
     }
 
@@ -864,7 +883,7 @@ class SpellTypeIME : InputMethodService() {
             isShifted = !isShifted
             updateKeyLabels()
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.toggleShift", e)
         }
     }
 
@@ -880,7 +899,7 @@ class SpellTypeIME : InputMethodService() {
             isShifted = false
             updateKeyLabels()
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.toggleMode", e)
         }
     }
 
@@ -891,7 +910,7 @@ class SpellTypeIME : InputMethodService() {
             isShifted = false
             updateKeyLabels()
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.toggleEmojiMode", e)
         }
     }
 
@@ -932,7 +951,7 @@ class SpellTypeIME : InputMethodService() {
                 }
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.updateKeyLabels", e)
         }
     }
 
@@ -953,7 +972,7 @@ class SpellTypeIME : InputMethodService() {
                 ic.deleteSurroundingText(1, 0)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.handleBackspace", e)
         }
     }
 
@@ -996,7 +1015,7 @@ class SpellTypeIME : InputMethodService() {
                 ic.commitText(" ", 1)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.handleSpace", e)
         }
     }
 
@@ -1010,7 +1029,7 @@ class SpellTypeIME : InputMethodService() {
                 updateLivePreviewBar()
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.handleClipboardTool", e)
         }
     }
 
@@ -1055,7 +1074,7 @@ class SpellTypeIME : InputMethodService() {
                 updateLivePreviewBar()
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.handleTranslateTool", e)
         }
     }
 
@@ -1098,7 +1117,7 @@ class SpellTypeIME : InputMethodService() {
             composingText.append(templates[index])
             updateLivePreviewBar()
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.handleTemplatesTool", e)
         }
     }
 
@@ -1117,7 +1136,7 @@ class SpellTypeIME : InputMethodService() {
                 ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER))
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.handleEnter", e)
         }
     }
 
@@ -1149,7 +1168,11 @@ class SpellTypeIME : InputMethodService() {
                         ic.commitText(styled, 1)
                         onComplete?.invoke()
                     } catch (e: Exception) {
-                        e.printStackTrace()
+                        e.rethrowIfCancellation()
+                        AppLog.e("SpellTypeIME.commitComposingText", e)
+                        // Styling failed — commit the raw text so the user never loses what they typed.
+                        ic.commitText(textToFormat, 1)
+                        onComplete?.invoke()
                     }
                 }
             } else {
@@ -1157,7 +1180,7 @@ class SpellTypeIME : InputMethodService() {
                 onComplete?.invoke()
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.commitComposingText", e)
         }
     }
 
@@ -1179,7 +1202,7 @@ class SpellTypeIME : InputMethodService() {
                 )
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.updateLivePreviewBar", e)
         }
     }
 
@@ -1188,7 +1211,7 @@ class SpellTypeIME : InputMethodService() {
             // Use the new AI-powered suggestions
             updateSuggestionsBarWithAI()
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.updateSuggestionsBar", e)
         }
     }
 
@@ -1214,7 +1237,7 @@ class SpellTypeIME : InputMethodService() {
                 row.layoutParams = lp
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.applyKeyboardHeight", e)
         }
     }
 
@@ -1222,7 +1245,7 @@ class SpellTypeIME : InputMethodService() {
         try {
             applyPremiumTheme()
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.applyCustomConfigurations", e)
         }
     }
 
@@ -1236,7 +1259,7 @@ class SpellTypeIME : InputMethodService() {
                 }
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.styleAllTextViewsUnder", e)
         }
     }
 
@@ -1346,7 +1369,7 @@ class SpellTypeIME : InputMethodService() {
             }
             view.setTextColor(textColor)
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.applyKeyStyle", e)
         }
     }
 
@@ -1362,7 +1385,7 @@ class SpellTypeIME : InputMethodService() {
             applyPremiumTheme()
             keyboardRootView?.findViewById<TextView>(R.id.btn_theme)?.text = "${activeRealTheme.emoji} ${activeRealTheme.name}"
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.cyclePremiumTheme", e)
         }
     }
 
@@ -1430,7 +1453,7 @@ class SpellTypeIME : InputMethodService() {
                 theme.glowColor
             )
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.applyPremiumTheme", e)
         }
     }
 
@@ -1444,7 +1467,7 @@ class SpellTypeIME : InputMethodService() {
             currentLanguage = languageList[languageIndex]
             applyLanguage()
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.cycleLanguage", e)
         }
     }
 
@@ -1456,7 +1479,7 @@ class SpellTypeIME : InputMethodService() {
             // Update key labels based on language layout
             updateKeyLabelsForLanguage(lang)
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.applyLanguage", e)
         }
     }
 
@@ -1472,7 +1495,7 @@ class SpellTypeIME : InputMethodService() {
                 }
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.updateKeyLabelsForLanguage", e)
         }
     }
 
@@ -1504,7 +1527,7 @@ class SpellTypeIME : InputMethodService() {
                 keyboardRootView?.findViewById<TextView>(R.id.btn_dev_mode)?.text = "⌨️ Dev"
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.toggleDeveloperMode", e)
         }
     }
 
@@ -1523,7 +1546,7 @@ class SpellTypeIME : InputMethodService() {
                 keyboardRootView?.findViewById<TextView>(R.id.btn_gemini)?.text = "✨ AI"
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.toggleGeminiLive", e)
         }
     }
 
@@ -1540,7 +1563,7 @@ class SpellTypeIME : InputMethodService() {
             if (smartReplies.size >= 2) root.findViewById<TextView>(R.id.suggestion_center)?.text = smartReplies[1]
             if (smartReplies.size >= 3) root.findViewById<TextView>(R.id.suggestion_right)?.text = smartReplies[2]
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.updateGeminiSuggestions", e)
         }
     }
 
@@ -1576,7 +1599,7 @@ class SpellTypeIME : InputMethodService() {
                 ic.commitText(suggestion, 1)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.handleSuggestionClick", e)
         }
     }
 
@@ -1596,7 +1619,7 @@ class SpellTypeIME : InputMethodService() {
                             val ic = currentInputConnection ?: return
                             ic.commitText(text, 1)
                         } catch (e: Exception) {
-                            e.printStackTrace()
+                            AppLog.e("SpellTypeIME.handleVoiceInput.onResult", e)
                         }
                     }
                     override fun onPartialResult(text: String) {
@@ -1605,29 +1628,29 @@ class SpellTypeIME : InputMethodService() {
                             val ic = currentInputConnection ?: return
                             ic.setComposingText(text, 1)
                         } catch (e: Exception) {
-                            e.printStackTrace()
+                            AppLog.e("SpellTypeIME.handleVoiceInput.onPartialResult", e)
                         }
                     }
                     override fun onError(error: String) {
                         try {
-                            android.widget.Toast.makeText(ctx, "🎤 ${error.ifBlank { "Voice input error" }}", android.widget.Toast.LENGTH_SHORT).show()
+                            showToast("🎤 ${error.ifBlank { "Voice input error" }}")
                             keyboardRootView?.findViewById<TextView>(R.id.tool_voice)?.text = "🎤"
                         } catch (e: Exception) {
-                            e.printStackTrace()
+                            AppLog.e("SpellTypeIME.handleVoiceInput.onError", e)
                         }
                     }
                     override fun onListeningStarted() {
                         try {
                             keyboardRootView?.findViewById<TextView>(R.id.tool_voice)?.text = "🔴"
                         } catch (e: Exception) {
-                            e.printStackTrace()
+                            AppLog.e("SpellTypeIME.handleVoiceInput.onListeningStarted", e)
                         }
                     }
                     override fun onListeningStopped() {
                         try {
                             keyboardRootView?.findViewById<TextView>(R.id.tool_voice)?.text = "🎤"
                         } catch (e: Exception) {
-                            e.printStackTrace()
+                            AppLog.e("SpellTypeIME.handleVoiceInput.onListeningStopped", e)
                         }
                     }
                 })
@@ -1638,10 +1661,8 @@ class SpellTypeIME : InputMethodService() {
                 voiceInputManager?.startListening()
             }
         } catch (e: Exception) {
-            e.printStackTrace()
-            try {
-                android.widget.Toast.makeText(applicationContext ?: this, "🎤 Voice input unavailable", android.widget.Toast.LENGTH_SHORT).show()
-            } catch (_: Exception) {}
+            AppLog.e("SpellTypeIME.handleVoiceInput", e)
+            showToast("🎤 Voice input unavailable")
         }
     }
 
@@ -1657,7 +1678,7 @@ class SpellTypeIME : InputMethodService() {
             val root = keyboardRootView ?: return
             showSuggestions(root, "😀 Smileys", "👍 People", "🔥 Objects")
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.handleGifSearch", e)
         }
     }
 
@@ -1670,23 +1691,16 @@ class SpellTypeIME : InputMethodService() {
             val bg = activeBackground ?: return
             val root = keyboardRootView ?: return
             root.background = KeyboardBackgroundEngine.createBackground(bg)
-            try {
-                android.widget.Toast.makeText(
-                    applicationContext ?: this,
-                    "🎨 ${bg.emoji} ${bg.name}",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
-            } catch (_: Exception) {}
+            showToast("🎨 ${bg.emoji} ${bg.name}")
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.handleImageDesign", e)
+            showToast("🎨 Couldn't change keyboard background")
         }
     }
 
     private fun openSettings() {
-        try {
-            SettingsManager.openKeyboardSettings(applicationContext ?: this)
-        } catch (e: Exception) {
-            e.printStackTrace()
+        if (!SettingsManager.openKeyboardSettings(applicationContext ?: this)) {
+            showToast("⚙️ Couldn't open keyboard settings")
         }
     }
 
@@ -1694,7 +1708,7 @@ class SpellTypeIME : InputMethodService() {
         try {
             val text = composingText.toString()
             if (text.isBlank()) {
-                android.widget.Toast.makeText(applicationContext ?: this, "📡 Type something first to transmit!", android.widget.Toast.LENGTH_SHORT).show()
+                showToast("📡 Type something first to transmit!")
                 return
             }
             // Encode styled text for sharing
@@ -1710,11 +1724,16 @@ class SpellTypeIME : InputMethodService() {
             // Copy to clipboard
             val clipboard = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
             val clip = android.content.ClipData.newPlainText("SpellType Transmission", clipboardData)
-            clipboard?.setPrimaryClip(clip)
-            android.widget.Toast.makeText(applicationContext ?: this, "📡 Transmission copied! Share it!", android.widget.Toast.LENGTH_SHORT).show()
+            if (clipboard == null) {
+                AppLog.e("SpellTypeIME.handleTransmissionTool", "clipboard service unavailable")
+                showToast("📡 Clipboard unavailable")
+                return
+            }
+            clipboard.setPrimaryClip(clip)
+            showToast("📡 Transmission copied! Share it!")
         } catch (e: Exception) {
-            e.printStackTrace()
-            android.widget.Toast.makeText(applicationContext ?: this, "📡 Transmission error", android.widget.Toast.LENGTH_SHORT).show()
+            AppLog.e("SpellTypeIME.handleTransmissionTool", e)
+            showToast("📡 Transmission error")
         }
     }
 
@@ -2080,7 +2099,7 @@ class SpellTypeIME : InputMethodService() {
                 }
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.updateSuggestionsBarWithAI", e)
         }
     }
 
@@ -2097,7 +2116,7 @@ class SpellTypeIME : InputMethodService() {
             playVibrationFeedback()
             playSoundFeedback()
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.onKeyClickFeedbackPremium", e)
         }
     }
 
@@ -2124,7 +2143,7 @@ class SpellTypeIME : InputMethodService() {
                 controlCenter.visibility = View.GONE
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.toggleControlCenter", e)
         }
     }
 
@@ -2180,7 +2199,7 @@ class SpellTypeIME : InputMethodService() {
                 applyPremiumTheme()
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("SpellTypeIME.applySimpleMode", e)
         }
     }
 
@@ -2561,25 +2580,30 @@ class SpellTypeIME : InputMethodService() {
                     keyboardRootView?.findViewById<TextView>(R.id.suggestion_center)?.text = "AI Result Added!"
                 }
             } catch (e: java.net.SocketTimeoutException) {
-                e.printStackTrace()
+                AppLog.w("SpellTypeIME.performGoogleAISearch: timed out, using local result", e)
                 val fallback = generateLocalAISearchResult(query)
                 withContext(Dispatchers.Main) {
                     currentInputConnection?.commitText("\n🤖 [AI Search]: $fallback\n", 1)
                 }
             } catch (e: java.io.IOException) {
-                e.printStackTrace()
+                AppLog.w("SpellTypeIME.performGoogleAISearch: network failure, using local result", e)
                 val fallback = generateLocalAISearchResult(query)
                 withContext(Dispatchers.Main) {
                     currentInputConnection?.commitText("\n🤖 [AI Search]: $fallback\n", 1)
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                e.rethrowIfCancellation()
+                AppLog.e("SpellTypeIME.performGoogleAISearch", e)
                 val fallback = generateLocalAISearchResult(query)
                 withContext(Dispatchers.Main) {
                     currentInputConnection?.commitText("\n🤖 [AI Search]: $fallback\n", 1)
                 }
             } finally {
-                try { urlConnection?.disconnect() } catch (_: Exception) {}
+                try {
+                    urlConnection?.disconnect()
+                } catch (e: Exception) {
+                    AppLog.w("SpellTypeIME.performGoogleAISearch: failed to close connection", e)
+                }
             }
         }
     }

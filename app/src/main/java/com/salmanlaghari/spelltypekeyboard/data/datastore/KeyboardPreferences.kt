@@ -4,11 +4,14 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
+import com.salmanlaghari.spelltypekeyboard.core.AppLog
 import com.salmanlaghari.spelltypekeyboard.domain.model.FrameStyle
 import com.salmanlaghari.spelltypekeyboard.domain.model.ShapeLayout
 import com.salmanlaghari.spelltypekeyboard.domain.model.UnicodeStyle
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import java.io.IOException
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "spelltype_settings")
 
@@ -45,17 +48,35 @@ class KeyboardPreferences(private val context: Context) {
         val KEY_TEXT_SIZE = stringPreferencesKey("key_text_size")
     }
 
+    /**
+     * Reads of an unreadable preferences file fall back to defaults instead of cancelling every
+     * collector (which would take the keyboard service down with it). Anything else propagates.
+     */
+    private val preferencesFlow: Flow<Preferences> = context.dataStore.data
+        .catch { error ->
+            if (error is IOException) {
+                AppLog.e("KeyboardPreferences.read", error)
+                emit(emptyPreferences())
+            } else {
+                throw error
+            }
+        }
+
     /** Reads a stored value, falling back to [default] when it was never written. */
     private fun <T> preferenceFlow(key: Preferences.Key<T>, default: T): Flow<T> =
-        context.dataStore.data.map { preferences -> preferences[key] ?: default }
+        preferencesFlow.map { preferences -> preferences[key] ?: default }
 
     /** Reads an enum stored by name, falling back to [default] for missing or unknown names. */
-    private fun <T : Enum<T>> enumFlow(
+    private inline fun <reified T : Enum<T>> enumFlow(
         key: Preferences.Key<String>,
-        values: Array<T>,
         default: T
     ): Flow<T> = preferenceFlow(key, default.name).map { name ->
-        values.firstOrNull { it.name == name } ?: default
+        try {
+            enumValueOf<T>(name)
+        } catch (e: IllegalArgumentException) {
+            AppLog.e("KeyboardPreferences.parseEnum(${T::class.java.simpleName})", e)
+            default
+        }
     }
 
     private suspend fun <T> savePreference(key: Preferences.Key<T>, value: T) {
@@ -63,13 +84,13 @@ class KeyboardPreferences(private val context: Context) {
     }
 
     val selectedFrameStyleFlow: Flow<FrameStyle> =
-        enumFlow(SELECTED_FRAME_STYLE, FrameStyle.values(), FrameStyle.NONE)
+        enumFlow(SELECTED_FRAME_STYLE, FrameStyle.NONE)
 
     val selectedShapeLayoutFlow: Flow<ShapeLayout> =
-        enumFlow(SELECTED_SHAPE_LAYOUT, ShapeLayout.values(), ShapeLayout.NONE)
+        enumFlow(SELECTED_SHAPE_LAYOUT, ShapeLayout.NONE)
 
     val selectedUnicodeStyleFlow: Flow<UnicodeStyle> =
-        enumFlow(SELECTED_UNICODE_STYLE, UnicodeStyle.values(), UnicodeStyle.NONE)
+        enumFlow(SELECTED_UNICODE_STYLE, UnicodeStyle.NONE)
 
     val glitterEnabledFlow: Flow<Boolean> = preferenceFlow(GLITTER_ENABLED, false)
 

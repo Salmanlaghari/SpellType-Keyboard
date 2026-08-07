@@ -11,6 +11,7 @@ import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAdLoa
 import com.google.android.gms.ads.appopen.AppOpenAd
 import com.google.android.gms.ads.nativead.NativeAd
 import com.salmanlaghari.spelltypekeyboard.BuildConfig
+import com.salmanlaghari.spelltypekeyboard.core.AppLog
 
 enum class BannerType { KEYBOARD_TOP, KEYBOARD_BOTTOM, HOME, SETTINGS }
 enum class InterstitialType { SETTINGS, PRO_TOOLS, APP_OPEN, EXIT }
@@ -30,7 +31,7 @@ object AdManager {
                 initialized = true
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("AdManager.init", e)
         }
     }
 
@@ -120,7 +121,13 @@ object AdManager {
     //  AD LOADING METHODS
     // ═══════════════════════════════════════
 
-    fun loadBanner(context: Context, type: BannerType, adSize: AdSize, onLoaded: (AdView) -> Unit) {
+    fun loadBanner(
+        context: Context,
+        type: BannerType,
+        adSize: AdSize,
+        onFailed: (() -> Unit)? = null,
+        onLoaded: (AdView) -> Unit
+    ) {
         try {
             val adView = AdView(context)
             adView.adUnitId = getBannerId(type)
@@ -129,10 +136,15 @@ object AdManager {
                 override fun onAdLoaded() {
                     onLoaded(adView)
                 }
+                override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                    AppLog.e("AdManager.loadBanner($type)", loadAdError.message)
+                    onFailed?.invoke()
+                }
             }
             adView.loadAd(AdRequest.Builder().build())
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("AdManager.loadBanner", e)
+            onFailed?.invoke()
         }
     }
 
@@ -153,12 +165,13 @@ object AdManager {
                         onLoaded(interstitialAd)
                     }
                     override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                        AppLog.e("AdManager.loadInterstitial($type)", loadAdError.message)
                         onFailed?.invoke()
                     }
                 }
             )
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("AdManager.loadInterstitial", e)
             onFailed?.invoke()
         }
     }
@@ -180,12 +193,13 @@ object AdManager {
                         onLoaded(rewardedAd)
                     }
                     override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                        AppLog.e("AdManager.loadRewarded($type)", loadAdError.message)
                         onFailed?.invoke()
                     }
                 }
             )
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("AdManager.loadRewarded", e)
             onFailed?.invoke()
         }
     }
@@ -206,12 +220,13 @@ object AdManager {
                         onLoaded(ad)
                     }
                     override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                        AppLog.e("AdManager.loadRewardedInterstitial", loadAdError.message)
                         onFailed?.invoke()
                     }
                 }
             )
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("AdManager.loadRewardedInterstitial", e)
             onFailed?.invoke()
         }
     }
@@ -232,12 +247,13 @@ object AdManager {
                         onLoaded(ad)
                     }
                     override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                        AppLog.e("AdManager.loadAppOpen", loadAdError.message)
                         onFailed?.invoke()
                     }
                 }
             )
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("AdManager.loadAppOpen", e)
             onFailed?.invoke()
         }
     }
@@ -254,13 +270,14 @@ object AdManager {
                 }
                 .withAdListener(object : AdListener() {
                     override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                        AppLog.e("AdManager.loadNativeAd", loadAdError.message)
                         onFailed?.invoke()
                     }
                 })
                 .build()
             adLoader.loadAd(AdRequest.Builder().build())
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("AdManager.loadNativeAd", e)
             onFailed?.invoke()
         }
     }
