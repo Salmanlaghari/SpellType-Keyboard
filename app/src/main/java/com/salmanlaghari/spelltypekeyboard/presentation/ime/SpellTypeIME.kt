@@ -8,13 +8,13 @@ import android.view.inputmethod.InputConnection
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.salmanlaghari.spelltypekeyboard.R
-import com.salmanlaghari.spelltypekeyboard.core.AppLog
-import com.salmanlaghari.spelltypekeyboard.core.rethrowIfCancellation
 import com.salmanlaghari.spelltypekeyboard.data.datastore.KeyboardPreferences
 import com.salmanlaghari.spelltypekeyboard.data.db.SpellTypeDatabase
 import com.salmanlaghari.spelltypekeyboard.data.repository.KeyboardRepositoryImpl
+import com.salmanlaghari.spelltypekeyboard.domain.ArtEngine
+import com.salmanlaghari.spelltypekeyboard.domain.ShapeEngine
 import com.salmanlaghari.spelltypekeyboard.domain.StyleCategorizer
-import com.salmanlaghari.spelltypekeyboard.domain.TextArtFormatter
+import com.salmanlaghari.spelltypekeyboard.domain.UnicodeStylingEngine
 import com.salmanlaghari.spelltypekeyboard.domain.PreviewStyler
 import com.salmanlaghari.spelltypekeyboard.domain.MoodDetector
 import com.salmanlaghari.spelltypekeyboard.domain.model.FrameStyle
@@ -40,7 +40,6 @@ import com.salmanlaghari.spelltypekeyboard.domain.features.EmojiGifManager
 import com.salmanlaghari.spelltypekeyboard.domain.features.SettingsManager
 import com.salmanlaghari.spelltypekeyboard.domain.transmission.TransmissionEngine
 import com.salmanlaghari.spelltypekeyboard.domain.effects.ParticleEffectsEngine
-import com.salmanlaghari.spelltypekeyboard.presentation.common.setChipSelected
 import kotlinx.coroutines.*
 
 class SpellTypeIME : InputMethodService() {
@@ -167,13 +166,7 @@ class SpellTypeIME : InputMethodService() {
         "👽", "🧸", "🍭", "🎁", "🚀", "🛸", "🎮", "🍕", "🥑", "🦁",
         "🦄", "🌈", "🌍", "⚡", "🔮", "🧬", "🧸", "🦾", "🧿", "🎨",
         "🎸", "🛹", "🍿", "🍩", "🍦", "🧁", "🍹", "🍷", "🔔", "📿",
-        "🥺", "🥰", "🥶", "🥳", "🤠", "🤖", "💪", "🏆", "🎯", "💡",
-        "📱", "💻", "🎧", "📸", "🎬", "🏋️", "🧘", "✈️", "🏕️", "🏔️",
-        "🌊", "🌅", "🌌", "🦋", "🐝", "🌺", "🌻", "🌹", "🍀", "🌴",
-        "🐶", "🐱", "🐼", "🐨", "🦊", "🐰", "🐻", "🦁", "🐯", "🐸",
-        "❤️", "💕", "💞", "💓", "💗", "💖", "💘", "💝", "💟", "🫶",
-        "😊", "😂", "🤣", "😍", "🤩", "😎", "🥳", "😇", "🤗", "😋",
-        "👍", "👎", "👏", "🙌", "🤝", "✌️", "🤞", "🫰", "👋", "🤙"
+        "🥺", "🥰", "🥶", "🥳", "🤠", "🤖"
     )
 
     private var isEmojiMode = false
@@ -199,17 +192,7 @@ class SpellTypeIME : InputMethodService() {
             saveSelectedFrameStyleUseCase = SaveSelectedFrameStyleUseCase(repo)
             getSelectedFrameStyleUseCase = GetSelectedFrameStyleUseCase(repo)
         } catch (e: Exception) {
-            // Without a repository the keyboard still types, but every saved setting is lost.
-            AppLog.e("SpellTypeIME.onCreate", e)
-            showToast("⚠️ SpellType settings unavailable — using defaults")
-        }
-    }
-
-    private fun showToast(message: String) {
-        try {
-            android.widget.Toast.makeText(applicationContext ?: this, message, android.widget.Toast.LENGTH_SHORT).show()
-        } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.showToast", e)
+            e.printStackTrace()
         }
     }
 
@@ -226,28 +209,34 @@ class SpellTypeIME : InputMethodService() {
                 // Initialize AdMob SDK first
                 com.salmanlaghari.spelltypekeyboard.presentation.ads.AdManager.init(applicationContext ?: this)
 
-                showBannerIn(topContainer, com.salmanlaghari.spelltypekeyboard.presentation.ads.BannerType.KEYBOARD_TOP)
-                showBannerIn(bottomContainer, com.salmanlaghari.spelltypekeyboard.presentation.ads.BannerType.KEYBOARD_BOTTOM)
+                // Load Top Banner
+                topContainer?.let { container ->
+                    container.visibility = View.VISIBLE
+                    com.salmanlaghari.spelltypekeyboard.presentation.ads.AdManager.loadBanner(
+                        context = this,
+                        type = com.salmanlaghari.spelltypekeyboard.presentation.ads.BannerType.KEYBOARD_TOP,
+                        adSize = com.google.android.gms.ads.AdSize.BANNER
+                    ) { adView ->
+                        container.removeAllViews()
+                        container.addView(adView)
+                    }
+                }
+
+                // Load Bottom Banner
+                bottomContainer?.let { container ->
+                    container.visibility = View.VISIBLE
+                    com.salmanlaghari.spelltypekeyboard.presentation.ads.AdManager.loadBanner(
+                        context = this,
+                        type = com.salmanlaghari.spelltypekeyboard.presentation.ads.BannerType.KEYBOARD_BOTTOM,
+                        adSize = com.google.android.gms.ads.AdSize.BANNER
+                    ) { adView ->
+                        container.removeAllViews()
+                        container.addView(adView)
+                    }
+                }
             }
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.updateKeyboardAdBanners", e)
-        }
-    }
-
-    private fun showBannerIn(
-        container: android.widget.FrameLayout?,
-        type: com.salmanlaghari.spelltypekeyboard.presentation.ads.BannerType
-    ) {
-        container ?: return
-        container.visibility = View.VISIBLE
-        com.salmanlaghari.spelltypekeyboard.presentation.ads.AdManager.loadBanner(
-            context = this,
-            type = type,
-            adSize = com.google.android.gms.ads.AdSize.BANNER,
-            onFailed = { container.visibility = View.GONE }
-        ) { adView ->
-            container.removeAllViews()
-            container.addView(adView)
+            e.printStackTrace()
         }
     }
 
@@ -258,7 +247,7 @@ class SpellTypeIME : InputMethodService() {
             updateLivePreviewBar()
             updateSuggestionsBar()
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.onStartInputView", e)
+            e.printStackTrace()
         }
     }
 
@@ -579,7 +568,7 @@ class SpellTypeIME : InputMethodService() {
             bindControlCenter(keyboardView)
             return keyboardView
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.onCreateInputView", e)
+            e.printStackTrace()
             // Never let the keyboard crash. Always return a dummy/fallback view to maintain system stability!
             val fallback = View(applicationContext ?: this)
             fallback.minimumHeight = 1
@@ -593,7 +582,7 @@ class SpellTypeIME : InputMethodService() {
             voiceInputManager?.destroy()
             serviceJob.cancel()
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.onDestroy", e)
+            e.printStackTrace()
         }
         super.onDestroy()
     }
@@ -606,129 +595,175 @@ class SpellTypeIME : InputMethodService() {
         ))
     }
 
-    /** Builds a quick-art bar chip with the shared sizing, colors and selected state. */
-    private fun createQuickArtChip(label: String, selected: Boolean, onClick: (TextView) -> Unit): TextView {
-        val density = resources.displayMetrics.density
-        val padLR = (12 * density).toInt()
-        val padTB = (6 * density).toInt()
-        val margin = (4 * density).toInt()
-
-        val chip = TextView(this)
-        chip.text = label
-        chip.setTextColor(resources.getColor(R.color.key_text_color, null))
-        chip.textSize = 12f
-        chip.setPadding(padLR, padTB, padLR, padTB)
-        chip.layoutParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        ).apply { setMargins(margin, 0, margin, 0) }
-        chip.isClickable = true
-        chip.isFocusable = true
-        chip.setChipSelected(selected)
-        chip.setOnClickListener { onClick(chip) }
-        return chip
-    }
-
     private fun populateQuickArtBar(container: LinearLayout) {
         try {
             container.removeAllViews()
 
+            val density = resources.displayMetrics.density
+            val padLR = (12 * density).toInt()
+            val padTB = (6 * density).toInt()
+            val margin = (4 * density).toInt()
+
             // 1. Add 3D Emoji Toggle Chip
-            container.addView(
-                createQuickArtChip("😎 3D Emoji", isEmojiMode) { chip ->
-                    onKeyClickFeedback(chip)
-                    toggleEmojiMode()
-                    refreshQuickArtBar()
-                }
+            val emojiChip = TextView(this)
+            emojiChip.text = "😎 3D Emoji"
+            emojiChip.setTextColor(resources.getColor(R.color.key_text_color, null))
+            emojiChip.textSize = 12f
+            emojiChip.setPadding(padLR, padTB, padLR, padTB)
+            val emojiParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
             )
+            emojiParams.setMargins(margin, 0, margin, 0)
+            emojiChip.layoutParams = emojiParams
+            emojiChip.isClickable = true
+            emojiChip.isFocusable = true
+            emojiChip.setBackgroundResource(
+                if (isEmojiMode) R.drawable.chip_active_background
+                else R.drawable.chip_inactive_background
+            )
+            emojiChip.setOnClickListener {
+                onKeyClickFeedback(emojiChip)
+                toggleEmojiMode()
+                refreshQuickArtBar()
+            }
+            container.addView(emojiChip)
 
             // 2. Add Glitter Toggle Chip
-            container.addView(
-                createQuickArtChip(
-                    if (glitterEnabled) "✨ Glitter: ON" else "✨ Glitter: OFF",
-                    glitterEnabled
-                ) { chip ->
-                    onKeyClickFeedback(chip)
-                    toggleGlitter()
-                }
+            val glitterChip = TextView(this)
+            glitterChip.text = if (glitterEnabled) "✨ Glitter: ON" else "✨ Glitter: OFF"
+            glitterChip.setTextColor(resources.getColor(R.color.key_text_color, null))
+            glitterChip.textSize = 12f
+            glitterChip.setPadding(padLR, padTB, padLR, padTB)
+            val glitterParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
             )
+            glitterParams.setMargins(margin, 0, margin, 0)
+            glitterChip.layoutParams = glitterParams
+            glitterChip.isClickable = true
+            glitterChip.isFocusable = true
+            glitterChip.setBackgroundResource(
+                if (glitterEnabled) R.drawable.chip_active_background
+                else R.drawable.chip_inactive_background
+            )
+            glitterChip.setOnClickListener {
+                onKeyClickFeedback(glitterChip)
+                toggleGlitter()
+            }
+            container.addView(glitterChip)
 
             // 3. Add standard styles
-            for (style in getSortedStyles()) {
+            val styles = getSortedStyles()
+            for (style in styles) {
+                val textView = TextView(this)
+
+                val isFav = favoriteStyles.contains(style.name)
+                val isPrem = StyleCategorizer.isPremium(style)
                 val prefix = when {
-                    favoriteStyles.contains(style.name) -> "♥ "
-                    StyleCategorizer.isPremium(style) -> "👑 "
+                    isFav -> "♥ "
+                    isPrem -> "👑 "
                     else -> ""
                 }
-                val name = if (style == FrameStyle.NONE) "Normal" else TextArtFormatter.displayName(style)
 
-                container.addView(
-                    createQuickArtChip("$prefix$name", activeStyle == style && !isEmojiMode) {
-                        if (isEmojiMode) {
-                            isEmojiMode = false
-                            updateKeyLabels()
-                        }
-                        selectFrameStyle(style)
-                    }
+                val name = if (style == FrameStyle.NONE) "Normal" else style.name.lowercase().replace("_", " ").replaceFirstChar { it.uppercase() }
+                textView.text = "$prefix$name"
+                textView.setTextColor(resources.getColor(R.color.key_text_color, null))
+                textView.textSize = 12f
+
+                textView.setPadding(padLR, padTB, padLR, padTB)
+
+                val params = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
                 )
+                params.setMargins(margin, 0, margin, 0)
+                textView.layoutParams = params
+
+                textView.isClickable = true
+                textView.isFocusable = true
+                textView.setBackgroundResource(
+                    if (activeStyle == style && !isEmojiMode) R.drawable.chip_active_background
+                    else R.drawable.chip_inactive_background
+                )
+
+                textView.setOnClickListener {
+                    if (isEmojiMode) {
+                        isEmojiMode = false
+                        updateKeyLabels()
+                    }
+                    selectFrameStyle(style)
+                }
+                container.addView(textView)
             }
 
             // 4. Add Unicode Font Style Chips (excluding NONE)
-            for (uStyle in UnicodeStyle.values().filter { it != UnicodeStyle.NONE }) {
-                container.addView(
-                    createQuickArtChip(
-                        "𝔽 ${TextArtFormatter.displayName(uStyle)}",
-                        activeUnicode == uStyle && !isEmojiMode
-                    ) {
-                        if (isEmojiMode) {
-                            isEmojiMode = false
-                            updateKeyLabels()
-                        }
-                        selectUnicodeStyle(uStyle)
-                    }
+            val unicodeStyles = UnicodeStyle.values().filter { it != UnicodeStyle.NONE }
+            for (uStyle in unicodeStyles) {
+                val textView = TextView(this)
+                val name = uStyle.name.lowercase().replace("_", " ").replaceFirstChar { it.uppercase() }
+
+                textView.text = "𝔽 $name"
+                textView.setTextColor(resources.getColor(R.color.key_text_color, null))
+                textView.textSize = 12f
+                textView.setPadding(padLR, padTB, padLR, padTB)
+
+                val params = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
                 )
+                params.setMargins(margin, 0, margin, 0)
+                textView.layoutParams = params
+                textView.isClickable = true
+                textView.isFocusable = true
+                textView.setBackgroundResource(
+                    if (activeUnicode == uStyle && !isEmojiMode) R.drawable.chip_active_background
+                    else R.drawable.chip_inactive_background
+                )
+
+                textView.setOnClickListener {
+                    if (isEmojiMode) {
+                        isEmojiMode = false
+                        updateKeyLabels()
+                    }
+                    selectUnicodeStyle(uStyle)
+                }
+                container.addView(textView)
             }
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.populateQuickArtBar", e)
+            e.printStackTrace()
         }
     }
 
     private val glowingKeys = mutableSetOf<Int>()
 
-    /** Haptic pulse honouring the configured strength. */
-    private fun playVibrationFeedback() {
-        if (!vibrationEnabled) return
-        val vibrator = getSystemService(android.content.Context.VIBRATOR_SERVICE) as? android.os.Vibrator
-        vibrator?.let {
-            val duration = (vibrationStrength * 0.4).toLong().coerceAtLeast(1)
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                val amplitude = (vibrationStrength * 2.55).toInt().coerceIn(1, 255)
-                it.vibrate(android.os.VibrationEffect.createOneShot(duration, amplitude))
-            } else {
-                @Suppress("DEPRECATION")
-                it.vibrate(duration)
-            }
-        }
-    }
-
-    /** Key click sound honouring the configured volume. */
-    private fun playSoundFeedback() {
-        if (!soundEnabled) return
-        val am = getSystemService(android.content.Context.AUDIO_SERVICE) as? android.media.AudioManager
-        am?.playSoundEffect(android.media.AudioManager.FX_KEYPRESS_STANDARD, soundVolume / 100f)
-    }
-
     private fun onKeyClickFeedback(view: View) {
         try {
-            playVibrationFeedback()
+            if (vibrationEnabled) {
+                val vibrator = getSystemService(android.content.Context.VIBRATOR_SERVICE) as? android.os.Vibrator
+                vibrator?.let {
+                    val duration = (vibrationStrength * 0.4).toLong().coerceAtLeast(1)
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        val amplitude = (vibrationStrength * 2.55).toInt().coerceIn(1, 255)
+                        it.vibrate(android.os.VibrationEffect.createOneShot(duration, amplitude))
+                    } else {
+                        @Suppress("DEPRECATION")
+                        it.vibrate(duration)
+                    }
+                }
+            }
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.onKeyClickFeedback", e)
+            e.printStackTrace()
         }
 
         try {
-            playSoundFeedback()
+            if (soundEnabled) {
+                val am = getSystemService(android.content.Context.AUDIO_SERVICE) as? android.media.AudioManager
+                val vol = soundVolume / 100f
+                am?.playSoundEffect(android.media.AudioManager.FX_KEYPRESS_STANDARD, vol)
+            }
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.onKeyClickFeedback", e)
+            e.printStackTrace()
         }
 
         try {
@@ -747,7 +782,7 @@ class SpellTypeIME : InputMethodService() {
                 }
             }
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.onKeyClickFeedback", e)
+            e.printStackTrace()
         }
 
         try {
@@ -764,7 +799,7 @@ class SpellTypeIME : InputMethodService() {
                         .start()
                 }.start()
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.onKeyClickFeedback", e)
+            e.printStackTrace()
         }
     }
 
@@ -778,9 +813,7 @@ class SpellTypeIME : InputMethodService() {
                     refreshQuickArtBar()
                     updateLivePreviewBar()
                 } catch (e: Exception) {
-                    e.rethrowIfCancellation()
-                    AppLog.e("SpellTypeIME.selectFrameStyle", e)
-                    showToast("⚠️ Couldn't save frame style")
+                    e.printStackTrace()
                 }
             }
         }
@@ -796,9 +829,7 @@ class SpellTypeIME : InputMethodService() {
                     refreshQuickArtBar()
                     updateLivePreviewBar()
                 } catch (e: Exception) {
-                    e.rethrowIfCancellation()
-                    AppLog.e("SpellTypeIME.selectUnicodeStyle", e)
-                    showToast("⚠️ Couldn't save text style")
+                    e.printStackTrace()
                 }
             }
         }
@@ -814,9 +845,7 @@ class SpellTypeIME : InputMethodService() {
                     refreshQuickArtBar()
                     updateLivePreviewBar()
                 } catch (e: Exception) {
-                    e.rethrowIfCancellation()
-                    AppLog.e("SpellTypeIME.toggleGlitter", e)
-                    showToast("⚠️ Couldn't save glitter setting")
+                    e.printStackTrace()
                 }
             }
         }
@@ -827,7 +856,7 @@ class SpellTypeIME : InputMethodService() {
             val container = keyboardRootView?.findViewById<LinearLayout>(R.id.quick_art_container) ?: return
             populateQuickArtBar(container)
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.refreshQuickArtBar", e)
+            e.printStackTrace()
         }
     }
 
@@ -839,15 +868,24 @@ class SpellTypeIME : InputMethodService() {
     }
 
     /** Apply all active styles to composing text for live preview in input field */
-    private fun applyComposingStyle(text: String, signature: String = ""): String =
-        TextArtFormatter.format(
-            text = text,
-            style = activeStyle,
-            shape = activeShape,
-            unicode = activeUnicode,
-            glitterEnabled = glitterEnabled,
-            signature = signature
-        )
+    private fun applyComposingStyle(text: String): String {
+        var processed = UnicodeStylingEngine.applyStyle(text, activeUnicode)
+        if (glitterEnabled) {
+            val glitterSymbols = listOf("✨", "🌟", "⭐", "💫")
+            val words = processed.split(" ")
+            val sb = StringBuilder()
+            for (i in words.indices) {
+                sb.append(words[i])
+                if (i < words.size - 1) {
+                    sb.append(" ${glitterSymbols[i % glitterSymbols.size]} ")
+                }
+            }
+            processed = if (words.size == 1) "✨ $processed ✨" else sb.toString()
+        }
+        processed = ShapeEngine.applyShape(processed, activeShape)
+        processed = ArtEngine.applyFrame(processed, activeStyle)
+        return processed
+    }
 
     private fun handleKeyClick(text: String) {
         try {
@@ -873,7 +911,7 @@ class SpellTypeIME : InputMethodService() {
                 updateSuggestionsBar()
             }
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.handleKeyClick", e)
+            e.printStackTrace()
         }
     }
 
@@ -883,7 +921,7 @@ class SpellTypeIME : InputMethodService() {
             isShifted = !isShifted
             updateKeyLabels()
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.toggleShift", e)
+            e.printStackTrace()
         }
     }
 
@@ -899,7 +937,7 @@ class SpellTypeIME : InputMethodService() {
             isShifted = false
             updateKeyLabels()
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.toggleMode", e)
+            e.printStackTrace()
         }
     }
 
@@ -910,7 +948,7 @@ class SpellTypeIME : InputMethodService() {
             isShifted = false
             updateKeyLabels()
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.toggleEmojiMode", e)
+            e.printStackTrace()
         }
     }
 
@@ -951,7 +989,7 @@ class SpellTypeIME : InputMethodService() {
                 }
             }
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.updateKeyLabels", e)
+            e.printStackTrace()
         }
     }
 
@@ -972,7 +1010,7 @@ class SpellTypeIME : InputMethodService() {
                 ic.deleteSurroundingText(1, 0)
             }
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.handleBackspace", e)
+            e.printStackTrace()
         }
     }
 
@@ -1015,7 +1053,7 @@ class SpellTypeIME : InputMethodService() {
                 ic.commitText(" ", 1)
             }
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.handleSpace", e)
+            e.printStackTrace()
         }
     }
 
@@ -1029,33 +1067,27 @@ class SpellTypeIME : InputMethodService() {
                 updateLivePreviewBar()
             }
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.handleClipboardTool", e)
+            e.printStackTrace()
         }
     }
 
-    /**
-     * Runs a pro tool straight away for premium users, otherwise behind an interstitial.
-     * The tool always runs, even when the ad cannot be loaded or shown.
-     */
-    private fun runProToolWithAd(tool: () -> Unit) {
+    private fun handleClipboardToolWithAd() {
         if (premiumUnlocked) {
-            tool()
-            return
+            handleClipboardTool()
+        } else {
+            com.salmanlaghari.spelltypekeyboard.presentation.ads.AdManager.loadInterstitial(
+                context = this,
+                type = com.salmanlaghari.spelltypekeyboard.presentation.ads.InterstitialType.PRO_TOOLS,
+                onLoaded = { _ ->
+                    // Service context safety fallback
+                    handleClipboardTool()
+                },
+                onFailed = {
+                    handleClipboardTool()
+                }
+            )
         }
-        com.salmanlaghari.spelltypekeyboard.presentation.ads.AdManager.loadInterstitial(
-            context = this,
-            type = com.salmanlaghari.spelltypekeyboard.presentation.ads.InterstitialType.PRO_TOOLS,
-            onLoaded = { _ ->
-                // Service context safety fallback
-                tool()
-            },
-            onFailed = {
-                tool()
-            }
-        )
     }
-
-    private fun handleClipboardToolWithAd() = runProToolWithAd(::handleClipboardTool)
 
     private fun handleTranslateTool() {
         try {
@@ -1074,11 +1106,27 @@ class SpellTypeIME : InputMethodService() {
                 updateLivePreviewBar()
             }
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.handleTranslateTool", e)
+            e.printStackTrace()
         }
     }
 
-    private fun handleTranslateToolWithAd() = runProToolWithAd(::handleTranslateTool)
+    private fun handleTranslateToolWithAd() {
+        if (premiumUnlocked) {
+            handleTranslateTool()
+        } else {
+            com.salmanlaghari.spelltypekeyboard.presentation.ads.AdManager.loadInterstitial(
+                context = this,
+                type = com.salmanlaghari.spelltypekeyboard.presentation.ads.InterstitialType.PRO_TOOLS,
+                onLoaded = { _ ->
+                    // Service context safety fallback
+                    handleTranslateTool()
+                },
+                onFailed = {
+                    handleTranslateTool()
+                }
+            )
+        }
+    }
 
     private var templateIndex = 0
     private fun handleTemplatesTool() {
@@ -1099,17 +1147,7 @@ class SpellTypeIME : InputMethodService() {
                 "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n  𝕳𝖊𝖆𝖛𝖞 𝕯𝖊𝖈𝖔𝖗𝖆𝖙𝖎𝖛𝖊 𝕷𝖎𝖓𝖊\n▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
                 "🖤 𝔖𝔭𝔢𝔩𝔩𝔗𝔶𝔭𝔢 𝔊𝔬𝔱𝔥𝔦𝔠 𝔖𝔦𝔤𝔫𝔢𝔱 🖤",
                 "🔥 𝓕𝓲𝓻𝓮 𝓑𝓵𝓪𝓼𝓽 𝓔𝓶𝓸𝓳𝓲 𝓑𝓪𝓷𝓷𝓮𝓻 🔥\n 🔥☄️💥🌋🧨",
-                "⭐ 𝒲𝒾𝓈𝒽 𝒰𝓅𝑜𝓃 𝒜 𝒮𝓉𝒶𝓇 ⭐",
-                "🎮 𝓖𝓪𝓶𝓮𝓻𝓼 𝓤𝓷𝓲𝓽𝓮𝓭 🎮\n 🕹️👾🎯🏆💪",
-                "💻 𝓒𝓸𝓭𝓮𝓻𝓼 𝓛𝓲𝓯𝓮 💻\n { } = Life; 🐛 = Enemy",
-                "🎵 𝓜𝓾𝓼𝓲𝓬 𝓛𝓸𝓿𝓮𝓻 🎵\n 🎸🎹🥁🎤🎧",
-                "📚 𝓑𝓸𝓸𝓴 𝓦𝓸𝓻𝓶 📚\n Reading is dreaming\n with open eyes ✨",
-                "🏋️ 𝓕𝓲𝓽𝓷𝓮𝓼𝓼 𝓖𝓸𝓪𝓵𝓼 🏋️\n 💪 No Pain, No Gain 💪",
-                "✈️ 𝓣𝓻𝓪𝓿𝓮𝓵 𝓓𝓲𝓪𝓻𝔂 ✈️\n 🌍🗺️🧳📸✨",
-                "🍕 𝓕𝓸𝓸𝓭𝓲𝓮 𝓛𝓲𝓯𝓮 🍕\n 🍔🌮🍣🧁🍩",
-                "🎬 𝓜𝓸𝓿𝓲𝓮 𝓑𝓾𝓯𝓯 🎬\n 🍿🎥🎭📽️🎞️",
-                "🌅 𝓟𝓮𝓪𝓬𝓮𝓯𝓾𝓵 𝓢𝓸𝓾𝓵 🌅\n 🧘‍♀️☮️🕊️🌿💚",
-                "⚡ 𝓢𝓹𝓮𝓵𝓵𝓣𝔂𝓹𝓮 𝓟𝓸𝔀𝓮𝓻 ⚡\n ✨🔥💫🌟⭐"
+                "⭐ 𝒲𝒾𝓈𝒽 𝒰𝓅𝑜𝓃 𝒜 𝒮𝓉𝒶𝓇 ⭐"
             )
             val index = templateIndex
             templateIndex = (templateIndex + 1) % templates.size
@@ -1117,11 +1155,27 @@ class SpellTypeIME : InputMethodService() {
             composingText.append(templates[index])
             updateLivePreviewBar()
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.handleTemplatesTool", e)
+            e.printStackTrace()
         }
     }
 
-    private fun handleTemplatesToolWithAd() = runProToolWithAd(::handleTemplatesTool)
+    private fun handleTemplatesToolWithAd() {
+        if (premiumUnlocked) {
+            handleTemplatesTool()
+        } else {
+            com.salmanlaghari.spelltypekeyboard.presentation.ads.AdManager.loadInterstitial(
+                context = this,
+                type = com.salmanlaghari.spelltypekeyboard.presentation.ads.InterstitialType.PRO_TOOLS,
+                onLoaded = { _ ->
+                    // Service context safety fallback
+                    handleTemplatesTool()
+                },
+                onFailed = {
+                    handleTemplatesTool()
+                }
+            )
+        }
+    }
 
     private fun handleEnter() {
         try {
@@ -1136,7 +1190,7 @@ class SpellTypeIME : InputMethodService() {
                 ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER))
             }
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.handleEnter", e)
+            e.printStackTrace()
         }
     }
 
@@ -1168,11 +1222,7 @@ class SpellTypeIME : InputMethodService() {
                         ic.commitText(styled, 1)
                         onComplete?.invoke()
                     } catch (e: Exception) {
-                        e.rethrowIfCancellation()
-                        AppLog.e("SpellTypeIME.commitComposingText", e)
-                        // Styling failed — commit the raw text so the user never loses what they typed.
-                        ic.commitText(textToFormat, 1)
-                        onComplete?.invoke()
+                        e.printStackTrace()
                     }
                 }
             } else {
@@ -1180,7 +1230,7 @@ class SpellTypeIME : InputMethodService() {
                 onComplete?.invoke()
             }
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.commitComposingText", e)
+            e.printStackTrace()
         }
     }
 
@@ -1192,7 +1242,28 @@ class SpellTypeIME : InputMethodService() {
             } else {
                 previewTextView.visibility = View.VISIBLE
 
-                val processed = applyComposingStyle(composingText.toString(), customSignature)
+                val textToFormat = composingText.toString()
+                var processed = UnicodeStylingEngine.applyStyle(textToFormat, activeUnicode)
+
+                if (glitterEnabled) {
+                    val glitterSymbols = listOf("✨", "🌟", "⭐", "💫")
+                    val words = processed.split(" ")
+                    val sb = StringBuilder()
+                    for (i in words.indices) {
+                        sb.append(words[i])
+                        if (i < words.size - 1) {
+                            val symbol = glitterSymbols[i % glitterSymbols.size]
+                            sb.append(" $symbol ")
+                        }
+                    }
+                    processed = if (words.size == 1) "✨ $processed ✨" else sb.toString()
+                }
+
+                processed = ShapeEngine.applyShape(processed, activeShape)
+                processed = ArtEngine.applyFrame(processed, activeStyle)
+                if (customSignature.isNotEmpty()) {
+                    processed = "$processed\n$customSignature"
+                }
 
                 // Apply Rainbow Coloring and Giant Sizing preview style dynamically
                 previewTextView.text = PreviewStyler.stylePreview(
@@ -1202,7 +1273,7 @@ class SpellTypeIME : InputMethodService() {
                 )
             }
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.updateLivePreviewBar", e)
+            e.printStackTrace()
         }
     }
 
@@ -1211,7 +1282,7 @@ class SpellTypeIME : InputMethodService() {
             // Use the new AI-powered suggestions
             updateSuggestionsBarWithAI()
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.updateSuggestionsBar", e)
+            e.printStackTrace()
         }
     }
 
@@ -1237,7 +1308,7 @@ class SpellTypeIME : InputMethodService() {
                 row.layoutParams = lp
             }
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.applyKeyboardHeight", e)
+            e.printStackTrace()
         }
     }
 
@@ -1245,7 +1316,7 @@ class SpellTypeIME : InputMethodService() {
         try {
             applyPremiumTheme()
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.applyCustomConfigurations", e)
+            e.printStackTrace()
         }
     }
 
@@ -1259,7 +1330,7 @@ class SpellTypeIME : InputMethodService() {
                 }
             }
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.styleAllTextViewsUnder", e)
+            e.printStackTrace()
         }
     }
 
@@ -1369,7 +1440,7 @@ class SpellTypeIME : InputMethodService() {
             }
             view.setTextColor(textColor)
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.applyKeyStyle", e)
+            e.printStackTrace()
         }
     }
 
@@ -1385,7 +1456,7 @@ class SpellTypeIME : InputMethodService() {
             applyPremiumTheme()
             keyboardRootView?.findViewById<TextView>(R.id.btn_theme)?.text = "${activeRealTheme.emoji} ${activeRealTheme.name}"
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.cyclePremiumTheme", e)
+            e.printStackTrace()
         }
     }
 
@@ -1453,7 +1524,7 @@ class SpellTypeIME : InputMethodService() {
                 theme.glowColor
             )
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.applyPremiumTheme", e)
+            e.printStackTrace()
         }
     }
 
@@ -1467,7 +1538,7 @@ class SpellTypeIME : InputMethodService() {
             currentLanguage = languageList[languageIndex]
             applyLanguage()
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.cycleLanguage", e)
+            e.printStackTrace()
         }
     }
 
@@ -1479,7 +1550,7 @@ class SpellTypeIME : InputMethodService() {
             // Update key labels based on language layout
             updateKeyLabelsForLanguage(lang)
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.applyLanguage", e)
+            e.printStackTrace()
         }
     }
 
@@ -1495,7 +1566,7 @@ class SpellTypeIME : InputMethodService() {
                 }
             }
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.updateKeyLabelsForLanguage", e)
+            e.printStackTrace()
         }
     }
 
@@ -1527,7 +1598,7 @@ class SpellTypeIME : InputMethodService() {
                 keyboardRootView?.findViewById<TextView>(R.id.btn_dev_mode)?.text = "⌨️ Dev"
             }
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.toggleDeveloperMode", e)
+            e.printStackTrace()
         }
     }
 
@@ -1546,7 +1617,7 @@ class SpellTypeIME : InputMethodService() {
                 keyboardRootView?.findViewById<TextView>(R.id.btn_gemini)?.text = "✨ AI"
             }
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.toggleGeminiLive", e)
+            e.printStackTrace()
         }
     }
 
@@ -1563,7 +1634,7 @@ class SpellTypeIME : InputMethodService() {
             if (smartReplies.size >= 2) root.findViewById<TextView>(R.id.suggestion_center)?.text = smartReplies[1]
             if (smartReplies.size >= 3) root.findViewById<TextView>(R.id.suggestion_right)?.text = smartReplies[2]
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.updateGeminiSuggestions", e)
+            e.printStackTrace()
         }
     }
 
@@ -1599,7 +1670,7 @@ class SpellTypeIME : InputMethodService() {
                 ic.commitText(suggestion, 1)
             }
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.handleSuggestionClick", e)
+            e.printStackTrace()
         }
     }
 
@@ -1619,7 +1690,7 @@ class SpellTypeIME : InputMethodService() {
                             val ic = currentInputConnection ?: return
                             ic.commitText(text, 1)
                         } catch (e: Exception) {
-                            AppLog.e("SpellTypeIME.handleVoiceInput.onResult", e)
+                            e.printStackTrace()
                         }
                     }
                     override fun onPartialResult(text: String) {
@@ -1628,29 +1699,29 @@ class SpellTypeIME : InputMethodService() {
                             val ic = currentInputConnection ?: return
                             ic.setComposingText(text, 1)
                         } catch (e: Exception) {
-                            AppLog.e("SpellTypeIME.handleVoiceInput.onPartialResult", e)
+                            e.printStackTrace()
                         }
                     }
                     override fun onError(error: String) {
                         try {
-                            showToast("🎤 ${error.ifBlank { "Voice input error" }}")
+                            android.widget.Toast.makeText(ctx, "🎤 ${error.ifBlank { "Voice input error" }}", android.widget.Toast.LENGTH_SHORT).show()
                             keyboardRootView?.findViewById<TextView>(R.id.tool_voice)?.text = "🎤"
                         } catch (e: Exception) {
-                            AppLog.e("SpellTypeIME.handleVoiceInput.onError", e)
+                            e.printStackTrace()
                         }
                     }
                     override fun onListeningStarted() {
                         try {
                             keyboardRootView?.findViewById<TextView>(R.id.tool_voice)?.text = "🔴"
                         } catch (e: Exception) {
-                            AppLog.e("SpellTypeIME.handleVoiceInput.onListeningStarted", e)
+                            e.printStackTrace()
                         }
                     }
                     override fun onListeningStopped() {
                         try {
                             keyboardRootView?.findViewById<TextView>(R.id.tool_voice)?.text = "🎤"
                         } catch (e: Exception) {
-                            AppLog.e("SpellTypeIME.handleVoiceInput.onListeningStopped", e)
+                            e.printStackTrace()
                         }
                     }
                 })
@@ -1661,8 +1732,10 @@ class SpellTypeIME : InputMethodService() {
                 voiceInputManager?.startListening()
             }
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.handleVoiceInput", e)
-            showToast("🎤 Voice input unavailable")
+            e.printStackTrace()
+            try {
+                android.widget.Toast.makeText(applicationContext ?: this, "🎤 Voice input unavailable", android.widget.Toast.LENGTH_SHORT).show()
+            } catch (_: Exception) {}
         }
     }
 
@@ -1676,9 +1749,11 @@ class SpellTypeIME : InputMethodService() {
 
             // Show emoji category in suggestion bar
             val root = keyboardRootView ?: return
-            showSuggestions(root, "😀 Smileys", "👍 People", "🔥 Objects")
+            root.findViewById<TextView>(R.id.suggestion_left)?.text = "😀 Smileys"
+            root.findViewById<TextView>(R.id.suggestion_center)?.text = "👍 People"
+            root.findViewById<TextView>(R.id.suggestion_right)?.text = "🔥 Objects"
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.handleGifSearch", e)
+            e.printStackTrace()
         }
     }
 
@@ -1691,16 +1766,23 @@ class SpellTypeIME : InputMethodService() {
             val bg = activeBackground ?: return
             val root = keyboardRootView ?: return
             root.background = KeyboardBackgroundEngine.createBackground(bg)
-            showToast("🎨 ${bg.emoji} ${bg.name}")
+            try {
+                android.widget.Toast.makeText(
+                    applicationContext ?: this,
+                    "🎨 ${bg.emoji} ${bg.name}",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            } catch (_: Exception) {}
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.handleImageDesign", e)
-            showToast("🎨 Couldn't change keyboard background")
+            e.printStackTrace()
         }
     }
 
     private fun openSettings() {
-        if (!SettingsManager.openKeyboardSettings(applicationContext ?: this)) {
-            showToast("⚙️ Couldn't open keyboard settings")
+        try {
+            SettingsManager.openKeyboardSettings(applicationContext ?: this)
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
@@ -1708,7 +1790,7 @@ class SpellTypeIME : InputMethodService() {
         try {
             val text = composingText.toString()
             if (text.isBlank()) {
-                showToast("📡 Type something first to transmit!")
+                android.widget.Toast.makeText(applicationContext ?: this, "📡 Type something first to transmit!", android.widget.Toast.LENGTH_SHORT).show()
                 return
             }
             // Encode styled text for sharing
@@ -1724,16 +1806,11 @@ class SpellTypeIME : InputMethodService() {
             // Copy to clipboard
             val clipboard = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
             val clip = android.content.ClipData.newPlainText("SpellType Transmission", clipboardData)
-            if (clipboard == null) {
-                AppLog.e("SpellTypeIME.handleTransmissionTool", "clipboard service unavailable")
-                showToast("📡 Clipboard unavailable")
-                return
-            }
-            clipboard.setPrimaryClip(clip)
-            showToast("📡 Transmission copied! Share it!")
+            clipboard?.setPrimaryClip(clip)
+            android.widget.Toast.makeText(applicationContext ?: this, "📡 Transmission copied! Share it!", android.widget.Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.handleTransmissionTool", e)
-            showToast("📡 Transmission error")
+            e.printStackTrace()
+            android.widget.Toast.makeText(applicationContext ?: this, "📡 Transmission error", android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -2035,13 +2112,6 @@ class SpellTypeIME : InputMethodService() {
     //  OVERRIDE: Update suggestions to use AI engine
     // ═══════════════════════════════════════════════════════════════
 
-    /** Fills the three suggestion slots of the suggestions bar. */
-    private fun showSuggestions(root: View, left: String, center: String, right: String) {
-        root.findViewById<TextView>(R.id.suggestion_left)?.text = left
-        root.findViewById<TextView>(R.id.suggestion_center)?.text = center
-        root.findViewById<TextView>(R.id.suggestion_right)?.text = right
-    }
-
     private fun updateSuggestionsBarWithAI() {
         try {
             val root = keyboardRootView ?: return
@@ -2059,12 +2129,9 @@ class SpellTypeIME : InputMethodService() {
             if (premiumAssistEnabled && rawInput.isNotEmpty()) {
                 val assistSuggestions = getPremiumAssistSuggestions(rawInput)
                 if (assistSuggestions.isNotEmpty()) {
-                    showSuggestions(
-                        root,
-                        assistSuggestions.getOrElse(0) { "" },
-                        assistSuggestions.getOrElse(1) { "✨ Assist" },
-                        assistSuggestions.getOrElse(2) { "" }
-                    )
+                    root.findViewById<TextView>(R.id.suggestion_left)?.text = assistSuggestions.getOrElse(0) { "" }
+                    root.findViewById<TextView>(R.id.suggestion_center)?.text = assistSuggestions.getOrElse(1) { "✨ Assist" }
+                    root.findViewById<TextView>(R.id.suggestion_right)?.text = assistSuggestions.getOrElse(2) { "" }
                     return
                 }
             }
@@ -2072,12 +2139,9 @@ class SpellTypeIME : InputMethodService() {
             // Use AI Suggestions Engine
             val suggestions = AISuggestionsEngine.getSuggestions(rawInput, lastCommittedWord)
             if (suggestions.isNotEmpty()) {
-                showSuggestions(
-                    root,
-                    suggestions.getOrElse(0) { "" },
-                    suggestions.getOrElse(1) { "SpellType" },
-                    suggestions.getOrElse(2) { "" }
-                )
+                root.findViewById<TextView>(R.id.suggestion_left)?.text = suggestions.getOrElse(0) { "" }
+                root.findViewById<TextView>(R.id.suggestion_center)?.text = suggestions.getOrElse(1) { "SpellType" }
+                root.findViewById<TextView>(R.id.suggestion_right)?.text = suggestions.getOrElse(2) { "" }
             } else {
                 // Fall back to mood detector
                 val moodSuggestion = MoodDetector.detectMood(rawInput)
@@ -2099,7 +2163,7 @@ class SpellTypeIME : InputMethodService() {
                 }
             }
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.updateSuggestionsBarWithAI", e)
+            e.printStackTrace()
         }
     }
 
@@ -2113,10 +2177,28 @@ class SpellTypeIME : InputMethodService() {
             if (view is TextView) {
                 PremiumAnimationEngine.animateKeyPress(view, activeRealTheme.glowColor)
             }
-            playVibrationFeedback()
-            playSoundFeedback()
+            // Vibration feedback
+            if (vibrationEnabled) {
+                val vibrator = getSystemService(android.content.Context.VIBRATOR_SERVICE) as? android.os.Vibrator
+                vibrator?.let {
+                    val duration = (vibrationStrength * 0.4).toLong().coerceAtLeast(1)
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        val amplitude = (vibrationStrength * 2.55).toInt().coerceIn(1, 255)
+                        it.vibrate(android.os.VibrationEffect.createOneShot(duration, amplitude))
+                    } else {
+                        @Suppress("DEPRECATION")
+                        it.vibrate(duration)
+                    }
+                }
+            }
+            // Sound feedback
+            if (soundEnabled) {
+                val am = getSystemService(android.content.Context.AUDIO_SERVICE) as? android.media.AudioManager
+                val vol = soundVolume / 100f
+                am?.playSoundEffect(android.media.AudioManager.FX_KEYPRESS_STANDARD, vol)
+            }
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.onKeyClickFeedbackPremium", e)
+            e.printStackTrace()
         }
     }
 
@@ -2143,7 +2225,7 @@ class SpellTypeIME : InputMethodService() {
                 controlCenter.visibility = View.GONE
             }
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.toggleControlCenter", e)
+            e.printStackTrace()
         }
     }
 
@@ -2199,7 +2281,7 @@ class SpellTypeIME : InputMethodService() {
                 applyPremiumTheme()
             }
         } catch (e: Exception) {
-            AppLog.e("SpellTypeIME.applySimpleMode", e)
+            e.printStackTrace()
         }
     }
 
@@ -2221,54 +2303,6 @@ class SpellTypeIME : InputMethodService() {
         // CUSTOM
         listOf("🌟", "🔥", "💖", "✨", "👑", "💎", "🍀", "🌸", "🎵", "❄️", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p")
     )
-
-    /**
-     * Wires a control center ON/OFF option: renders "label: state" and re-renders after each tap.
-     * [onToggle] owns the actual state change so callers keep their own backing fields.
-     */
-    private fun bindToggleOption(
-        root: View,
-        viewId: Int,
-        label: String,
-        onText: String = "ON",
-        offText: String = "OFF",
-        isOn: () -> Boolean,
-        onToggle: () -> Unit
-    ) {
-        val button = root.findViewById<TextView>(viewId) ?: return
-        button.text = "$label: ${if (isOn()) onText else offText}"
-        button.setOnClickListener {
-            onKeyClickFeedback(it)
-            onToggle()
-            button.text = "$label: ${if (isOn()) onText else offText}"
-        }
-    }
-
-    /** Wires a particle effect option that starts its effect, or stops it when already running. */
-    private fun bindParticleEffect(
-        root: View,
-        viewId: Int,
-        label: String,
-        type: ParticleEffectsEngine.EffectType,
-        start: (View) -> Unit
-    ) {
-        val button = root.findViewById<TextView>(viewId) ?: return
-        button.setOnClickListener {
-            onKeyClickFeedback(it)
-            if (ParticleEffectsEngine.isActive() && activeParticleEffect == type) {
-                ParticleEffectsEngine.stop()
-                activeParticleEffect = ParticleEffectsEngine.EffectType.NONE
-                button.text = "$label: OFF"
-            } else {
-                val target = keyboardRootView ?: return@setOnClickListener
-                start(target)
-                activeParticleEffect = type
-                button.text = "$label: ON"
-            }
-        }
-    }
-
-    private var activeParticleEffect = ParticleEffectsEngine.EffectType.NONE
 
     private fun bindControlCenter(root: View) {
         val keysContainer = root.findViewById<View>(R.id.keyboard_keys_container) ?: return
@@ -2294,21 +2328,33 @@ class SpellTypeIME : InputMethodService() {
         }
 
         // 1. Gboard Type Choice
-        bindToggleOption(root, R.id.btn_opt_gboard, "⌨️ Gboard Mode", isOn = { gboardModeEnabled }) {
+        val btnGboard = root.findViewById<TextView>(R.id.btn_opt_gboard)
+        btnGboard?.text = "⌨️ Gboard Mode: ${if (gboardModeEnabled) "ON" else "OFF"}"
+        btnGboard?.setOnClickListener {
+            onKeyClickFeedback(it)
             gboardModeEnabled = !gboardModeEnabled
+            btnGboard.text = "⌨️ Gboard Mode: ${if (gboardModeEnabled) "ON" else "OFF"}"
             applyPremiumTheme()
         }
 
         // 2. 3D Keycaps Mode
-        bindToggleOption(root, R.id.btn_opt_3d_keys, "🧱 3D Keycaps", isOn = { force3DKeycaps }) {
+        val btn3d = root.findViewById<TextView>(R.id.btn_opt_3d_keys)
+        btn3d?.text = "🧱 3D Keycaps: ${if (force3DKeycaps) "ON" else "OFF"}"
+        btn3d?.setOnClickListener {
+            onKeyClickFeedback(it)
             force3DKeycaps = !force3DKeycaps
             RealTheme.force3D = force3DKeycaps
+            btn3d.text = "🧱 3D Keycaps: ${if (force3DKeycaps) "ON" else "OFF"}"
             applyPremiumTheme()
         }
 
         // 3. Dynamic Haptic Toggle
-        bindToggleOption(root, R.id.btn_opt_haptic, "📳 Haptic Haptic", isOn = { vibrationEnabled }) {
+        val btnHaptic = root.findViewById<TextView>(R.id.btn_opt_haptic)
+        btnHaptic?.text = "📳 Haptic Haptic: ${if (vibrationEnabled) "ON" else "OFF"}"
+        btnHaptic?.setOnClickListener {
+            onKeyClickFeedback(it)
             vibrationEnabled = !vibrationEnabled
+            btnHaptic.text = "📳 Haptic Haptic: ${if (vibrationEnabled) "ON" else "OFF"}"
         }
 
         // 4. Cycle Alphabet
@@ -2331,8 +2377,12 @@ class SpellTypeIME : InputMethodService() {
         }
 
         // 6. Key Sound Audio Toggle
-        bindToggleOption(root, R.id.btn_opt_sound, "🔊 Key Click Audio", isOn = { soundEnabled }) {
+        val btnSound = root.findViewById<TextView>(R.id.btn_opt_sound)
+        btnSound?.text = "🔊 Key Click Audio: ${if (soundEnabled) "ON" else "OFF"}"
+        btnSound?.setOnClickListener {
+            onKeyClickFeedback(it)
             soundEnabled = !soundEnabled
+            btnSound.text = "🔊 Key Click Audio: ${if (soundEnabled) "ON" else "OFF"}"
         }
 
         // 7. Key Sound Volume Control
@@ -2366,26 +2416,32 @@ class SpellTypeIME : InputMethodService() {
         }
 
         // 11. Number Row Show/Hide
-        bindToggleOption(
-            root, R.id.btn_opt_numrow, "🔢 Number Row",
-            onText = "SHOW", offText = "HIDE", isOn = { numberRowEnabled }
-        ) {
+        val btnNumrow = root.findViewById<TextView>(R.id.btn_opt_numrow)
+        btnNumrow?.text = "🔢 Number Row: ${if (numberRowEnabled) "SHOW" else "HIDE"}"
+        btnNumrow?.setOnClickListener {
+            onKeyClickFeedback(it)
             numberRowEnabled = !numberRowEnabled
+            btnNumrow.text = "🔢 Number Row: ${if (numberRowEnabled) "SHOW" else "HIDE"}"
             root.findViewById<View>(R.id.number_row)?.visibility = if (numberRowEnabled) View.VISIBLE else View.GONE
         }
 
         // 12. Smart Auto Suggestions
-        bindToggleOption(
-            root, R.id.btn_opt_suggest, "💡 Suggestion Bar",
-            onText = "SHOW", offText = "HIDE", isOn = { autoSuggestionsEnabled }
-        ) {
+        val btnSuggest = root.findViewById<TextView>(R.id.btn_opt_suggest)
+        btnSuggest?.text = "💡 Suggestion Bar: ${if (autoSuggestionsEnabled) "SHOW" else "HIDE"}"
+        btnSuggest?.setOnClickListener {
+            onKeyClickFeedback(it)
             autoSuggestionsEnabled = !autoSuggestionsEnabled
+            btnSuggest.text = "💡 Suggestion Bar: ${if (autoSuggestionsEnabled) "SHOW" else "HIDE"}"
             root.findViewById<View>(R.id.ai_suggestions_bar)?.visibility = if (autoSuggestionsEnabled) View.VISIBLE else View.GONE
         }
 
         // 13. Rainbow Live Preview
-        bindToggleOption(root, R.id.btn_opt_rainbow, "🌈 Rainbow Preview", isOn = { rainbowPreviewEnabled }) {
+        val btnRainbow = root.findViewById<TextView>(R.id.btn_opt_rainbow)
+        btnRainbow?.text = "🌈 Rainbow Preview: ${if (rainbowPreviewEnabled) "ON" else "OFF"}"
+        btnRainbow?.setOnClickListener {
+            onKeyClickFeedback(it)
             rainbowPreviewEnabled = !rainbowPreviewEnabled
+            btnRainbow.text = "🌈 Rainbow Preview: ${if (rainbowPreviewEnabled) "ON" else "OFF"}"
             val tvPreview = root.findViewById<TextView>(R.id.tv_keyboard_live_preview)
             if (rainbowPreviewEnabled) {
                 tvPreview?.setBackgroundColor(Color.parseColor("#3B0066"))
@@ -2397,32 +2453,66 @@ class SpellTypeIME : InputMethodService() {
         }
 
         // 14. Giant Words Mode
-        bindToggleOption(root, R.id.btn_opt_giant, "🅰️ Giant Words", isOn = { giantWordsEnabled }) {
+        val btnGiant = root.findViewById<TextView>(R.id.btn_opt_giant)
+        btnGiant?.text = "🅰️ Giant Words: ${if (giantWordsEnabled) "ON" else "OFF"}"
+        btnGiant?.setOnClickListener {
+            onKeyClickFeedback(it)
             giantWordsEnabled = !giantWordsEnabled
+            btnGiant.text = "🅰️ Giant Words: ${if (giantWordsEnabled) "ON" else "OFF"}"
         }
 
         // 15. Glitter Sparkle Sparkle
-        bindToggleOption(root, R.id.btn_opt_glitter, "✨ Glitter Mode", isOn = { glitterEnabled }) {
+        val btnGlitter = root.findViewById<TextView>(R.id.btn_opt_glitter)
+        btnGlitter?.text = "✨ Glitter Mode: ${if (glitterEnabled) "ON" else "OFF"}"
+        btnGlitter?.setOnClickListener {
+            onKeyClickFeedback(it)
             glitterEnabled = !glitterEnabled
+            btnGlitter.text = "✨ Glitter Mode: ${if (glitterEnabled) "ON" else "OFF"}"
         }
 
         // 16. Unicode Gothic Style
-        bindUnicodeToggle(root, R.id.btn_opt_gothic, "🏰 Gothic Unicode", UnicodeStyle.GOTHIC)
+        val btnGothic = root.findViewById<TextView>(R.id.btn_opt_gothic)
+        btnGothic?.text = "🏰 Gothic Unicode: ${if (activeUnicode == UnicodeStyle.GOTHIC) "ON" else "OFF"}"
+        btnGothic?.setOnClickListener {
+            onKeyClickFeedback(it)
+            activeUnicode = if (activeUnicode == UnicodeStyle.GOTHIC) UnicodeStyle.NONE else UnicodeStyle.GOTHIC
+            btnGothic.text = "🏰 Gothic Unicode: ${if (activeUnicode == UnicodeStyle.GOTHIC) "ON" else "OFF"}"
+        }
 
         // 17. Unicode Bold Style
-        bindUnicodeToggle(root, R.id.btn_opt_bold, "🄱 Bold Unicode", UnicodeStyle.CIRCLED)
+        val btnBold = root.findViewById<TextView>(R.id.btn_opt_bold)
+        btnBold?.text = "🄱 Bold Unicode: ${if (activeUnicode == UnicodeStyle.CIRCLED) "ON" else "OFF"}"
+        btnBold?.setOnClickListener {
+            onKeyClickFeedback(it)
+            activeUnicode = if (activeUnicode == UnicodeStyle.CIRCLED) UnicodeStyle.NONE else UnicodeStyle.CIRCLED
+            btnBold.text = "🄱 Bold Unicode: ${if (activeUnicode == UnicodeStyle.CIRCLED) "ON" else "OFF"}"
+        }
 
         // 18. Unicode Cursive Style
-        bindUnicodeToggle(root, R.id.btn_opt_cursive, "✍️ Cursive Unicode", UnicodeStyle.CURSIVE)
+        val btnCursive = root.findViewById<TextView>(R.id.btn_opt_cursive)
+        btnCursive?.text = "✍️ Cursive Unicode: ${if (activeUnicode == UnicodeStyle.CURSIVE) "ON" else "OFF"}"
+        btnCursive?.setOnClickListener {
+            onKeyClickFeedback(it)
+            activeUnicode = if (activeUnicode == UnicodeStyle.CURSIVE) UnicodeStyle.NONE else UnicodeStyle.CURSIVE
+            btnCursive.text = "✍️ Cursive Unicode: ${if (activeUnicode == UnicodeStyle.CURSIVE) "ON" else "OFF"}"
+        }
 
         // 19. Emoji Frames Selector
-        bindToggleOption(root, R.id.btn_opt_emoji_frames, "🖼️ Emoji Borders", isOn = { activeStyle != FrameStyle.NONE }) {
+        val btnFrames = root.findViewById<TextView>(R.id.btn_opt_emoji_frames)
+        btnFrames?.text = "🖼️ Emoji Borders: ${if (activeStyle != FrameStyle.NONE) "ON" else "OFF"}"
+        btnFrames?.setOnClickListener {
+            onKeyClickFeedback(it)
             activeStyle = if (activeStyle == FrameStyle.NONE) FrameStyle.SPARKS else FrameStyle.NONE
+            btnFrames.text = "🖼️ Emoji Borders: ${if (activeStyle != FrameStyle.NONE) "ON" else "OFF"}"
         }
 
         // 20. Custom Signature Toggle
-        bindToggleOption(root, R.id.btn_opt_signature, "🖋️ Signature Tail", isOn = { customSignature.isNotBlank() }) {
+        val btnSignature = root.findViewById<TextView>(R.id.btn_opt_signature)
+        btnSignature?.text = "🖋️ Signature Tail: ${if (customSignature.isNotBlank()) "ON" else "OFF"}"
+        btnSignature?.setOnClickListener {
+            onKeyClickFeedback(it)
             customSignature = if (customSignature.isBlank()) "Sent with SpellType 🪄" else ""
+            btnSignature.text = "🖋️ Signature Tail: ${if (customSignature.isNotBlank()) "ON" else "OFF"}"
         }
 
         // 21. Language English
@@ -2454,18 +2544,30 @@ class SpellTypeIME : InputMethodService() {
         }
 
         // 25. 130FPS Render Precision
-        bindToggleOption(root, R.id.btn_opt_60fps, "⚡ 130FPS Ultra Render", isOn = { highFpsRenderEnabled }) {
+        val btn60fps = root.findViewById<TextView>(R.id.btn_opt_60fps)
+        btn60fps?.text = "⚡ 130FPS Ultra Render: ${if (highFpsRenderEnabled) "ON" else "OFF"}"
+        btn60fps?.setOnClickListener {
+            onKeyClickFeedback(it)
             highFpsRenderEnabled = !highFpsRenderEnabled
+            btn60fps.text = "⚡ 60FPS Soft Render: ${if (highFpsRenderEnabled) "ON" else "OFF"}"
         }
 
         // 26. Holographic Glow Effect
-        bindToggleOption(root, R.id.btn_opt_holo_glow, "🎇 Holographic Glow", isOn = { holographicGlowEnabled }) {
+        val btnHoloGlow = root.findViewById<TextView>(R.id.btn_opt_holo_glow)
+        btnHoloGlow?.text = "🎇 Holographic Glow: ${if (holographicGlowEnabled) "ON" else "OFF"}"
+        btnHoloGlow?.setOnClickListener {
+            onKeyClickFeedback(it)
             holographicGlowEnabled = !holographicGlowEnabled
+            btnHoloGlow.text = "🎇 Holographic Glow: ${if (holographicGlowEnabled) "ON" else "OFF"}"
         }
 
         // 27. Particle System
-        bindToggleOption(root, R.id.btn_opt_particles, "☄️ Tap Particles", isOn = { tapParticlesEnabled }) {
+        val btnParticles = root.findViewById<TextView>(R.id.btn_opt_particles)
+        btnParticles?.text = "☄️ Tap Particles: ${if (tapParticlesEnabled) "ON" else "OFF"}"
+        btnParticles?.setOnClickListener {
+            onKeyClickFeedback(it)
             tapParticlesEnabled = !tapParticlesEnabled
+            btnParticles.text = "☄️ Tap Particles: ${if (tapParticlesEnabled) "ON" else "OFF"}"
         }
 
         // 28. Template Keyboard Choice
@@ -2476,8 +2578,12 @@ class SpellTypeIME : InputMethodService() {
         }
 
         // 29. Premium Assist
-        bindToggleOption(root, R.id.btn_opt_assist, "🪄 Premium Assist", isOn = { premiumAssistEnabled }) {
+        val btnAssist = root.findViewById<TextView>(R.id.btn_opt_assist)
+        btnAssist?.text = "🪄 Premium Assist: ${if (premiumAssistEnabled) "ON" else "OFF"}"
+        btnAssist?.setOnClickListener {
+            onKeyClickFeedback(it)
             premiumAssistEnabled = !premiumAssistEnabled
+            btnAssist.text = "🪄 Premium Assist: ${if (premiumAssistEnabled) "ON" else "OFF"}"
         }
 
         // 30. Clear Compose Buffer
@@ -2495,29 +2601,83 @@ class SpellTypeIME : InputMethodService() {
         }
 
         // 32. Ad-Free Sandbox
-        bindToggleOption(root, R.id.btn_opt_adfree, "🛡️ Ad-Free Sandbox", isOn = { adFreeSandboxEnabled }) {
+        val btnAdFree = root.findViewById<TextView>(R.id.btn_opt_adfree)
+        btnAdFree?.text = "🛡️ Ad-Free Sandbox: ${if (adFreeSandboxEnabled) "ON" else "OFF"}"
+        btnAdFree?.setOnClickListener {
+            onKeyClickFeedback(it)
             adFreeSandboxEnabled = !adFreeSandboxEnabled
             premiumUnlocked = adFreeSandboxEnabled
+            btnAdFree.text = "🛡️ Ad-Free Sandbox: ${if (adFreeSandboxEnabled) "ON" else "OFF"}"
             updateKeyboardAdBanners()
         }
 
         // ═══ Particle Effects ═══
-        bindParticleEffect(root, R.id.btn_opt_rain, "🌧️ Rain Effect", ParticleEffectsEngine.EffectType.RAIN, ParticleEffectsEngine::startRain)
-        bindParticleEffect(root, R.id.btn_opt_cherry, "🌸 Cherry Blossom", ParticleEffectsEngine.EffectType.CHERRY_BLOSSOM, ParticleEffectsEngine::startCherryBlossom)
-        bindParticleEffect(root, R.id.btn_opt_snow, "❄️ Snow Effect", ParticleEffectsEngine.EffectType.SNOW, ParticleEffectsEngine::startSnow)
-        bindParticleEffect(root, R.id.btn_opt_sparkle, "✨ Sparkle Effect", ParticleEffectsEngine.EffectType.SPARKLE, ParticleEffectsEngine::startSparkle)
+        var activeEffect = ParticleEffectsEngine.EffectType.NONE
+
+        val btnRain = root.findViewById<TextView>(R.id.btn_opt_rain)
+        btnRain?.setOnClickListener {
+            onKeyClickFeedback(it)
+            if (ParticleEffectsEngine.isActive() && activeEffect == ParticleEffectsEngine.EffectType.RAIN) {
+                ParticleEffectsEngine.stop()
+                activeEffect = ParticleEffectsEngine.EffectType.NONE
+                btnRain.text = "🌧️ Rain Effect: OFF"
+            } else {
+                ParticleEffectsEngine.startRain(keyboardRootView!!)
+                activeEffect = ParticleEffectsEngine.EffectType.RAIN
+                btnRain.text = "🌧️ Rain Effect: ON"
+            }
+        }
+
+        val btnCherry = root.findViewById<TextView>(R.id.btn_opt_cherry)
+        btnCherry?.setOnClickListener {
+            onKeyClickFeedback(it)
+            if (ParticleEffectsEngine.isActive() && activeEffect == ParticleEffectsEngine.EffectType.CHERRY_BLOSSOM) {
+                ParticleEffectsEngine.stop()
+                activeEffect = ParticleEffectsEngine.EffectType.NONE
+                btnCherry.text = "🌸 Cherry Blossom: OFF"
+            } else {
+                ParticleEffectsEngine.startCherryBlossom(keyboardRootView!!)
+                activeEffect = ParticleEffectsEngine.EffectType.CHERRY_BLOSSOM
+                btnCherry.text = "🌸 Cherry Blossom: ON"
+            }
+        }
+
+        val btnSnow = root.findViewById<TextView>(R.id.btn_opt_snow)
+        btnSnow?.setOnClickListener {
+            onKeyClickFeedback(it)
+            if (ParticleEffectsEngine.isActive() && activeEffect == ParticleEffectsEngine.EffectType.SNOW) {
+                ParticleEffectsEngine.stop()
+                activeEffect = ParticleEffectsEngine.EffectType.NONE
+                btnSnow.text = "❄️ Snow Effect: OFF"
+            } else {
+                ParticleEffectsEngine.startSnow(keyboardRootView!!)
+                activeEffect = ParticleEffectsEngine.EffectType.SNOW
+                btnSnow.text = "❄️ Snow Effect: ON"
+            }
+        }
+
+        val btnSparkle = root.findViewById<TextView>(R.id.btn_opt_sparkle)
+        btnSparkle?.setOnClickListener {
+            onKeyClickFeedback(it)
+            if (ParticleEffectsEngine.isActive() && activeEffect == ParticleEffectsEngine.EffectType.SPARKLE) {
+                ParticleEffectsEngine.stop()
+                activeEffect = ParticleEffectsEngine.EffectType.NONE
+                btnSparkle.text = "✨ Sparkle Effect: OFF"
+            } else {
+                ParticleEffectsEngine.startSparkle(keyboardRootView!!)
+                activeEffect = ParticleEffectsEngine.EffectType.SPARKLE
+                btnSparkle.text = "✨ Sparkle Effect: ON"
+            }
+        }
 
         // Simple Keyboard Mode
-        bindToggleOption(root, R.id.btn_opt_simple_mode, "🔇 Simple Keyboard", isOn = { simpleModeActive }) {
+        val btnSimpleMode = root.findViewById<TextView>(R.id.btn_opt_simple_mode)
+        btnSimpleMode?.text = "🔇 Simple Keyboard: ${if (simpleModeActive) "ON" else "OFF"}"
+        btnSimpleMode?.setOnClickListener {
+            onKeyClickFeedback(it)
             simpleModeActive = !simpleModeActive
+            btnSimpleMode.text = "🔇 Simple Keyboard: ${if (simpleModeActive) "ON" else "OFF"}"
             applySimpleMode()
-        }
-    }
-
-    /** Wires a control center option that switches a single unicode style on or back to NONE. */
-    private fun bindUnicodeToggle(root: View, viewId: Int, label: String, style: UnicodeStyle) {
-        bindToggleOption(root, viewId, label, isOn = { activeUnicode == style }) {
-            activeUnicode = if (activeUnicode == style) UnicodeStyle.NONE else style
         }
     }
 
@@ -2580,30 +2740,25 @@ class SpellTypeIME : InputMethodService() {
                     keyboardRootView?.findViewById<TextView>(R.id.suggestion_center)?.text = "AI Result Added!"
                 }
             } catch (e: java.net.SocketTimeoutException) {
-                AppLog.w("SpellTypeIME.performGoogleAISearch: timed out, using local result", e)
+                e.printStackTrace()
                 val fallback = generateLocalAISearchResult(query)
                 withContext(Dispatchers.Main) {
                     currentInputConnection?.commitText("\n🤖 [AI Search]: $fallback\n", 1)
                 }
             } catch (e: java.io.IOException) {
-                AppLog.w("SpellTypeIME.performGoogleAISearch: network failure, using local result", e)
+                e.printStackTrace()
                 val fallback = generateLocalAISearchResult(query)
                 withContext(Dispatchers.Main) {
                     currentInputConnection?.commitText("\n🤖 [AI Search]: $fallback\n", 1)
                 }
             } catch (e: Exception) {
-                e.rethrowIfCancellation()
-                AppLog.e("SpellTypeIME.performGoogleAISearch", e)
+                e.printStackTrace()
                 val fallback = generateLocalAISearchResult(query)
                 withContext(Dispatchers.Main) {
                     currentInputConnection?.commitText("\n🤖 [AI Search]: $fallback\n", 1)
                 }
             } finally {
-                try {
-                    urlConnection?.disconnect()
-                } catch (e: Exception) {
-                    AppLog.w("SpellTypeIME.performGoogleAISearch: failed to close connection", e)
-                }
+                try { urlConnection?.disconnect() } catch (_: Exception) {}
             }
         }
     }
@@ -2620,28 +2775,7 @@ class SpellTypeIME : InputMethodService() {
             q.contains("google") -> "Google LLC is an American multinational technology company focusing on artificial intelligence, search engine technology, and online advertising."
             q.contains("android") -> "Android is a mobile operating system based on a modified version of the Linux kernel and other open-source software, designed primarily for touchscreen mobile devices."
             q.contains("kotlin") -> "Kotlin is a cross-platform, statically typed, general-purpose programming language with type inference, designed to interoperate fully with Java."
-            q.contains("python") -> "Python is a high-level, general-purpose programming language. Its design philosophy emphasizes code readability with the use of significant indentation."
-            q.contains("javascript") -> "JavaScript, often abbreviated as JS, is a programming language that is one of the core technologies of the World Wide Web, alongside HTML and CSS."
-            q.contains("machine learning") || q.contains("ml") -> "Machine learning is a subset of artificial intelligence that focuses on building systems that learn from data. It includes supervised, unsupervised, and reinforcement learning."
-            q.contains("blockchain") -> "Blockchain is a distributed ledger technology that records transactions across many computers so that the records cannot be altered retroactively."
-            q.contains("climate") || q.contains("global warming") -> "Climate change refers to long-term shifts in temperatures and weather patterns. Human activities have been the main driver of climate change since the 1800s."
-            q.contains("pakistan") -> "Pakistan is a country in South Asia. It is the fifth-most populous country with a population exceeding 230 million. Capital: Islamabad."
-            q.contains("islam") || q.contains("quran") -> "Islam is a monotheistic Abrahamic religion founded in the 7th century CE. The Quran is its holy book, believed to be the word of God as revealed to Prophet Muhammad."
-            q.contains("cricket") -> "Cricket is a bat-and-ball game played between two teams of eleven players on a field. It originated in England and is now popular worldwide, especially in South Asia."
-            q.contains("football") || q.contains("soccer") -> "Football (soccer) is the world's most popular sport, played by over 250 million players in over 200 countries. The FIFA World Cup is its premier tournament."
-            q.contains("music") -> "Music is the art of arranging sound in time through melody, harmony, rhythm, and timbre. It is a universal cultural phenomenon present in all human societies."
-            q.contains("ai") || q.contains("artificial intelligence") -> "Artificial Intelligence (AI) is the simulation of human intelligence processes by computer systems, including learning, reasoning, and self-correction."
-            q.contains("space") || q.contains("nasa") -> "Space exploration is the use of astronomy and space technology to explore outer space. NASA, SpaceX, and other organizations are leading the way to Mars and beyond."
-            q.contains("health") || q.contains("fitness") -> "Health and fitness encompass physical, mental, and social well-being. Regular exercise, balanced nutrition, and adequate sleep are key pillars of good health."
-            q.contains("recipe") || q.contains("cook") -> "Cooking is the art and science of preparing food for consumption. It involves combining ingredients using various techniques to create nutritious and delicious meals."
-            q.contains("game") || q.contains("gaming") -> "Gaming is a multi-billion dollar industry encompassing video games, mobile games, and esports. Popular genres include action, RPG, strategy, and simulation."
-            q.contains("photography") -> "Photography is the art of capturing light with a camera. It involves composition, lighting, exposure, and post-processing to create compelling visual stories."
-            q.contains("travel") -> "Travel is the movement of people between distant geographical locations. It can be for leisure, business, or exploration, broadening perspectives and creating memories."
-            q.contains("education") -> "Education is the process of facilitating learning and acquiring knowledge, skills, values, and habits. It is a fundamental human right and key to development."
-            q.contains("startup") || q.contains("business") -> "A startup is a young company founded to develop a unique product or service. Key elements include innovation, scalability, and solving real-world problems."
-            q.contains("bitcoin") || q.contains("crypto") -> "Bitcoin is a decentralized digital currency created in 2009. Cryptocurrency uses cryptography for security and operates on blockchain technology."
-            q.contains("spelltype") -> "SpellType Keyboard is an advanced, ultra-customizable Android keyboard that features 3D rendering, AI suggestions, 130+ languages, and automatic unicode stylized outputs! 🚀"
-            else -> "SpellType AI found that '$query' is an interesting topic! For detailed results, try searching on your favorite search engine. 🚀"
+            else -> "Google AI found that '$query' represents an interesting concept connected to advanced technology, learning, and human curiosity! 🚀"
         }
     }
 }

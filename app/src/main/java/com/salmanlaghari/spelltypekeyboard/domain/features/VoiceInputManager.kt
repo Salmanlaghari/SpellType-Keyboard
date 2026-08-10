@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
-import com.salmanlaghari.spelltypekeyboard.core.AppLog
 
 /**
  * Real Voice Input Manager
@@ -37,14 +36,8 @@ class VoiceInputManager(private val context: Context) {
             return
         }
 
-        destroy()
-        speechRecognizer = try {
-            SpeechRecognizer.createSpeechRecognizer(context)
-        } catch (e: Exception) {
-            AppLog.e("VoiceInputManager.startListening", e)
-            callback?.onError("Couldn't start voice input")
-            return
-        }
+        speechRecognizer?.destroy()
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context)
 
         speechRecognizer?.setRecognitionListener(object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
@@ -100,32 +93,18 @@ class VoiceInputManager(private val context: Context) {
             putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
         }
 
-        try {
-            speechRecognizer?.startListening(intent)
-        } catch (e: Exception) {
-            isListening = false
-            AppLog.e("VoiceInputManager.startListening", e)
-            callback?.onError("Couldn't start voice input")
-        }
+        speechRecognizer?.startListening(intent)
     }
 
     fun stopListening() {
-        try {
-            speechRecognizer?.stopListening()
-        } catch (e: Exception) {
-            AppLog.e("VoiceInputManager.stopListening", e)
-        }
+        speechRecognizer?.stopListening()
         isListening = false
     }
 
     fun isListening(): Boolean = isListening
 
     fun destroy() {
-        try {
-            speechRecognizer?.destroy()
-        } catch (e: Exception) {
-            AppLog.e("VoiceInputManager.destroy", e)
-        }
+        speechRecognizer?.destroy()
         speechRecognizer = null
     }
 }

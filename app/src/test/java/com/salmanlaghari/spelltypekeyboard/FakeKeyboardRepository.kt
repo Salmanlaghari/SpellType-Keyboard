@@ -10,9 +10,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 class FakeKeyboardRepository : KeyboardRepository {
 
-    /** When true, every write fails, mirroring an unwritable DataStore/database. */
-    var failWrites = false
-
     private val savedArtList = mutableListOf<SavedArt>()
     private val savedArtFlow = MutableStateFlow<List<SavedArt>>(emptyList())
     private val selectedFrameStyleFlow = MutableStateFlow(FrameStyle.NONE)
@@ -48,14 +45,12 @@ class FakeKeyboardRepository : KeyboardRepository {
     }
 
     override suspend fun saveArt(art: SavedArt) {
-        failIfRequested()
         val newArt = art.copy(id = savedArtList.size + 1)
         savedArtList.add(newArt)
         savedArtFlow.value = savedArtList.toList().reversed()
     }
 
     override suspend fun deleteArt(art: SavedArt) {
-        failIfRequested()
         savedArtList.removeIf { it.id == art.id }
         savedArtFlow.value = savedArtList.toList().reversed()
     }
@@ -65,7 +60,6 @@ class FakeKeyboardRepository : KeyboardRepository {
     }
 
     override suspend fun saveSelectedFrameStyle(style: FrameStyle) {
-        failIfRequested()
         selectedFrameStyleFlow.value = style
     }
 
@@ -255,12 +249,7 @@ class FakeKeyboardRepository : KeyboardRepository {
     }
 
     override suspend fun clearAllArt() {
-        failIfRequested()
         savedArtList.clear()
         savedArtFlow.value = emptyList()
-    }
-
-    private fun failIfRequested() {
-        if (failWrites) throw IllegalStateException("write failed")
     }
 }

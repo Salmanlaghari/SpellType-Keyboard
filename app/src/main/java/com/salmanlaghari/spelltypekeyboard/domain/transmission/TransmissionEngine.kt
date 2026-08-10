@@ -1,7 +1,6 @@
 package com.salmanlaghari.spelltypekeyboard.domain.transmission
 
 import android.util.Base64
-import com.salmanlaghari.spelltypekeyboard.core.AppLog
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
@@ -162,7 +161,6 @@ object TransmissionEngine {
 
             DecodedTransmission(payload, true)
         } catch (e: Exception) {
-            AppLog.e("TransmissionEngine.decode", e)
             DecodedTransmission(null, false, "Decode error: ${e.message}")
         }
     }
@@ -202,7 +200,6 @@ object TransmissionEngine {
             }
             params["d"]
         } catch (e: Exception) {
-            AppLog.e("TransmissionEngine.extractDataFromUrl", e)
             null
         }
     }
@@ -303,7 +300,6 @@ object TransmissionEngine {
                 parts.size == 2 && Base64.decode(parts[0], Base64.NO_WRAP or Base64.URL_SAFE).isNotEmpty()
             }
         } catch (e: Exception) {
-            AppLog.w("TransmissionEngine.isValidTransmission", e)
             false
         }
     }
