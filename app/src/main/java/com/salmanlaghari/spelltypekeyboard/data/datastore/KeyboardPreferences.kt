@@ -4,11 +4,14 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
+import com.salmanlaghari.spelltypekeyboard.core.AppLog
 import com.salmanlaghari.spelltypekeyboard.domain.model.FrameStyle
 import com.salmanlaghari.spelltypekeyboard.domain.model.ShapeLayout
 import com.salmanlaghari.spelltypekeyboard.domain.model.UnicodeStyle
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import java.io.IOException
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "spelltype_settings")
 
@@ -45,274 +48,141 @@ class KeyboardPreferences(private val context: Context) {
         val KEY_TEXT_SIZE = stringPreferencesKey("key_text_size")
     }
 
-    val selectedFrameStyleFlow: Flow<FrameStyle> = context.dataStore.data
-        .map { preferences ->
-            val name = preferences[SELECTED_FRAME_STYLE] ?: FrameStyle.NONE.name
-            try { FrameStyle.valueOf(name) } catch (e: Exception) { FrameStyle.NONE }
+    /**
+     * Reads of an unreadable preferences file fall back to defaults instead of cancelling every
+     * collector (which would take the keyboard service down with it). Anything else propagates.
+     */
+    private val preferencesFlow: Flow<Preferences> = context.dataStore.data
+        .catch { error ->
+            if (error is IOException) {
+                AppLog.e("KeyboardPreferences.read", error)
+                emit(emptyPreferences())
+            } else {
+                throw error
+            }
         }
 
-    val selectedShapeLayoutFlow: Flow<ShapeLayout> = context.dataStore.data
-        .map { preferences ->
-            val name = preferences[SELECTED_SHAPE_LAYOUT] ?: ShapeLayout.NONE.name
-            try { ShapeLayout.valueOf(name) } catch (e: Exception) { ShapeLayout.NONE }
-        }
+    /** Reads a stored value, falling back to [default] when it was never written. */
+    private fun <T> preferenceFlow(key: Preferences.Key<T>, default: T): Flow<T> =
+        preferencesFlow.map { preferences -> preferences[key] ?: default }
 
-    val selectedUnicodeStyleFlow: Flow<UnicodeStyle> = context.dataStore.data
-        .map { preferences ->
-            val name = preferences[SELECTED_UNICODE_STYLE] ?: UnicodeStyle.NONE.name
-            try { UnicodeStyle.valueOf(name) } catch (e: Exception) { UnicodeStyle.NONE }
+    /** Reads an enum stored by name, falling back to [default] for missing or unknown names. */
+    private inline fun <reified T : Enum<T>> enumFlow(
+        key: Preferences.Key<String>,
+        default: T
+    ): Flow<T> = preferenceFlow(key, default.name).map { name ->
+        try {
+            enumValueOf<T>(name)
+        } catch (e: IllegalArgumentException) {
+            AppLog.e("KeyboardPreferences.parseEnum(${T::class.java.simpleName})", e)
+            default
         }
+    }
 
-    val glitterEnabledFlow: Flow<Boolean> = context.dataStore.data
-        .map { preferences ->
-            preferences[GLITTER_ENABLED] ?: false
-        }
+    private suspend fun <T> savePreference(key: Preferences.Key<T>, value: T) {
+        context.dataStore.edit { preferences -> preferences[key] = value }
+    }
 
-    val customSignatureFlow: Flow<String> = context.dataStore.data
-        .map { preferences ->
-            preferences[CUSTOM_SIGNATURE] ?: ""
-        }
+    val selectedFrameStyleFlow: Flow<FrameStyle> =
+        enumFlow(SELECTED_FRAME_STYLE, FrameStyle.NONE)
 
-    val favoriteStylesFlow: Flow<Set<String>> = context.dataStore.data
-        .map { preferences ->
-            preferences[FAVORITE_STYLES] ?: emptySet()
-        }
+    val selectedShapeLayoutFlow: Flow<ShapeLayout> =
+        enumFlow(SELECTED_SHAPE_LAYOUT, ShapeLayout.NONE)
 
-    val vibrationEnabledFlow: Flow<Boolean> = context.dataStore.data
-        .map { preferences ->
-            preferences[VIBRATION_ENABLED] ?: true
-        }
+    val selectedUnicodeStyleFlow: Flow<UnicodeStyle> =
+        enumFlow(SELECTED_UNICODE_STYLE, UnicodeStyle.NONE)
 
-    val soundEnabledFlow: Flow<Boolean> = context.dataStore.data
-        .map { preferences ->
-            preferences[SOUND_ENABLED] ?: true
-        }
+    val glitterEnabledFlow: Flow<Boolean> = preferenceFlow(GLITTER_ENABLED, false)
 
-    val themeSelectionFlow: Flow<String> = context.dataStore.data
-        .map { preferences ->
-            preferences[THEME_SELECTION] ?: "DARK"
-        }
+    val customSignatureFlow: Flow<String> = preferenceFlow(CUSTOM_SIGNATURE, "")
 
-    val premiumUnlockedFlow: Flow<Boolean> = context.dataStore.data
-        .map { preferences ->
-            preferences[PREMIUM_UNLOCKED] ?: false
-        }
+    val favoriteStylesFlow: Flow<Set<String>> = preferenceFlow(FAVORITE_STYLES, emptySet())
+
+    val vibrationEnabledFlow: Flow<Boolean> = preferenceFlow(VIBRATION_ENABLED, true)
+
+    val soundEnabledFlow: Flow<Boolean> = preferenceFlow(SOUND_ENABLED, true)
+
+    val themeSelectionFlow: Flow<String> = preferenceFlow(THEME_SELECTION, "DARK")
+
+    val premiumUnlockedFlow: Flow<Boolean> = preferenceFlow(PREMIUM_UNLOCKED, false)
 
     // Phase 6 Flows
-    val colorfulPreviewEnabledFlow: Flow<Boolean> = context.dataStore.data
-        .map { preferences ->
-            preferences[COLORFUL_PREVIEW_ENABLED] ?: true
-        }
+    val colorfulPreviewEnabledFlow: Flow<Boolean> = preferenceFlow(COLORFUL_PREVIEW_ENABLED, true)
 
-    val giantWordsEnabledFlow: Flow<Boolean> = context.dataStore.data
-        .map { preferences ->
-            preferences[GIANT_WORDS_ENABLED] ?: false
-        }
+    val giantWordsEnabledFlow: Flow<Boolean> = preferenceFlow(GIANT_WORDS_ENABLED, false)
 
-    val keyboardHeightFlow: Flow<String> = context.dataStore.data
-        .map { preferences ->
-            preferences[KEYBOARD_HEIGHT] ?: "MEDIUM"
-        }
+    val keyboardHeightFlow: Flow<String> = preferenceFlow(KEYBOARD_HEIGHT, "MEDIUM")
 
-    val vibrationStrengthFlow: Flow<Int> = context.dataStore.data
-        .map { preferences ->
-            preferences[VIBRATION_STRENGTH] ?: 50
-        }
+    val vibrationStrengthFlow: Flow<Int> = preferenceFlow(VIBRATION_STRENGTH, 50)
 
-    val keySoundVolumeFlow: Flow<Int> = context.dataStore.data
-        .map { preferences ->
-            preferences[KEY_SOUND_VOLUME] ?: 50
-        }
+    val keySoundVolumeFlow: Flow<Int> = preferenceFlow(KEY_SOUND_VOLUME, 50)
 
-    val numberRowEnabledFlow: Flow<Boolean> = context.dataStore.data
-        .map { preferences ->
-            preferences[NUMBER_ROW_ENABLED] ?: true
-        }
+    val numberRowEnabledFlow: Flow<Boolean> = preferenceFlow(NUMBER_ROW_ENABLED, true)
 
-    val autoSuggestionsEnabledFlow: Flow<Boolean> = context.dataStore.data
-        .map { preferences ->
-            preferences[AUTO_SUGGESTIONS_ENABLED] ?: true
-        }
+    val autoSuggestionsEnabledFlow: Flow<Boolean> = preferenceFlow(AUTO_SUGGESTIONS_ENABLED, true)
 
-    val swipeTypingEnabledFlow: Flow<Boolean> = context.dataStore.data
-        .map { preferences ->
-            preferences[SWIPE_TYPING_ENABLED] ?: false
-        }
+    val swipeTypingEnabledFlow: Flow<Boolean> = preferenceFlow(SWIPE_TYPING_ENABLED, false)
 
     // Premium UI & Upgrades Flow Getters
-    val keyboardWallpaperPathFlow: Flow<String> = context.dataStore.data
-        .map { preferences ->
-            preferences[KEYBOARD_WALLPAPER_PATH] ?: ""
-        }
+    val keyboardWallpaperPathFlow: Flow<String> = preferenceFlow(KEYBOARD_WALLPAPER_PATH, "")
 
-    val keyboardWallpaperOpacityFlow: Flow<Int> = context.dataStore.data
-        .map { preferences ->
-            preferences[KEYBOARD_WALLPAPER_OPACITY] ?: 50
-        }
+    val keyboardWallpaperOpacityFlow: Flow<Int> = preferenceFlow(KEYBOARD_WALLPAPER_OPACITY, 50)
 
-    val keyShapeFlow: Flow<String> = context.dataStore.data
-        .map { preferences ->
-            preferences[KEY_SHAPE] ?: "ROUNDED"
-        }
+    val keyShapeFlow: Flow<String> = preferenceFlow(KEY_SHAPE, "ROUNDED")
 
-    val keyBorderEnabledFlow: Flow<Boolean> = context.dataStore.data
-        .map { preferences ->
-            preferences[KEY_BORDER_ENABLED] ?: true
-        }
+    val keyBorderEnabledFlow: Flow<Boolean> = preferenceFlow(KEY_BORDER_ENABLED, true)
 
-    val keyBorderThicknessFlow: Flow<Int> = context.dataStore.data
-        .map { preferences ->
-            preferences[KEY_BORDER_THICKNESS] ?: 1
-        }
+    val keyBorderThicknessFlow: Flow<Int> = preferenceFlow(KEY_BORDER_THICKNESS, 1)
 
-    val keyTextSizeFlow: Flow<String> = context.dataStore.data
-        .map { preferences ->
-            preferences[KEY_TEXT_SIZE] ?: "MEDIUM"
-        }
+    val keyTextSizeFlow: Flow<String> = preferenceFlow(KEY_TEXT_SIZE, "MEDIUM")
 
-    suspend fun saveSelectedFrameStyle(style: FrameStyle) {
-        context.dataStore.edit { preferences ->
-            preferences[SELECTED_FRAME_STYLE] = style.name
-        }
-    }
+    suspend fun saveSelectedFrameStyle(style: FrameStyle) = savePreference(SELECTED_FRAME_STYLE, style.name)
 
-    suspend fun saveSelectedShapeLayout(shape: ShapeLayout) {
-        context.dataStore.edit { preferences ->
-            preferences[SELECTED_SHAPE_LAYOUT] = shape.name
-        }
-    }
+    suspend fun saveSelectedShapeLayout(shape: ShapeLayout) = savePreference(SELECTED_SHAPE_LAYOUT, shape.name)
 
-    suspend fun saveSelectedUnicodeStyle(style: UnicodeStyle) {
-        context.dataStore.edit { preferences ->
-            preferences[SELECTED_UNICODE_STYLE] = style.name
-        }
-    }
+    suspend fun saveSelectedUnicodeStyle(style: UnicodeStyle) = savePreference(SELECTED_UNICODE_STYLE, style.name)
 
-    suspend fun saveGlitterEnabled(enabled: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[GLITTER_ENABLED] = enabled
-        }
-    }
+    suspend fun saveGlitterEnabled(enabled: Boolean) = savePreference(GLITTER_ENABLED, enabled)
 
-    suspend fun saveCustomSignature(signature: String) {
-        context.dataStore.edit { preferences ->
-            preferences[CUSTOM_SIGNATURE] = signature
-        }
-    }
+    suspend fun saveCustomSignature(signature: String) = savePreference(CUSTOM_SIGNATURE, signature)
 
-    suspend fun saveFavoriteStyles(favorites: Set<String>) {
-        context.dataStore.edit { preferences ->
-            preferences[FAVORITE_STYLES] = favorites
-        }
-    }
+    suspend fun saveFavoriteStyles(favorites: Set<String>) = savePreference(FAVORITE_STYLES, favorites)
 
-    suspend fun saveVibrationEnabled(enabled: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[VIBRATION_ENABLED] = enabled
-        }
-    }
+    suspend fun saveVibrationEnabled(enabled: Boolean) = savePreference(VIBRATION_ENABLED, enabled)
 
-    suspend fun saveSoundEnabled(enabled: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[SOUND_ENABLED] = enabled
-        }
-    }
+    suspend fun saveSoundEnabled(enabled: Boolean) = savePreference(SOUND_ENABLED, enabled)
 
-    suspend fun saveThemeSelection(theme: String) {
-        context.dataStore.edit { preferences ->
-            preferences[THEME_SELECTION] = theme
-        }
-    }
+    suspend fun saveThemeSelection(theme: String) = savePreference(THEME_SELECTION, theme)
 
-    suspend fun savePremiumUnlocked(unlocked: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[PREMIUM_UNLOCKED] = unlocked
-        }
-    }
+    suspend fun savePremiumUnlocked(unlocked: Boolean) = savePreference(PREMIUM_UNLOCKED, unlocked)
 
     // Phase 6 Setters
-    suspend fun saveColorfulPreviewEnabled(enabled: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[COLORFUL_PREVIEW_ENABLED] = enabled
-        }
-    }
+    suspend fun saveColorfulPreviewEnabled(enabled: Boolean) = savePreference(COLORFUL_PREVIEW_ENABLED, enabled)
 
-    suspend fun saveGiantWordsEnabled(enabled: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[GIANT_WORDS_ENABLED] = enabled
-        }
-    }
+    suspend fun saveGiantWordsEnabled(enabled: Boolean) = savePreference(GIANT_WORDS_ENABLED, enabled)
 
-    suspend fun saveKeyboardHeight(height: String) {
-        context.dataStore.edit { preferences ->
-            preferences[KEYBOARD_HEIGHT] = height
-        }
-    }
+    suspend fun saveKeyboardHeight(height: String) = savePreference(KEYBOARD_HEIGHT, height)
 
-    suspend fun saveVibrationStrength(strength: Int) {
-        context.dataStore.edit { preferences ->
-            preferences[VIBRATION_STRENGTH] = strength
-        }
-    }
+    suspend fun saveVibrationStrength(strength: Int) = savePreference(VIBRATION_STRENGTH, strength)
 
-    suspend fun saveKeySoundVolume(volume: Int) {
-        context.dataStore.edit { preferences ->
-            preferences[KEY_SOUND_VOLUME] = volume
-        }
-    }
+    suspend fun saveKeySoundVolume(volume: Int) = savePreference(KEY_SOUND_VOLUME, volume)
 
-    suspend fun saveNumberRowEnabled(enabled: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[NUMBER_ROW_ENABLED] = enabled
-        }
-    }
+    suspend fun saveNumberRowEnabled(enabled: Boolean) = savePreference(NUMBER_ROW_ENABLED, enabled)
 
-    suspend fun saveAutoSuggestionsEnabled(enabled: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[AUTO_SUGGESTIONS_ENABLED] = enabled
-        }
-    }
+    suspend fun saveAutoSuggestionsEnabled(enabled: Boolean) = savePreference(AUTO_SUGGESTIONS_ENABLED, enabled)
 
-    suspend fun saveSwipeTypingEnabled(enabled: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[SWIPE_TYPING_ENABLED] = enabled
-        }
-    }
+    suspend fun saveSwipeTypingEnabled(enabled: Boolean) = savePreference(SWIPE_TYPING_ENABLED, enabled)
 
     // Premium UI & Upgrades Setters
-    suspend fun saveKeyboardWallpaperPath(path: String) {
-        context.dataStore.edit { preferences ->
-            preferences[KEYBOARD_WALLPAPER_PATH] = path
-        }
-    }
+    suspend fun saveKeyboardWallpaperPath(path: String) = savePreference(KEYBOARD_WALLPAPER_PATH, path)
 
-    suspend fun saveKeyboardWallpaperOpacity(opacity: Int) {
-        context.dataStore.edit { preferences ->
-            preferences[KEYBOARD_WALLPAPER_OPACITY] = opacity
-        }
-    }
+    suspend fun saveKeyboardWallpaperOpacity(opacity: Int) = savePreference(KEYBOARD_WALLPAPER_OPACITY, opacity)
 
-    suspend fun saveKeyShape(shape: String) {
-        context.dataStore.edit { preferences ->
-            preferences[KEY_SHAPE] = shape
-        }
-    }
+    suspend fun saveKeyShape(shape: String) = savePreference(KEY_SHAPE, shape)
 
-    suspend fun saveKeyBorderEnabled(enabled: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[KEY_BORDER_ENABLED] = enabled
-        }
-    }
+    suspend fun saveKeyBorderEnabled(enabled: Boolean) = savePreference(KEY_BORDER_ENABLED, enabled)
 
-    suspend fun saveKeyBorderThickness(thickness: Int) {
-        context.dataStore.edit { preferences ->
-            preferences[KEY_BORDER_THICKNESS] = thickness
-        }
-    }
+    suspend fun saveKeyBorderThickness(thickness: Int) = savePreference(KEY_BORDER_THICKNESS, thickness)
 
-    suspend fun saveKeyTextSize(size: String) {
-        context.dataStore.edit { preferences ->
-            preferences[KEY_TEXT_SIZE] = size
-        }
-    }
+    suspend fun saveKeyTextSize(size: String) = savePreference(KEY_TEXT_SIZE, size)
 }

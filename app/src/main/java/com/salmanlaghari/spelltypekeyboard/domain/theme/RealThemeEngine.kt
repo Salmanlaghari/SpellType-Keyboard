@@ -424,7 +424,51 @@ data class RealTheme(
                 Color.parseColor("#4A3000"), Color.parseColor("#7A5500"), Color.parseColor("#FFF8E1"),
                 Color.parseColor("#FFB300"), Color.parseColor("#FFC107"), Color.parseColor("#FFD54F"),
                 Color.parseColor("#1A1000"), Color.parseColor("#FFC107"), Color.parseColor("#1A1000"),
-                Color.parseColor("#0D0800"), is3DTheme = true, particleColor = Color.parseColor("#FFB300"))
+                Color.parseColor("#0D0800"), is3DTheme = true, particleColor = Color.parseColor("#FFB300")),
+
+            // ═══ v6.0 — 6 NEW 3D BRAND THEMES ═══
+            // 45. Brand Neon Purple
+            RealTheme("brand_neon_purple", "Brand Neon Purple", "💜",
+                intArrayOf(Color.parseColor("#1A002E"), Color.parseColor("#330055"), Color.parseColor("#0D001A")),
+                Color.parseColor("#4A0080"), Color.parseColor("#6B00B3"), Color.parseColor("#F3E5F5"),
+                Color.parseColor("#AA00FF"), Color.parseColor("#D500F9"), Color.parseColor("#38005A"),
+                Color.parseColor("#0D001A"), Color.parseColor("#D500F9"), Color.parseColor("#0D001A"),
+                Color.parseColor("#0D001A"), is3DTheme = true, particleColor = Color.parseColor("#D500F9")),
+            // 46. Brand Ocean Blue
+            RealTheme("brand_ocean_blue", "Brand Ocean Blue", "🌊",
+                intArrayOf(Color.parseColor("#001A33"), Color.parseColor("#003366"), Color.parseColor("#000D1A")),
+                Color.parseColor("#0A3D66"), Color.parseColor("#1565A0"), Color.parseColor("#E3F2FD"),
+                Color.parseColor("#1976D2"), Color.parseColor("#42A5F5"), Color.parseColor("#0D2F4F"),
+                Color.parseColor("#001A33"), Color.parseColor("#42A5F5"), Color.parseColor("#001A33"),
+                Color.parseColor("#000D1A"), is3DTheme = true, particleColor = Color.parseColor("#42A5F5")),
+            // 47. Brand Forest Green
+            RealTheme("brand_forest_green", "Brand Forest Green", "🌲",
+                intArrayOf(Color.parseColor("#001A0D"), Color.parseColor("#003319"), Color.parseColor("#000F07")),
+                Color.parseColor("#0A3D20"), Color.parseColor("#156B35"), Color.parseColor("#E8F5E9"),
+                Color.parseColor("#388E3C"), Color.parseColor("#66BB6A"), Color.parseColor("#0A2E15"),
+                Color.parseColor("#001A0D"), Color.parseColor("#66BB6A"), Color.parseColor("#001A0D"),
+                Color.parseColor("#000F07"), is3DTheme = true, particleColor = Color.parseColor("#66BB6A")),
+            // 48. Brand Sunset Orange
+            RealTheme("brand_sunset_orange", "Brand Sunset Orange", "🌅",
+                intArrayOf(Color.parseColor("#1A0A00"), Color.parseColor("#331500"), Color.parseColor("#0D0500")),
+                Color.parseColor("#4A2000"), Color.parseColor("#803500"), Color.parseColor("#FFF3E0"),
+                Color.parseColor("#FF6D00"), Color.parseColor("#FF9100"), Color.parseColor("#331500"),
+                Color.parseColor("#1A0A00"), Color.parseColor("#FF9100"), Color.parseColor("#1A0A00"),
+                Color.parseColor("#0D0500"), is3DTheme = true, particleColor = Color.parseColor("#FF9100")),
+            // 49. Brand Ice Crystal
+            RealTheme("brand_ice_crystal", "Brand Ice Crystal", "❄️",
+                intArrayOf(Color.parseColor("#E0F4FF"), Color.parseColor("#E8F8FF"), Color.parseColor("#D0EFFF")),
+                Color.parseColor("#FFFFFF"), Color.parseColor("#B3E5FC"), Color.parseColor("#01579B"),
+                Color.parseColor("#0288D1"), Color.parseColor("#03A9F4"), Color.parseColor("#4FC3F7"),
+                Color.parseColor("#E0F4FF"), Color.parseColor("#0288D1"), Color.parseColor("#E0F4FF"),
+                Color.parseColor("#D0EFFF"), isLight = true, is3DTheme = true, particleColor = Color.parseColor("#4FC3F7")),
+            // 50. Brand Fire Red
+            RealTheme("brand_fire_red", "Brand Fire Red", "🔥",
+                intArrayOf(Color.parseColor("#1A0500"), Color.parseColor("#331000"), Color.parseColor("#0D0200")),
+                Color.parseColor("#4A1800"), Color.parseColor("#803000"), Color.parseColor("#FFF8E1"),
+                Color.parseColor("#FF3D00"), Color.parseColor("#FF6E40"), Color.parseColor("#331000"),
+                Color.parseColor("#1A0500"), Color.parseColor("#FF6E40"), Color.parseColor("#1A0500"),
+                Color.parseColor("#0D0200"), is3DTheme = true, particleColor = Color.parseColor("#FF6E40"))
         )
     }
 

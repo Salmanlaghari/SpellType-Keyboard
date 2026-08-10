@@ -29,28 +29,26 @@ android {
             val envKeyAlias = System.getenv("KEY_ALIAS")
             val envKeyPass = System.getenv("KEY_PASSWORD")
 
+            val keystorePropertiesFile = rootProject.file("keystore.properties")
             if (envStoreFile != null && envStorePass != null) {
                 // CI environment — use env vars
                 storeFile = file(envStoreFile)
                 storePassword = envStorePass
                 keyAlias = envKeyAlias ?: "spelltype"
                 keyPassword = envKeyPass ?: envStorePass
+            } else if (keystorePropertiesFile.exists()) {
+                val keystoreProperties = Properties()
+                keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
             } else {
-                val keystorePropertiesFile = rootProject.file("keystore.properties")
-                if (keystorePropertiesFile.exists()) {
-                    val keystoreProperties = Properties()
-                    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
-                    storeFile = file(keystoreProperties["storeFile"] as String)
-                    storePassword = keystoreProperties["storePassword"] as String
-                    keyAlias = keystoreProperties["keyAlias"] as String
-                    keyPassword = keystoreProperties["keyPassword"] as String
-                } else {
-                    // Fallback for local/test builds
-                    storeFile = file("release.keystore")
-                    storePassword = "spelltypepass"
-                    keyAlias = "spelltype"
-                    keyPassword = "spelltypepass"
-                }
+                // Fallback for local/test builds
+                storeFile = file("release.keystore")
+                storePassword = "spelltypepass"
+                keyAlias = "spelltype"
+                keyPassword = "spelltypepass"
             }
         }
     }
@@ -92,6 +90,7 @@ android {
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
+            isReturnDefaultValues = true
         }
     }
 }

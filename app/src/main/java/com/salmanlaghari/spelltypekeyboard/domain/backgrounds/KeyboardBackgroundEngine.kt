@@ -142,7 +142,29 @@ object KeyboardBackgroundEngine {
         KeyboardBackground("emerald_city", "Emerald City", "💚", BackgroundType.GRADIENT,
             intArrayOf(Color.parseColor("#001A0A"), Color.parseColor("#003315"), Color.parseColor("#001A0D")), 20),
         KeyboardBackground("diamond_dust", "Diamond Dust", "💠", BackgroundType.PATTERN_SNOW,
-            intArrayOf(Color.parseColor("#E0F0FF"), Color.parseColor("#E8F5FF")), 30)
+            intArrayOf(Color.parseColor("#E0F0FF"), Color.parseColor("#E8F5FF")), 30),
+
+        // ═══ v6.0 — 10 NEW 8K BRAND WALLPAPER BACKGROUNDS ═══
+        KeyboardBackground("brand_neon", "Brand Neon", "💜", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#1A002E"), Color.parseColor("#330055"), Color.parseColor("#0D001A")), 20),
+        KeyboardBackground("brand_ocean", "Brand Ocean", "🌊", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#001A33"), Color.parseColor("#003366"), Color.parseColor("#000D1A")), 20),
+        KeyboardBackground("brand_forest", "Brand Forest", "🌲", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#001A0D"), Color.parseColor("#003319"), Color.parseColor("#000F07")), 20),
+        KeyboardBackground("brand_sunset", "Brand Sunset", "🌅", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#1A0A00"), Color.parseColor("#331500"), Color.parseColor("#0D0500")), 20),
+        KeyboardBackground("brand_ice", "Brand Ice", "❄️", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#0A1A2E"), Color.parseColor("#0F2847"), Color.parseColor("#071220")), 20),
+        KeyboardBackground("brand_fire", "Brand Fire", "🔥", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#1A0500"), Color.parseColor("#331000"), Color.parseColor("#0D0200")), 20),
+        KeyboardBackground("brand_gold", "Brand Gold", "✨", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#1A1000"), Color.parseColor("#332000"), Color.parseColor("#0D0800")), 20),
+        KeyboardBackground("brand_rose", "Brand Rose", "🌹", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#1A0010"), Color.parseColor("#330020"), Color.parseColor("#0D0008")), 20),
+        KeyboardBackground("brand_emerald", "Brand Emerald", "💚", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#001A0A"), Color.parseColor("#003315"), Color.parseColor("#000F05")), 20),
+        KeyboardBackground("brand_sapphire", "Brand Sapphire", "💙", BackgroundType.GRADIENT,
+            intArrayOf(Color.parseColor("#000A1A"), Color.parseColor("#001533"), Color.parseColor("#000510")), 20)
     )
 
     /**

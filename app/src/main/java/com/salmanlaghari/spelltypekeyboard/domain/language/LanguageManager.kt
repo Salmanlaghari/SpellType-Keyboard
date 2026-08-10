@@ -679,6 +679,150 @@ object LanguageManager {
             row2 = listOf("ش","س","ی","ب","ل","ا","ت","ن","م","ک"),
             row3 = listOf("ئ","ء","ؤ","ر","لا","ى","ة","و","ز"),
             category = LanguageCategory.MIDDLE_EASTERN)
+
+        // ═══════════════════════════════════════
+        //  ADDITIONAL LANGUAGES (130+ total)
+        // ═══════════════════════════════════════
+
+        languages += KeyboardLanguage("sw", "Swahili (Tanzania)", "Kiswahili", "🇹🇿",
+            row1 = listOf("q","w","e","r","t","y","u","i","o","p"),
+            row2 = listOf("a","s","d","f","g","h","j","k","l"),
+            row3 = listOf("z","x","c","v","b","n","m"),
+            category = LanguageCategory.AFRICAN)
+
+        languages += KeyboardLanguage("my", "Burmese", "မြန်မာ", "🇲🇲",
+            row1 = listOf("ဆ","တ","န","မ","အ","ပ","က","င","သ"),
+            row2 = listOf("စ","ဟ","ျ","ဗ","ံ","ါ","ိ","ု","ဒ"),
+            row3 = listOf("ယ","ရ","လ","ဝ","ဥ","ဘ","ည"),
+            category = LanguageCategory.SOUTHEAST_ASIAN)
+
+        languages += KeyboardLanguage("si", "Sinhala", "සිංහල", "🇱🇰",
+            row1 = listOf("ු","ෑ","ා","ී","ූ","බ","හ","ග","ද","ජ"),
+            row2 = listOf("ො","ේ","්","ි","ැ","ප","ර","ක","ත","ච"),
+            row3 = listOf("අ","ඞ","ම","න","ව","ල","ස"),
+            category = LanguageCategory.INDIC)
+
+        languages += KeyboardLanguage("jv", "Javanese", "Basa Jawa", "🇮🇩",
+            row1 = listOf("q","w","e","r","t","y","u","i","o","p"),
+            row2 = listOf("a","s","d","f","g","h","j","k","l"),
+            row3 = listOf("z","x","c","v","b","n","m"),
+            category = LanguageCategory.SOUTHEAST_ASIAN)
+
+        languages += KeyboardLanguage("su", "Sundanese", "Basa Sunda", "🇮🇩",
+            row1 = listOf("q","w","e","r","t","y","u","i","o","p"),
+            row2 = listOf("a","s","d","f","g","h","j","k","l"),
+            row3 = listOf("z","x","c","v","b","n","m"),
+            category = LanguageCategory.SOUTHEAST_ASIAN)
+
+        languages += KeyboardLanguage("ceb", "Cebuano", "Cebuano", "🇵🇭",
+            row1 = listOf("q","w","e","r","t","y","u","i","o","p"),
+            row2 = listOf("a","s","d","f","g","h","j","k","l"),
+            row3 = listOf("z","x","c","v","b","n","m"),
+            category = LanguageCategory.SOUTHEAST_ASIAN)
+
+        languages += KeyboardLanguage("hmn", "Hmong", "Hmoob", "🏳️",
+            row1 = listOf("q","w","e","r","t","y","u","i","o","p"),
+            row2 = listOf("a","s","d","f","g","h","j","k","l"),
+            row3 = listOf("z","x","c","v","b","n","m"),
+            category = LanguageCategory.SOUTHEAST_ASIAN)
+
+        languages += KeyboardLanguage("ht", "Haitian Creole", "Kreyòl Ayisyen", "🇭🇹",
+            row1 = listOf("q","w","e","r","t","y","u","i","o","p"),
+            row2 = listOf("a","s","d","f","g","h","j","k","l"),
+            row3 = listOf("z","x","c","v","b","n","m"),
+            category = LanguageCategory.EUROPEAN)
+
+        languages += KeyboardLanguage("yi", "Yiddish", "ייִדיש", "🇮🇱",
+            isRTL = true,
+            row1 = listOf("/","'","ק","ר","א","ט","ו","ן","ם","פ"),
+            row2 = listOf("ש","ד","ג","כ","ע","י","ח","ל","ך","ף"),
+            row3 = listOf("ז","ס","ב","ה","נ","מ","צ","ת","ץ"),
+            category = LanguageCategory.MIDDLE_EASTERN)
+
+        languages += KeyboardLanguage("co", "Corsican", "Corsu", "🇫🇷",
+            row1 = listOf("q","w","e","r","t","y","u","i","o","p"),
+            row2 = listOf("a","s","d","f","g","h","j","k","l"),
+            row3 = listOf("z","x","c","v","b","n","m"),
+            category = LanguageCategory.EUROPEAN)
+
+        languages += KeyboardLanguage("fy", "Frisian", "Frysk", "🇳🇱",
+            row1 = listOf("q","w","e","r","t","y","u","i","o","p"),
+            row2 = listOf("a","s","d","f","g","h","j","k","l"),
+            row3 = listOf("z","x","c","v","b","n","m"),
+            category = LanguageCategory.EUROPEAN)
+
+        languages += KeyboardLanguage("gd", "Scottish Gaelic", "Gàidhlig", "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
+            row1 = listOf("q","w","e","r","t","y","u","i","o","p"),
+            row2 = listOf("a","s","d","f","g","h","j","k","l"),
+            row3 = listOf("z","x","c","v","b","n","m"),
+            category = LanguageCategory.EUROPEAN)
+
+        languages += KeyboardLanguage("ku", "Kurdish (Kurmanji)", "Kurmancî", "🏴",
+            row1 = listOf("q","w","e","r","t","y","u","î","o","p"),
+            row2 = listOf("a","s","d","f","g","h","j","k","l"),
+            row3 = listOf("z","x","c","v","b","n","m","ê","û","ç"),
+            category = LanguageCategory.MIDDLE_EASTERN)
+
+        languages += KeyboardLanguage("ug", "Uyghur", "ئۇيغۇرچە", "🇨🇳",
+            isRTL = true,
+            row1 = listOf("چ","ۋ","ې","ر","ت","ي","ۇ","ڭ","و","پ"),
+            row2 = listOf("ھ","س","د","ا","ە","ق","ك","ل","گ"),
+            row3 = listOf("ژ","ز","ش","غ","ب","ن","م"),
+            category = LanguageCategory.MIDDLE_EASTERN)
+
+        languages += KeyboardLanguage("tt", "Tatar", "Татар", "🇷🇺",
+            row1 = listOf("й","ц","у","к","е","н","г","ш","щ","з"),
+            row2 = listOf("ф","ы","в","а","п","р","о","л","д","ж"),
+            row3 = listOf("я","ч","с","м","и","т","ь","б","ю","ң"),
+            category = LanguageCategory.CYRILLIC)
+
+        languages += KeyboardLanguage("ba", "Bashkir", "Башҡорт", "🇷🇺",
+            row1 = listOf("й","ц","у","к","е","н","г","ш","щ","з"),
+            row2 = listOf("ф","ы","в","а","п","р","о","л","д","ж"),
+            row3 = listOf("я","ч","с","м","и","т","ь","б","ю","ғ"),
+            category = LanguageCategory.CYRILLIC)
+
+        languages += KeyboardLanguage("cv", "Chuvash", "Чӑваш", "🇷🇺",
+            row1 = listOf("й","ц","у","к","е","н","г","ш","щ","з"),
+            row2 = listOf("ф","ы","в","а","п","р","о","л","д","ж"),
+            row3 = listOf("я","ч","с","м","и","т","ь","б","ю"),
+            category = LanguageCategory.CYRILLIC)
+
+        languages += KeyboardLanguage("os", "Ossetic", "Ирон", "🏴",
+            row1 = listOf("й","ц","у","к","е","н","г","ш","щ","з"),
+            row2 = listOf("ф","ы","в","а","п","р","о","л","д","ж"),
+            row3 = listOf("я","ч","с","м","и","т","ь","б","ю"),
+            category = LanguageCategory.CYRILLIC)
+
+        languages += KeyboardLanguage("ab", "Abkhaz", "Аԥсуа", "🏴",
+            row1 = listOf("й","ц","у","к","е","н","г","ш","щ","з"),
+            row2 = listOf("ф","ы","в","а","п","р","о","л","д","ж"),
+            row3 = listOf("я","ч","с","м","и","т","ь","б","ю"),
+            category = LanguageCategory.CYRILLIC)
+
+        languages += KeyboardLanguage("so", "Somali", "Soomaali", "🇸🇴",
+            row1 = listOf("q","w","e","r","t","y","u","i","o","p"),
+            row2 = listOf("a","s","d","f","g","h","j","k","l"),
+            row3 = listOf("z","x","c","v","b","n","m"),
+            category = LanguageCategory.AFRICAN)
+
+        languages += KeyboardLanguage("mg", "Malagasy", "Malagasy", "🇲🇬",
+            row1 = listOf("q","w","e","r","t","y","u","i","o","p"),
+            row2 = listOf("a","s","d","f","g","h","j","k","l"),
+            row3 = listOf("z","x","c","v","b","n","m"),
+            category = LanguageCategory.AFRICAN)
+
+        languages += KeyboardLanguage("ny", "Chichewa", "Chicheŵa", "🇲🇼",
+            row1 = listOf("q","w","e","r","t","y","u","i","o","p"),
+            row2 = listOf("a","s","d","f","g","h","j","k","l"),
+            row3 = listOf("z","x","c","v","b","n","m"),
+            category = LanguageCategory.AFRICAN)
+
+        languages += KeyboardLanguage("lo", "Lao", "ພາສາລາວ", "🇱🇦",
+            row1 = listOf("ຳ","ໄ","ຳ","ພ","ະ","ັ","ີ","ຶ","ື","ໂ"),
+            row2 = listOf("ຟ","ຫ","ກ","ດ","ເ","້","່","າ","ສ"),
+            row3 = listOf("ຜ","ປ","ແ","ິ","ິ","ທ","ມ","ໃ","ຝ"),
+            category = LanguageCategory.SOUTHEAST_ASIAN)
     }
 
     fun getAllLanguages(): List<KeyboardLanguage> = languages.toList()
