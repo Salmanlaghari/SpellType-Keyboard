@@ -19,18 +19,18 @@
 -dontwarn kotlinx.coroutines.**
 
 # ─── Keep Room Entities & DAOs ───
--keep class com.salmanlaghari.spelltypekeyboard.data.db.** { *; }
--keep class com.salmanlaghari.spelltypekeyboard.data.datastore.** { *; }
+-keep class com.spelltype.keyboard.data.db.** { *; }
+-keep class com.spelltype.keyboard.data.datastore.** { *; }
 -keep @androidx.room.Entity class *
 -keep @androidx.room.Dao class *
 
 # ─── Keep Domain Models ───
--keep class com.salmanlaghari.spelltypekeyboard.domain.model.** { *; }
--keep class com.salmanlaghari.spelltypekeyboard.domain.theme.** { *; }
--keep class com.salmanlaghari.spelltypekeyboard.domain.language.** { *; }
+-keep class com.spelltype.keyboard.domain.model.** { *; }
+-keep class com.spelltype.keyboard.domain.theme.** { *; }
+-keep class com.spelltype.keyboard.domain.language.** { *; }
 
 # ─── Keep IME Service ───
--keep class com.salmanlaghari.spelltypekeyboard.presentation.ime.SpellTypeIME { *; }
+-keep class com.spelltype.keyboard.presentation.ime.SpellTypeIME { *; }
 
 # ─── Keep AdMob ───
 -keep class com.google.android.gms.ads.** { *; }
@@ -42,7 +42,7 @@
 -dontwarn androidx.datastore.**
 
 # ─── Keep ViewBinding ───
--keep class com.salmanlaghari.spelltypekeyboard.databinding.** { *; }
+-keep class com.spelltype.keyboard.databinding.** { *; }
 
 # ─── Keep Serializable ───
 -keepclassmembers class * implements java.io.Serializable {
