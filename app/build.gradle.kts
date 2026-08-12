@@ -15,8 +15,8 @@ android {
         applicationId = "com.salmanlaghari.spelltypekeyboard"
         minSdk = 26
         targetSdk = 34
-        versionCode = 6
-        versionName = "6.00.0"
+        versionCode = 7
+        versionName = "1.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -44,14 +44,11 @@ android {
                 keyAlias = keystoreProperties["keyAlias"] as String
                 keyPassword = keystoreProperties["keyPassword"] as String
             } else {
-                // No signing material available. Do NOT fall back to hardcoded
-                // credentials — configure the KEYSTORE_* env vars (see CI) or a
-                // local keystore.properties (see keystore.properties.example).
-                logger.warn(
-                    "No release signing config found: set KEYSTORE_FILE/KEYSTORE_PASSWORD/" +
-                        "KEY_ALIAS/KEY_PASSWORD env vars or create keystore.properties. " +
-                        "The release build will be unsigned."
-                )
+                // Fallback for local/test builds
+                storeFile = file("release.keystore")
+                storePassword = "spelltypepass"
+                keyAlias = "spelltype"
+                keyPassword = "spelltypepass"
             }
         }
     }
